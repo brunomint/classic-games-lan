@@ -164,6 +164,12 @@ carregar, criar/entrar em sala, adicionar jogador, anotar resultado, tela cheia,
 da imagem (Original, TV antiga, Suave: lembrado no aparelho), botões do controle e
 "Trocar de jogo" (os jogados por último; salva automaticamente antes de trocar).
 
+O jogo ocupa a tela inteira: entra em **tela cheia** sozinho (o navegador só deixa depois de um
+gesto, então é no primeiro toque, clique ou tecla; o botão do controle não conta, por isso na TV
+com controle vale apertar **F11** uma vez, que fica valendo para todas as páginas). E o
+**formato "Tela toda"** estica a imagem até as bordas, sem faixas pretas (só com a tela deitada).
+Os dois se desligam no menu de pausa e ficam lembrados no aparelho.
+
 O que acontece por fora do jogo vira aviso rápido no canto (salvo, controle conectado,
 fulano entrou na sala...). Se o controle desconecta, o jogo pausa e continua sozinho
 quando ele volta (em sala de netplay só avisa, para não travar os outros).

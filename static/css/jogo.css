@@ -357,3 +357,10 @@ body.jogo {
 /* favoritar no menu de pausa: estrela vazia / cheia no fim da linha */
 .item-favorito::after { content: "☆"; margin-left: auto; font-size: 20px; color: var(--grafite-2); }
 .item-favorito[aria-pressed="true"]::after { content: "★"; color: var(--b); }
+
+/* telas baixas (TV/notebook em 720p): menu mais compacto para caber até "Sair do jogo" */
+@media (max-height: 800px) and (min-width: 761px) {
+  .pausa-corpo { padding-top: 12px; padding-bottom: 12px; }
+  .menu-pausa { gap: 2px; }
+  .item-pausa { min-height: 40px; padding: 7px 16px; }
+}
