@@ -64,7 +64,7 @@ def inject_lan_url():
 def index():
     continuar = None
     if session.get("jogador_id"):
-        with db.conectar() as con:
+        with db.ler() as con:
             ultimo = db.ultimo_jogo(con, session["jogador_id"])
         if ultimo:
             jogo = catalog.by_game_id().get(ultimo["game_id"])

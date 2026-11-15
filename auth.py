@@ -43,7 +43,7 @@ def jogador_atual():
     jogador_id = session.get("jogador_id")
     if not jogador_id:
         return None
-    with db.conectar() as con:
+    with db.ler() as con:
         jogador = db.buscar_jogador(con, jogador_id)
     if not jogador:
         session.clear()   # jogador apagado do banco
@@ -144,7 +144,7 @@ def register_auth(app):
         # só a tela de entrada usa; é uma consulta pequena
         if request.endpoint != "entrar":
             return {}
-        with db.conectar() as con:
+        with db.ler() as con:
             return {"perfis": db.perfis(con)}
 
     @app.route("/entrar", methods=["GET", "POST"])
@@ -161,6 +161,9 @@ def register_auth(app):
         def erro(msg):
             return render_template("entrar.html", proximo=proximo, nome=nome, erro=msg, criar=False), 400
 
+        # decide dentro da conexão; as páginas só são montadas depois de fechá-la
+        pedir_confirmacao = False
+        mensagem = None
         try:
             with db.conectar() as con:
                 jogador_id = autenticar(con, nome, pin)
@@ -169,13 +172,19 @@ def register_auth(app):
                     pendente = session.get("novo_jogador")
                     if not (confirmar_criacao and pendente and pendente["nome"].lower() == nome.lower()):
                         session["novo_jogador"] = {"nome": nome, "pin_hash": generate_password_hash(pin)}
-                        return render_template("entrar.html", proximo=proximo, nome=nome, erro=None, criar=True)
-                    if not check_password_hash(pendente["pin_hash"], pin):
+                        pedir_confirmacao = True
+                    elif not check_password_hash(pendente["pin_hash"], pin):
                         session.pop("novo_jogador", None)
-                        return erro("Os PINs não batem. Comece de novo.")
-                    jogador_id = criar_conta(con, nome, pin)
+                        mensagem = "Os PINs não batem. Comece de novo."
+                    else:
+                        jogador_id = criar_conta(con, nome, pin)
         except ErroLogin as e:
-            return erro(str(e))
+            mensagem = str(e)
+
+        if mensagem:
+            return erro(mensagem)
+        if pedir_confirmacao:
+            return render_template("entrar.html", proximo=proximo, nome=nome, erro=None, criar=True)
 
         session.clear()
         session.permanent = True

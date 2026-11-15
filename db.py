@@ -79,17 +79,36 @@ def agora():
 
 @contextmanager
 def conectar():
-    """Uma conexão por operação; o 'with' faz commit (ou rollback se der erro)."""
+    """Conexão para ESCREVER: o 'with' faz commit (ou rollback se der erro).
+
+    Segura o banco para escrita até o fim do bloco, então não monte páginas
+    (render_template) aqui dentro: elas abrem outras conexões e ficariam esperando.
+    """
     con = sqlite3.connect(DB_PATH, timeout=10, isolation_level=None)
     con.row_factory = sqlite3.Row
     con.execute("PRAGMA foreign_keys = ON")
     try:
         con.execute("BEGIN IMMEDIATE")
+    except Exception:
+        con.close()
+        raise
+    try:
         yield con
         con.execute("COMMIT")
     except Exception:
         con.execute("ROLLBACK")
         raise
+    finally:
+        con.close()
+
+
+@contextmanager
+def ler():
+    """Conexão só para LER: com o modo WAL, não espera quem está escrevendo."""
+    con = sqlite3.connect(DB_PATH, timeout=10)
+    con.row_factory = sqlite3.Row
+    try:
+        yield con
     finally:
         con.close()
 
