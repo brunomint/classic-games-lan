@@ -11,12 +11,14 @@
 //   Select + Start → menu de pausa (no teclado: Esc)
 //   Select + R1    → salvar agora
 //   Select + L1    → carregar o último save
+//   Select + R2    → acelerar (liga/desliga)
+//   Select + L2    → voltar no tempo, enquanto segurar
 // Os controles com numeração própria são traduzidos por perfis-controle.js.
 (function () {
   const SELETOR = [
     "a.tile", ".dock-btn", "a.sala", "[data-nav]",
     "dialog[open] button", "dialog[open] a[href]", "dialog[open] .opcoes label",
-    "dialog[open] input:not([type=hidden]):not([type=radio])", "dialog[open] select",
+    "dialog[open] input:not([type=hidden]):not([type=radio])", "dialog[open] select", "dialog[open] textarea",
   ].join(", ");
   const naTelaDoJogo = () => document.body.classList.contains("jogo");
   const dialogoAberto = () => document.querySelector("dialog[open]");
@@ -113,6 +115,7 @@
   // ---------- controle (Gamepad API) ----------
 
   const anterior = {};
+  const voltando = {};   // controle segurando Select + L2 (voltar no tempo)
   let rodando = false;
 
   function loop() {
@@ -129,9 +132,20 @@
         document.dispatchEvent(new CustomEvent("cg:menu-pausa"));   // abre ou fecha o menu
         continue;
       }
+      // voltar no tempo: vale enquanto Select + L2 estiverem apertados
+      const segurandoVoltar = agora.select && agora.l2;
+      if (naTelaDoJogo() && voltando[gp.index] && !segurandoVoltar) {
+        voltando[gp.index] = false;
+        document.dispatchEvent(new CustomEvent("cg:voltar-tempo", { detail: { ativo: false } }));
+      }
       if (naTelaDoJogo() && !dialogoAberto()) {
         if (combo("r1")) document.dispatchEvent(new CustomEvent("cg:salvar-rapido"));
         if (combo("l1")) document.dispatchEvent(new CustomEvent("cg:carregar-rapido"));
+        if (combo("r2")) document.dispatchEvent(new CustomEvent("cg:acelerar"));
+        if (combo("l2")) {
+          voltando[gp.index] = true;
+          document.dispatchEvent(new CustomEvent("cg:voltar-tempo", { detail: { ativo: true } }));
+        }
         continue;   // o resto do controle é do jogo
       }
 

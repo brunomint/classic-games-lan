@@ -63,7 +63,7 @@ window.CG = window.CG || {};
     // o analógico esquerdo também move
     cima = cima || eixo(1) < -0.5; baixo = baixo || eixo(1) > 0.5;
     esq = esq || eixo(0) < -0.5; dir = dir || eixo(0) > 0.5;
-    return { cima, baixo, esq, dir, a: bt(0), b: bt(1), x: bt(2), y: bt(3), l1: bt(4), r1: bt(5), select: bt(8), start: bt(9) };
+    return { cima, baixo, esq, dir, a: bt(0), b: bt(1), x: bt(2), y: bt(3), l1: bt(4), r1: bt(5), l2: bt(6), r2: bt(7), select: bt(8), start: bt(9) };
   };
 
   // nomes que o EmulatorJS usa para as posições do padrão

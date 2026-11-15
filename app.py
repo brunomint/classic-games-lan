@@ -15,6 +15,7 @@ from flask_socketio import SocketIO
 import config
 from ajustes import register_ajustes
 from auth import login_obrigatorio, register_auth
+from codigos import register_codigos
 import db
 import capas
 from games import Catalog
@@ -32,6 +33,7 @@ register_auth(app)
 register_netplay(app, socketio)
 register_uploads(app, catalog)
 register_registro(app, catalog)
+register_codigos(app, catalog)
 
 # porta em que este processo está rodando (definida ao iniciar)
 _porta = {"atual": None}

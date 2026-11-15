@@ -89,6 +89,17 @@
   }
   setInterval(ajustarControles, 1000);
 
+  // "Voltar no tempo" (opcoes-jogo.js) só pode ser ligado quando o emulador é criado:
+  // assim que o loader cria o EJS_emulator, antes de o jogo carregar, ajusta a opção.
+  let voltarNoTempo = false;
+  try { voltarNoTempo = localStorage.getItem("cg-voltar-no-tempo") === "sim"; } catch (e) { /* desligado */ }
+  let emulador;
+  Object.defineProperty(window, "EJS_emulator", {
+    configurable: true,
+    get: () => emulador,
+    set: (v) => { emulador = v; if (v) v.rewindEnabled = voltarNoTempo; },
+  });
+
   const loader = document.createElement("script");
   loader.src = "/emulatorjs/loader.js";
   document.body.appendChild(loader);

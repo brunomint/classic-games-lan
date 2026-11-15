@@ -71,6 +71,16 @@ CREATE TABLE IF NOT EXISTS saves (
 );
 CREATE INDEX IF NOT EXISTS idx_saves ON saves(jogador_id, game_id);
 
+CREATE TABLE IF NOT EXISTS codigos (          -- códigos de trapaça (Game Genie, GameShark...) por jogo
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    game_id     INTEGER NOT NULL,
+    nome        TEXT NOT NULL,
+    codigo      TEXT NOT NULL,
+    criado_por  TEXT REFERENCES jogadores(id),
+    criado_em   INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_codigos ON codigos(game_id);
+
 CREATE TABLE IF NOT EXISTS favoritos (
     jogador_id  TEXT NOT NULL REFERENCES jogadores(id),
     game_id     INTEGER NOT NULL,
@@ -429,6 +439,24 @@ def definir_favorito(con, jogador_id, game_id, favorito):
                     (jogador_id, game_id, agora()))
     else:
         con.execute("DELETE FROM favoritos WHERE jogador_id = ? AND game_id = ?", (jogador_id, game_id))
+
+
+def codigos(con, game_id):
+    return [dict(r) for r in con.execute(
+        "SELECT id, nome, codigo FROM codigos WHERE game_id = ? ORDER BY nome COLLATE NOCASE", (game_id,)
+    ).fetchall()]
+
+
+def criar_codigo(con, game_id, nome, codigo, jogador_id):
+    cur = con.execute(
+        "INSERT INTO codigos (game_id, nome, codigo, criado_por, criado_em) VALUES (?, ?, ?, ?, ?)",
+        (game_id, nome, codigo, jogador_id, agora()),
+    )
+    return cur.lastrowid
+
+
+def apagar_codigo(con, game_id, codigo_id):
+    return con.execute("DELETE FROM codigos WHERE id = ? AND game_id = ?", (codigo_id, game_id)).rowcount
 
 
 def perfis(con):

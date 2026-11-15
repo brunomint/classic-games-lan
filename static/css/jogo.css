@@ -118,7 +118,7 @@ body.jogo {
 .item-pausa:hover { background: rgba(255, 255, 255, .6); }
 .item-pausa:focus-visible,
 .usando-controle .item-pausa:focus { background: var(--plastico-claro); outline: 3px solid var(--foco); outline-offset: 0; }
-.item-pausa[hidden] { display: none; }
+.item-pausa[hidden], .opcao-tela[hidden] { display: none; }
 
 .item-principal { background: var(--plastico-claro); box-shadow: 0 2px 6px rgba(0, 0, 0, .1); }
 
@@ -172,7 +172,7 @@ body.jogo {
 
 .pausa-quadro img {
   width: 100%;
-  max-height: 46vh;
+  max-height: max(160px, min(46vh, calc(100vh - 520px)));   /* deixa lugar para as opções embaixo */
   object-fit: contain;
   border-radius: 12px;
   background: #000;
@@ -364,3 +364,126 @@ body.jogo {
   .menu-pausa { gap: 2px; }
   .item-pausa { min-height: 40px; padding: 7px 16px; }
 }
+
+/* ---------- opções do emulador no menu de pausa ---------- */
+
+.pausa-quadro .opcoes-tela + .opcoes-tela { margin-top: -4px; }
+
+/* som: − | Som: 50% | + numa pílula só (cada parte é um botão, o direcional passa por elas) */
+.opcao-som {
+  display: inline-flex;
+  align-items: stretch;
+  border-radius: 99px;
+  background: var(--plastico-claro);
+  box-shadow: 0 2px 0 var(--plastico-sombra);
+}
+
+.som-btn {
+  min-width: 42px;
+  min-height: 42px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 99px;
+  background: none;
+  color: var(--grafite);
+  font: inherit;
+  font-size: 20px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.som-valor { font-size: 16px; font-weight: 600; }
+.som-valor b { color: var(--x); }
+.som-valor[aria-pressed="true"] b { color: var(--a); }
+.som-btn:hover,
+.som-btn:focus-visible,
+.usando-controle .som-btn:focus { outline: 3px solid var(--foco); outline-offset: 2px; }
+
+/* códigos */
+.dialogo-codigos { width: min(560px, calc(100vw - 24px)); }
+.lista-codigos { list-style: none; margin: 0 0 14px; padding: 0; display: grid; gap: 8px; max-height: 40vh; overflow-y: auto; }
+.lista-codigos li { display: flex; gap: 8px; align-items: stretch; }
+
+.codigo {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 12px;
+  align-items: center;
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--plastico);
+  color: var(--grafite);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.codigo::before {
+  content: "";
+  grid-row: span 2;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--plastico-sombra);
+}
+
+.codigo[aria-pressed="true"]::before { background: var(--y); }
+.codigo strong { font-weight: 650; }
+.codigo small { color: var(--grafite-2); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.apagar-codigo {
+  flex: none;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  color: var(--a);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.codigo:hover, .codigo:focus-visible, .usando-controle .codigo:focus,
+.apagar-codigo:hover, .apagar-codigo:focus-visible, .usando-controle .apagar-codigo:focus { outline: 3px solid var(--foco); outline-offset: 2px; }
+
+.novo-codigo { margin-bottom: 14px; }
+.novo-codigo summary { cursor: pointer; font-weight: 650; color: var(--x); padding: 4px 0; border-radius: 6px; }
+.novo-codigo summary:focus-visible, .usando-controle .novo-codigo summary:focus { outline: 3px solid var(--foco); outline-offset: 2px; }
+.novo-codigo form { margin-top: 10px; }
+.dialogo textarea {
+  padding: 11px 12px;
+  border: 2px solid var(--plastico-sombra);
+  border-radius: 10px;
+  background: #f6f5f8;
+  color: var(--grafite);
+  font: inherit;
+  font-family: ui-monospace, monospace;
+  resize: vertical;
+}
+
+/* configurações avançadas: mostra a barra do emulador só enquanto o painel dele está aberto */
+body.avancado #game .ejs_menu_bar { display: flex !important; opacity: 1 !important; transform: none !important; }
+
+body > .fechar-avancado {
+  width: auto;
+  position: fixed;
+  top: 14px;
+  left: 14px;
+  z-index: 10000;
+  padding: 10px 18px;
+  border: 0;
+  border-radius: 99px;
+  background: var(--plastico-claro);
+  color: var(--grafite);
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .35);
+}
+
+.fechar-avancado[hidden] { display: none; }
+body.avancado .botao-menu { display: none; }

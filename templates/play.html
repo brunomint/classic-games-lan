@@ -76,6 +76,7 @@
       <button type="button" class="item-pausa item-principal" data-botao="B" id="pausa-continuar">Continuar jogando</button>
       <button type="button" class="item-pausa" id="pausa-salvar">Salvar agora <kbd>Select + R1</kbd></button>
       <button type="button" class="item-pausa" id="pausa-carregar">Carregar save <kbd>Select + L1</kbd></button>
+      <button type="button" class="item-pausa" id="pausa-voltar-tempo" hidden>Voltar 5 segundos <kbd>segure Select + L2</kbd></button>
       <button type="button" class="item-pausa item-favorito" id="pausa-favorito" data-game-id="{{ game.game_id }}"
               aria-pressed="{{ 'true' if favorito else 'false' }}"><span id="pausa-favorito-texto">{{ "Favorito" if favorito else "Favoritar" }}</span></button>
       <button type="button" class="item-pausa" id="pausa-sala" hidden>Criar sala para jogar junto</button>
@@ -92,11 +93,27 @@
         <span id="chips-locais"></span>
         <span class="chip chip-sala" id="chip-sala" hidden></span>
       </figcaption>
-      <div class="opcoes-tela" role="group" aria-label="Tela e controle">
+      <div class="opcoes-tela" role="group" aria-label="Tela">
         <button type="button" class="opcao-tela" id="imagem-tela-cheia" aria-pressed="false">Tela cheia</button>
         <button type="button" class="opcao-tela" id="imagem-formato">Formato: <b id="nome-formato">Tela toda</b></button>
         <button type="button" class="opcao-tela" id="imagem-filtro">Imagem: <b id="nome-filtro">Original</b></button>
+      </div>
+      <div class="opcoes-tela" role="group" aria-label="Jogo">
+        <span class="opcao-som" role="group" aria-label="Volume">
+          <button type="button" class="som-btn" id="som-menos" aria-label="Diminuir o som">−</button>
+          <button type="button" class="som-btn som-valor" id="som-mudo" aria-pressed="false">Som: <b id="nome-som">50%</b></button>
+          <button type="button" class="som-btn" id="som-mais" aria-label="Aumentar o som">+</button>
+        </span>
+        <button type="button" class="opcao-tela" id="opcao-velocidade">Velocidade: <b id="nome-velocidade">Normal</b></button>
+        <button type="button" class="opcao-tela" id="opcao-voltar-tempo" aria-pressed="false">Voltar no tempo</button>
+        <button type="button" class="opcao-tela" id="opcao-disco" hidden>Disco: <b id="nome-disco">1 de 2</b></button>
+        <button type="button" class="opcao-tela" id="opcao-codigos">Códigos <b id="total-codigos"></b></button>
+      </div>
+      <div class="opcoes-tela" role="group" aria-label="Mais opções">
+        <button type="button" class="opcao-tela" id="opcao-foto">Tirar foto</button>
         <button type="button" class="opcao-tela" id="pausa-controles">Botões do controle</button>
+        <button type="button" class="opcao-tela" id="pausa-reiniciar">Reiniciar o jogo</button>
+        <button type="button" class="opcao-tela" id="opcao-avancado">Configurações avançadas</button>
       </div>
     </figure>
   </div>
@@ -121,6 +138,52 @@
     <span><i>A</i> OK</span>
   </footer>
 </dialog>
+
+<!-- Reiniciar: perde o que não foi salvo -->
+<dialog id="dialogo-reiniciar" class="dialogo">
+  <h2>Reiniciar o jogo?</h2>
+  <p class="texto-apoio">O jogo volta para o começo. O que não foi salvo se perde.</p>
+  <div class="acoes">
+    <button type="button" class="botao botao-claro" data-botao="B" id="cancelar-reiniciar">Cancelar</button>
+    <button type="button" class="botao" data-botao="A" id="confirmar-reiniciar">Reiniciar</button>
+  </div>
+</dialog>
+
+<!-- Voltar no tempo: o emulador precisa reabrir o jogo para ligar/desligar -->
+<dialog id="dialogo-voltar-tempo" class="dialogo">
+  <h2 id="titulo-voltar-tempo">Ligar voltar no tempo?</h2>
+  <p class="texto-apoio">Com ele ligado, segure <strong>Select + L2</strong> para voltar alguns segundos e desfazer um erro.
+    Usa um pouco mais de memória. Para valer, o jogo precisa abrir de novo (o progresso é salvo antes).</p>
+  <div class="acoes">
+    <button type="button" class="botao botao-claro" data-botao="B" id="voltar-tempo-depois">Na próxima vez</button>
+    <button type="button" class="botao" data-botao="A" id="voltar-tempo-agora">Reabrir agora</button>
+  </div>
+</dialog>
+
+<!-- Códigos de trapaça do jogo (guardados no servidor) -->
+<dialog id="dialogo-codigos" class="dialogo dialogo-codigos">
+  <h2>Códigos</h2>
+  <p class="texto-apoio">Ligue e desligue com o A. Os códigos ficam salvos para a casa toda.</p>
+  <ul class="lista-codigos" id="lista-codigos"></ul>
+  <p class="texto-apoio" id="sem-codigos" hidden>Nenhum código neste jogo ainda.</p>
+  <details class="novo-codigo" id="novo-codigo">
+    <summary data-nav>Adicionar código</summary>
+    <form id="form-codigo">
+      <label class="campo"><span>Nome</span>
+        <input type="text" id="codigo-nome" maxlength="60" placeholder="Vidas infinitas" autocomplete="off" required></label>
+      <label class="campo"><span>Código (Game Genie, Action Replay, GameShark…; um por linha)</span>
+        <textarea id="codigo-texto" rows="3" placeholder="7E0DBE:05" spellcheck="false" required></textarea></label>
+      <p class="erro-form" id="erro-codigo" hidden></p>
+      <button type="submit" class="botao" data-botao="A">Salvar código</button>
+    </form>
+  </details>
+  <div class="acoes">
+    <button type="button" class="botao botao-claro" data-botao="B" id="fechar-codigos">Voltar</button>
+  </div>
+</dialog>
+
+<!-- Configurações avançadas: o painel do próprio emulador fica por cima do jogo -->
+<button type="button" class="fechar-avancado" id="fechar-avancado" hidden>Fechar configurações</button>
 
 <!-- O controle caiu: o jogo espera ele voltar -->
 <dialog id="dialogo-controle" class="dialogo">
@@ -164,6 +227,8 @@
 <script src="{{ url_for('static', filename='js/imagem-jogo.js') }}"></script>
 <script src="{{ url_for('static', filename='js/pausa.js') }}"></script>
 <script src="{{ url_for('static', filename='js/favoritos.js') }}"></script>
+<script src="{{ url_for('static', filename='js/opcoes-jogo.js') }}"></script>
+<script src="{{ url_for('static', filename='js/codigos.js') }}"></script>
 <script src="{{ url_for('static', filename='js/atalhos-jogo.js') }}"></script>
 <script src="{{ url_for('static', filename='js/gamepad-menu.js') }}"></script>
 <script src="{{ url_for('static', filename='js/analogico-direcional.js') }}"></script>

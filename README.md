@@ -157,12 +157,22 @@ O jogo ocupa a tela inteira, sem barras (nem a do EmulatorJS). Atalhos:
 | Select + Start | Esc | abre/fecha o menu (o jogo pausa) |
 | Select + R1 | | salva agora (no servidor, com foto da tela) |
 | Select + L1 | | carrega o último save feito à mão |
+| Select + R2 | | acelera (2x) / volta ao normal |
+| segure Select + L2 | | volta no tempo (com "Voltar no tempo" ligado no menu) |
 
 No celular, um botão redondo no canto abre o menu (no PC ele aparece quando o mouse mexe).
 O menu mostra a foto do momento em que pausou, quem está jogando e a sala; tem salvar,
 carregar, criar/entrar em sala, adicionar jogador, anotar resultado, tela cheia, filtro
 da imagem (Original, TV antiga, Suave: lembrado no aparelho), botões do controle e
 "Trocar de jogo" (os jogados por último; salva automaticamente antes de trocar).
+
+As opções da barra do emulador (escondida) estão no menu: **Som** (−, mudo, +), **Velocidade**
+(normal, rápida, lenta), **Voltar no tempo** (liga/desliga; o jogo reabre para valer), **Disco**
+(jogos de PS1 com mais de um CD), **Códigos** de trapaça (Game Genie, GameShark...: ficam no
+servidor por jogo, `codigos.py`; adicionar pede teclado ou celular, ligar/desligar vai pelo
+controle), **Tirar foto**, **Reiniciar o jogo** e **Configurações avançadas** (abre o painel do
+próprio emulador, só com mouse/toque). Velocidade, voltar no tempo, reiniciar e códigos ficam
+bloqueados jogando junto, porque dessincronizariam os aparelhos. Ver `static/js/opcoes-jogo.js`.
 
 O jogo ocupa a tela inteira: entra em **tela cheia** sozinho (o navegador só deixa depois de um
 gesto, então é no primeiro toque, clique ou tecla; o botão do controle não conta, por isso na TV

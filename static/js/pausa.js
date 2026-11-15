@@ -63,6 +63,11 @@
   let abrindo = false;
   function abrir() {
     if (dialogo.open) { dialogo.close(); return; }   // Select + Start de novo: volta ao jogo
+    // com o painel avançado do emulador aberto, o atalho só fecha o painel
+    if (document.body.classList.contains("avancado")) {
+      document.dispatchEvent(new CustomEvent("cg:fechar-avancado"));
+      return;
+    }
     if (abrindo || document.querySelector("dialog[open]") || !emu() || !emu().started) return;
     const e = emu();
     const n = netplay();
