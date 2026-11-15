@@ -193,5 +193,7 @@ def register_auth(app):
 
     @app.post("/sair")
     def sair():
+        """Sai; com ?para=Nome, já abre o PIN dessa pessoa (trocar de jogador)."""
         session.clear()
-        return redirect("/")
+        para = limpar_nome(request.args.get("para", ""))
+        return redirect(url_for("entrar", nome=para) if para else "/")

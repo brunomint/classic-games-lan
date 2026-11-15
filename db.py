@@ -397,6 +397,16 @@ def ultimo_jogo(con, jogador_id):
     return {"game_id": row["game_id"], "quando": row["quando"], "save_em": save["criado_em"] if save else None}
 
 
+def jogados_recentemente(con, jogador_id, limite=50):
+    """Jogos do jogador, do mais recente para o mais antigo: {game_id: último horário}."""
+    return {r["game_id"]: r["quando"] for r in con.execute(
+        """SELECT p.game_id, MAX(pa.saiu) AS quando
+           FROM participacoes pa JOIN partidas p ON p.id = pa.partida_id
+           WHERE pa.jogador_id = ? GROUP BY p.game_id ORDER BY quando DESC LIMIT ?""",
+        (jogador_id, limite),
+    ).fetchall()}
+
+
 def perfis(con):
     """Jogadores com login (para a tela 'Quem está jogando?'), os mais recentes primeiro."""
     return [dict(r) for r in con.execute(

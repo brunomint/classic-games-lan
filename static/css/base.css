@@ -1,6 +1,6 @@
 /* Classic Games — base: cores, fonte, botões, diálogos.
-   Tema: o próprio Super Nintendo. Plástico cinza-lilás, botões roxos e as quatro
-   cores dos botões A/B/X/Y como sistema de ações (sempre o mesmo significado):
+   Tema: menu de console moderno — fundo cinza-claro, superfícies brancas, foco
+   azul — com as quatro cores dos botões A/B/X/Y como sistema de ações:
      A vermelho = jogar / confirmar      B amarelo = voltar / cancelar
      X azul     = sala / jogar junto     Y verde   = adicionar jogador
    Tudo local: a fonte (Saira, OFL) vem de static/fonts. */
@@ -14,11 +14,11 @@
 }
 
 :root {
-  --plastico: #cdcad4;        /* corpo do console */
-  --plastico-claro: #e4e2e9;  /* tampa, superfícies em relevo */
-  --plastico-sombra: #a8a4b3; /* vincos e bordas */
-  --grafite: #34313d;         /* texto e partes escuras */
-  --grafite-2: #625e6d;       /* texto secundário */
+  --plastico: #ebebee;        /* fundo do menu */
+  --plastico-claro: #ffffff;  /* superfícies (cartões, botões claros) */
+  --plastico-sombra: #d3d3da; /* bordas e a "sombra" de baixo dos botões */
+  --grafite: #2b2b31;         /* texto e partes escuras */
+  --grafite-2: #6b6b76;       /* texto secundário */
   --roxo: #4d3f8c;            /* botões do console */
   --lavanda: #9a8ecf;
 
@@ -28,7 +28,7 @@
   --y: #2b8a4c;               /* verde */
 
   --tela: #1d1b24;            /* tela da TV */
-  --foco: #f2c230;
+  --foco: #1e9be6;            /* contorno do item selecionado */
 
   --fonte: "Saira", system-ui, sans-serif;
   --raio-plastico: 14px;
@@ -50,10 +50,6 @@ body {
   font-size: 16px;
   line-height: 1.45;
   font-stretch: 100%;
-  /* textura discreta de plástico injetado */
-  background-image:
-    radial-gradient(circle at 1px 1px, rgba(255, 255, 255, .22) 1px, transparent 0);
-  background-size: 4px 4px;
 }
 
 a { color: inherit; }

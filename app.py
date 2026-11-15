@@ -63,15 +63,18 @@ def inject_lan_url():
 
 @app.get("/")
 def index():
-    continuar = None
-    if session.get("jogador_id"):
-        with db.ler() as con:
-            ultimo = db.ultimo_jogo(con, session["jogador_id"])
-        if ultimo:
-            jogo = catalog.by_game_id().get(ultimo["game_id"])
-            if jogo:
-                continuar = {**ultimo, "jogo": jogo}
-    return render_template("index.html", consoles=catalog.by_console(), continuar=continuar)
+    """Menu inicial: uma fileira com todos os jogos, os que você jogou por último primeiro."""
+    jogos = catalog.scan()
+    recentes = {}
+    with db.ler() as con:
+        perfis = db.perfis(con)
+        if session.get("jogador_id"):
+            recentes = db.jogados_recentemente(con, session["jogador_id"])
+    ordem = list(recentes)
+    jogos.sort(key=lambda g: (ordem.index(g["game_id"]) if g["game_id"] in recentes else len(ordem)))
+    for g in jogos:
+        g["jogou_em"] = recentes.get(g["game_id"])
+    return render_template("index.html", jogos=jogos, perfis=perfis)
 
 
 @app.get("/jogo/<console>/<slug>")

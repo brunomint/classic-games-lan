@@ -3,103 +3,114 @@
 {% block body_class %}inicio{% endblock %}
 
 {% block content %}
-<div class="console">
-  <header class="tampa">
-    <div>
-      <h1 class="marca">Classic Games</h1>
+<div class="menu">
+  <header class="topo">
+    <nav class="perfis-topo" aria-label="Jogadores">
       {% if jogador %}
-      <p class="ola">{{ saudacao }}, <strong>{{ jogador.nome }}</strong>. Escolha um cartucho.</p>
-      {% else %}
-      <p class="ola">{{ saudacao }}! Entre para jogar e guardar seu progresso.</p>
+      <span class="perfil-topo eu" title="{{ jogador.nome }} (você)">
+        <span class="avatar avatar-0" aria-hidden="true">{{ jogador.nome[:1]|upper }}</span>
+      </span>
       {% endif %}
-    </div>
+      {% for p in perfis if not jogador or p.id != jogador.id %}
+      {% if loop.index <= 4 %}
+      <form method="post" action="/sair?para={{ p.nome|urlencode }}">
+        <button type="submit" class="perfil-topo" title="Jogar como {{ p.nome }}" aria-label="Jogar como {{ p.nome }}">
+          <span class="avatar avatar-{{ loop.index % 5 }}" aria-hidden="true">{{ p.nome[:1]|upper }}</span>
+        </button>
+      </form>
+      {% endif %}
+      {% endfor %}
+      {% if not jogador %}
+      <a class="perfil-topo" href="/entrar" title="Entrar" aria-label="Entrar">
+        <span class="avatar avatar-novo" aria-hidden="true">+</span>
+      </a>
+      {% endif %}
+    </nav>
 
-    <div class="perfil">
-      {% if jogador %}
-      <span class="avatar" aria-hidden="true">{{ jogador.nome[:1]|upper }}</span>
-      <div class="perfil-nome">
-        <strong>{{ jogador.nome }}</strong>
-        <form method="post" action="/sair"><button type="submit" class="link-botao">Trocar jogador</button></form>
-      </div>
-      {% else %}
-      <a class="botao" data-botao="A" href="/entrar">Entrar</a>
-      {% endif %}
+    <div class="status">
+      <span class="jogando" id="jogando" hidden></span>
+      <time class="relogio" id="relogio"></time>
     </div>
   </header>
 
-  <section class="painel">
-    {% if continuar %}
-    <a class="continuar" href="/jogo/{{ continuar.jogo.console }}/{{ continuar.jogo.slug }}">
-      <span class="cartucho cor-{{ continuar.jogo.console }}" aria-hidden="true">
-        <span class="etiqueta etiqueta-{{ continuar.jogo.cor }}">
-          {% if continuar.jogo.cover %}<img src="/covers/{{ continuar.jogo.cover }}" alt="">
-          {% else %}<span class="sigla">{{ continuar.jogo.initials }}</span>{% endif %}
-        </span>
-      </span>
-      <div>
-        <h2>Continuar</h2>
-        <span class="titulo-jogo">{{ continuar.jogo.title }}</span>
-        <span class="detalhe">
-          {% if continuar.save_em %}Salvo {{ continuar.save_em|quando }}{% else %}Jogou {{ continuar.quando|quando }}{% endif %}
-        </span>
-        <span class="botao" data-botao="A">Jogar</span>
-      </div>
-    </a>
-    {% else %}
-    <div class="continuar">
-      <span class="avatar" aria-hidden="true">?</span>
-      <div>
-        <h2>Primeira vez por aqui?</h2>
-        <span class="titulo-jogo">Escolha um jogo na prateleira</span>
-        <span class="detalhe">Seu progresso fica salvo e você continua de qualquer aparelho.</span>
-      </div>
+  <main class="centro">
+    {% if jogos %}
+    <div class="legenda" aria-live="polite">
+      <strong id="titulo-foco">{{ jogos[0].title }}</strong>
+      <span id="info-foco"></span>
     </div>
-    {% endif %}
 
-    <div class="lado">
-      <section class="salas" id="salas" hidden>
-        <h2>Gente jogando agora</h2>
-        <ul id="lista-salas"></ul>
-      </section>
-
-      <section class="junto">
-        <div id="qr" data-url="{{ lan_url }}" role="img" aria-label="QR code com o endereço"></div>
-        <div>
-          <h2>Jogar junto</h2>
-          <p>No celular, na mesma rede Wi-Fi, aponte a câmera ou abra
-            <code>{{ lan_url }}</code></p>
-        </div>
-      </section>
-    </div>
-  </section>
-
-  {% for console_label, games in consoles.items() %}
-  <section class="prateleira">
-    <h2>{{ console_label }} <small>{{ games|length }} jogo{{ "s" if games|length > 1 }}</small></h2>
-    <div class="grade">
-      {% for game in games %}
-      <a class="cartucho cor-{{ game.console }}" href="/jogo/{{ game.console }}/{{ game.slug }}" title="{{ game.title }}">
-        <span class="etiqueta etiqueta-{{ game.cor }}">
-          {% if game.cover %}<img src="/covers/{{ game.cover }}" alt="" loading="lazy">
-          {% else %}<span class="sigla" aria-hidden="true">{{ game.initials }}</span>{% endif %}
-          <span class="nome-jogo">{{ game.title }}</span>
-        </span>
-        {% if game.size_mb > 50 %}<span class="peso">{{ game.size_mb|round|int }} MB</span>{% endif %}
+    <div class="fileira" id="fileira" role="list">
+      {% for g in jogos %}
+      <a class="tile" role="listitem" href="/jogo/{{ g.console }}/{{ g.slug }}"
+         data-titulo="{{ g.title }}"
+         data-info="{{ g.console_label }}{% if g.jogou_em %}, você jogou {{ g.jogou_em|quando }}{% endif %}{% if g.size_mb > 50 %}, {{ g.size_mb|round|int }} MB{% endif %}"
+         aria-label="{{ g.title }}, {{ g.console_label }}">
+        {% if g.cover %}
+        <img src="/covers/{{ g.cover }}" alt="" loading="lazy">
+        {% else %}
+        <span class="tile-sigla etiqueta-{{ g.cor }}" aria-hidden="true">{{ g.initials }}</span>
+        {% endif %}
       </a>
       {% endfor %}
     </div>
-  </section>
-  {% else %}
-  <p class="vazio">A prateleira está vazia. <a href="/enviar">Envie a primeira ROM</a> e ela aparece aqui.</p>
-  {% endfor %}
+    {% else %}
+    <div class="vazio">
+      <p>Nenhum jogo ainda.</p>
+      <a class="botao" data-botao="Y" href="/enviar">Enviar a primeira ROM</a>
+    </div>
+    {% endif %}
+
+    <nav class="dock" aria-label="Menu">
+      <button type="button" class="dock-btn cor-x" id="abrir-junto" data-rotulo="Jogar junto" data-atalho="x">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="9" r="3.2"/><circle cx="16.5" cy="9" r="3.2"/><path d="M2.5 19c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5M11 19c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5"/></svg>
+        <span class="selo-salas" id="selo-salas" hidden></span>
+        <span class="sr">Jogar junto</span>
+      </button>
+      <a class="dock-btn cor-a" href="/historico" data-rotulo="Placar da casa">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h10v5a5 5 0 0 1-10 0V4zM7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4M12 14v4M8 20h8"/></svg>
+        <span class="sr">Placar da casa</span>
+      </a>
+      <a class="dock-btn cor-y" href="/enviar" data-rotulo="Enviar ROMs" data-atalho="y">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9h14v10a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V9zM7 9V5h10v4M12 12v5M9.5 14.5 12 12l2.5 2.5"/></svg>
+        <span class="sr">Enviar ROMs</span>
+      </a>
+      {% if jogador %}
+      <form method="post" action="/sair" class="dock-form">
+        <button type="submit" class="dock-btn cor-b" data-rotulo="Trocar jogador">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="8" r="3.5"/><path d="M3.5 20c.8-3.6 3.3-5.5 6.5-5.5 1.4 0 2.6.3 3.6 1M17 13l3 3-3 3M20 16h-6"/></svg>
+          <span class="sr">Trocar jogador</span>
+        </button>
+      </form>
+      {% else %}
+      <a class="dock-btn cor-b" href="/entrar" data-rotulo="Entrar">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c.8-3.6 3.6-5.5 7-5.5s6.2 1.9 7 5.5"/></svg>
+        <span class="sr">Entrar</span>
+      </a>
+      {% endif %}
+    </nav>
+    <p class="dock-legenda" id="dock-legenda" aria-hidden="true"></p>
+  </main>
+
+  <p class="dica-ok" id="dica-ok"><i>A</i> <span id="dica-ok-texto">Jogar</span></p>
 </div>
 
-<nav class="dicas" aria-label="Atalhos">
-  <span><i class="dir">✛</i> Escolher</span>
-  <span><i class="a">A</i> Jogar</span>
-  <a href="/historico" data-atalho="x"><i class="x">X</i> Placar da casa</a>
-  <a href="/enviar" data-atalho="y"><i class="y">Y</i> Enviar ROMs</a>
-</nav>
+<!-- Jogar junto: salas abertas + QR para os outros aparelhos -->
+<dialog id="dialogo-junto" class="dialogo dialogo-junto">
+  <h2>Jogar junto</h2>
+  <section id="salas" hidden>
+    <h3>Gente esperando</h3>
+    <ul id="lista-salas" class="lista-salas"></ul>
+  </section>
+  <p id="sem-salas" class="texto-apoio">Ninguém criou sala ainda. Abra um jogo e toque em Jogar junto para criar uma.</p>
+  <div class="convite">
+    <div id="qr" data-url="{{ lan_url }}" role="img" aria-label="QR code com o endereço"></div>
+    <p>Para entrar de outro aparelho na mesma rede Wi-Fi, aponte a câmera ou abra <strong>{{ lan_url }}</strong></p>
+  </div>
+  <div class="acoes">
+    <button type="button" class="botao botao-claro" data-botao="B" id="fechar-junto">Fechar</button>
+  </div>
+</dialog>
 {% endblock %}
 
 {% block scripts %}

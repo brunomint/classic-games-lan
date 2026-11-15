@@ -65,6 +65,49 @@ class Catalog:
                 return name
         return None
 
+    @staticmethod
+    def _arquivos_de_jogo(folder, exts):
+        """Um item por jogo: (arquivo que o emulador abre, título, tamanho total).
+
+        Jogos de CD vêm em vários arquivos:
+          - "Jogo (Track 01).bin", "(Track 02).bin"...: viram um jogo só, aberto
+            pela faixa 1 (a de dados). As outras faixas são as músicas do CD.
+          - "Jogo.cue" + .bin: abre pelo .bin; um .cue sem os arquivos que ele
+            cita fica de fora até o jogo estar completo.
+        """
+        nomes = sorted(n for n in os.listdir(folder) if os.path.splitext(n)[1].lower() in exts)
+        caminho = lambda n: os.path.join(folder, n)
+        usados = set()
+        jogos = []
+
+        for cue in [n for n in nomes if n.lower().endswith(".cue")]:
+            usados.add(cue)
+            try:
+                with open(caminho(cue), errors="replace") as f:
+                    citados = re.findall(r'^\s*FILE\s+"([^"]+)"', f.read(), re.M | re.I)
+            except OSError:
+                continue
+            citados = [os.path.basename(c) for c in citados]
+            if not citados or not all(os.path.isfile(caminho(c)) for c in citados):
+                continue                       # incompleto: falta .bin
+            usados.update(citados)
+            jogos.append((citados[0], clean_title(cue), sum(os.path.getsize(caminho(c)) for c in citados)))
+
+        faixas = {}
+        for n in nomes:
+            m = re.match(r"^(.*?)\s*\(Track 0*(\d+)\)(\.[^.]+)$", n, re.I)
+            if m and n not in usados:
+                faixas.setdefault(m.group(1), []).append((int(m.group(2)), n))
+        for base, lista in faixas.items():
+            lista.sort()
+            usados.update(n for _, n in lista)
+            jogos.append((lista[0][1], clean_title(base + ".bin"), sum(os.path.getsize(caminho(n)) for _, n in lista)))
+
+        for n in nomes:
+            if n not in usados:
+                jogos.append((n, clean_title(n), os.path.getsize(caminho(n))))
+        return sorted(jogos, key=lambda j: j[1].lower())
+
     def scan(self):
         """Relê as pastas a cada chamada (é barato e evita reiniciar o servidor)."""
         games = []
@@ -72,10 +115,7 @@ class Catalog:
             folder = os.path.join(self.roms_dir, console)
             if not os.path.isdir(folder):
                 continue
-            for filename in sorted(os.listdir(folder)):
-                if os.path.splitext(filename)[1].lower() not in exts:
-                    continue
-                title = clean_title(filename)
+            for filename, title, size in self._arquivos_de_jogo(folder, exts):
                 slug = slugify(title)
                 bios = BIOS.get(console)
                 games.append({
@@ -86,7 +126,7 @@ class Catalog:
                     "initials": initials(title),
                     "slug": slug,
                     "rom": f"{console}/{filename}",
-                    "size_mb": round(os.path.getsize(os.path.join(folder, filename)) / 1e6, 1),
+                    "size_mb": round(size / 1e6, 1),
                     # número estável: o netplay usa para separar as salas por jogo
                     "game_id": zlib.crc32(f"{console}/{slug}".encode()) & 0x7FFFFFFF,
                     # cor da etiqueta do cartucho: fixa para cada jogo, varia entre jogos

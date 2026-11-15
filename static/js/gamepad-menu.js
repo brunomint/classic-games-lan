@@ -4,8 +4,12 @@
 //   B / Esc             → volta (o que estiver marcado com data-atalho="b", senão a página anterior)
 //   X, Y                → atalhos marcados com data-atalho="x" / "y" (aparecem na barra de dicas)
 (function () {
-  const SELETOR = "a.continuar, a.sala, a.cartucho, [data-nav]";
-  const itens = () => Array.from(document.querySelectorAll(SELETOR)).filter((el) => el.offsetParent !== null);
+  const SELETOR = "a.tile, .dock-btn, a.sala, [data-nav]";
+  // com um diálogo aberto, só os itens dele contam
+  const itens = () => {
+    const raiz = document.querySelector("dialog[open]") || document;
+    return Array.from(raiz.querySelectorAll(SELETOR + ", dialog[open] button")).filter((el) => el.offsetParent !== null);
+  };
 
   function mover(dx, dy) {
     const lista = itens();

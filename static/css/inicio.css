@@ -1,231 +1,142 @@
-/* Página inicial: a "prateleira" de cartuchos do console. */
+/* Menu inicial no jeito de console moderno:
+   perfis e relógio no topo, uma fileira de capas grandes no meio (o nome do jogo
+   em foco aparece em cima dele), ícones redondos embaixo e "A Jogar" no canto. */
 
-.console {
-  max-width: 1080px;
-  margin: 0 auto;
-  padding: 0 16px 32px;
-}
+body.inicio { height: 100vh; overflow: hidden; }
 
-/* ---------- tampa do console: marca + jogador ---------- */
-
-.tampa {
+.menu {
+  position: relative;
   display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: end;
-  gap: 16px;
-  padding: 26px 0 18px;
+  grid-template-rows: auto 1fr;
+  grid-template-columns: minmax(0, 1fr);   /* a fileira rola por dentro, sem esticar a página */
+  height: 100%;
+  padding: 22px 0 18px;
 }
 
-.marca {
-  margin: 0;
-  font-size: clamp(30px, 7vw, 58px);
-  line-height: .95;
+/* ---------- topo: perfis e relógio ---------- */
+
+.topo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 clamp(16px, 4vw, 48px);
+}
+
+.perfis-topo { display: flex; align-items: center; gap: 10px; }
+.perfis-topo form { margin: 0; }
+
+.perfil-topo {
+  display: block;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.perfil-topo .avatar { width: 46px; height: 46px; font-size: 19px; box-shadow: 0 0 0 3px var(--plastico-claro); }
+.perfil-topo.eu .avatar { width: 54px; height: 54px; font-size: 22px; box-shadow: 0 0 0 3px var(--plastico-claro), 0 0 0 6px var(--grafite); }
+.perfil-topo:not(.eu) .avatar { opacity: .75; transition: opacity .12s ease; }
+.perfil-topo:hover .avatar,
+.perfil-topo:focus-visible .avatar { opacity: 1; }
+
+.status { display: flex; align-items: center; gap: 18px; font-stretch: 105%; }
+.relogio { font-size: 24px; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+.jogando {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-weight: 600;
+  color: var(--grafite-2);
+}
+
+.jogando::before {
+  content: "";
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--y);
+}
+
+/* ---------- centro: legenda, fileira de capas, dock ---------- */
+
+.centro {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 0;
+  min-width: 0;
+}
+
+.legenda {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  min-height: 34px;
+  margin: 0 0 12px;
+  padding-left: clamp(16px, 4vw, 48px);
+  transition: transform .18s ease;
+  white-space: nowrap;
+}
+
+.legenda strong { font-size: 24px; font-weight: 700; font-stretch: 108%; color: var(--x); }
+.legenda span { color: var(--grafite-2); font-size: 15px; }
+
+.fileira {
+  --tile: clamp(150px, 17vw, 236px);
+  display: flex;
+  gap: 14px;
+  padding: 12px clamp(16px, 4vw, 48px) 18px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scroll-padding: 0 clamp(16px, 4vw, 48px);
+  scrollbar-width: none;
+}
+
+.fileira::-webkit-scrollbar { display: none; }
+
+.tile {
+  position: relative;
+  flex: none;
+  width: var(--tile);
+  aspect-ratio: 1;
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--plastico-claro);
+  scroll-snap-align: start;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .08);
+}
+
+.tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.tile-sigla {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  background: var(--etiqueta, var(--roxo));
+  color: #fff;
+  font-size: calc(var(--tile) * .3);
   font-weight: 800;
   font-stretch: 125%;
   font-style: italic;
-  letter-spacing: -.01em;
-  color: var(--grafite);
-  /* gravado no plástico */
-  text-shadow: 0 1px 0 rgba(255, 255, 255, .7), 0 -1px 0 rgba(0, 0, 0, .12);
 }
 
-.ola { margin: 8px 0 0; font-size: 19px; font-weight: 500; color: var(--grafite-2); }
-.ola strong { color: var(--grafite); font-weight: 700; }
-
-.perfil {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.perfil form { margin: 0; }
-
-.perfil-nome { display: flex; flex-direction: column; line-height: 1.2; }
-.perfil-nome strong { font-size: 17px; }
-.perfil-nome .link-botao { font-size: 14px; color: var(--grafite-2); }
-
-/* ---------- painel: continuar, salas, jogar junto ---------- */
-
-.painel {
-  display: grid;
-  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
-  gap: 14px;
-  margin-bottom: 26px;
-}
-
-.continuar,
-.salas,
-.junto {
-  border-radius: var(--raio-plastico);
-  background: var(--plastico-claro);
-  box-shadow: 0 4px 0 var(--plastico-sombra);
-  padding: 16px 18px;
-}
-
-.continuar {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 16px;
-  align-items: center;
-  text-decoration: none;
-}
-
-.continuar h2,
-.salas h2,
-.junto h2 { margin: 0 0 4px; font-size: 15px; font-weight: 600; color: var(--grafite-2); }
-
-.continuar .titulo-jogo { display: block; font-size: 22px; font-weight: 750; font-stretch: 110%; line-height: 1.15; }
-.continuar .detalhe { display: block; margin: 4px 0 12px; color: var(--grafite-2); font-size: 15px; }
-.continuar .cartucho { width: 92px; pointer-events: none; }
-.continuar .etiqueta .sigla { font-size: 26px; }
-
-.lado { display: grid; gap: 14px; }
-
-.salas ul { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 8px; }
-
-.sala {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 8px 10px;
-  border-radius: 10px;
-  background: #f6f5f8;
-  text-decoration: none;
-}
-
-.sala .pulso {
-  width: 10px;
-  height: 10px;
-  flex: none;
-  border-radius: 50%;
-  background: var(--x);
-  box-shadow: 0 0 0 0 color-mix(in srgb, var(--x) 60%, transparent);
-  animation: pulso 1.8s ease-out infinite;
-}
-
-.sala-texto { flex: 1; min-width: 0; line-height: 1.25; }
-.sala-texto strong { display: block; }
-.sala-texto span { color: var(--grafite-2); font-size: 14px; }
-
-@keyframes pulso {
-  to { box-shadow: 0 0 0 9px transparent; }
-}
-
-.junto { display: flex; align-items: center; gap: 14px; }
-.junto p { margin: 0; font-size: 15px; color: var(--grafite-2); }
-.junto code { display: block; margin-top: 2px; color: var(--grafite); font-weight: 700; font-family: var(--fonte); font-size: 16px; }
-
-#qr {
-  width: 86px;
-  height: 86px;
-  flex: none;
-  padding: 4px;
-  border-radius: 8px;
-  background: #fff;
-}
-
-#qr svg { display: block; width: 100%; height: 100%; }
-
-/* ---------- prateleiras ---------- */
-
-.prateleira { margin-top: 26px; }
-
-.prateleira h2 {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-  margin: 0 0 14px;
-  font-size: 21px;
-  font-weight: 750;
-  font-stretch: 115%;
-}
-
-.prateleira h2 small { font-size: 15px; font-weight: 500; color: var(--grafite-2); font-stretch: 100%; }
-
-.grade {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 26px 18px;
-  padding: 18px 6px 22px;
-  border-radius: var(--raio-plastico);
-  /* a prateleira: um vão escuro com borda de plástico */
-  background: linear-gradient(to bottom, #b9b5c3, #c6c3cf 30%);
-  box-shadow: inset 0 6px 10px rgba(52, 49, 61, .25);
-}
-
-/* ---------- o cartucho (o elemento marcante da página) ---------- */
-
-.cartucho {
-  --etiqueta: var(--roxo);
-  position: relative;
-  display: block;
-  aspect-ratio: 5 / 4.4;
-  padding: 18px 12px 12px;
-  border-radius: 6px 6px 12px 12px;
-  background: linear-gradient(to bottom, #8f8b98, #7d7986);
-  color: var(--grafite);
-  text-decoration: none;
-  box-shadow: 0 6px 0 #5e5a67, 0 10px 14px rgba(0, 0, 0, .18);
-  transition: transform .14s ease, box-shadow .14s ease;
-}
-
-/* ranhuras do topo */
-.cartucho::before {
-  content: "";
-  position: absolute;
-  top: 6px;
-  left: 14%;
-  right: 14%;
-  height: 7px;
-  border-radius: 2px;
-  background: repeating-linear-gradient(to right, #6b6775 0 3px, transparent 3px 7px);
-}
-
-.etiqueta {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  height: 100%;
-  padding: 10px;
-  border-radius: 4px;
-  overflow: hidden;
-  color: #fff;
-  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .18);
-}
-
-.etiqueta img {
-  position: absolute;
-  inset: 18px 12px 12px;
-  width: calc(100% - 24px);
-  height: calc(100% - 30px);
-  object-fit: cover;
-  border-radius: 4px;
-}
-
-.etiqueta .sigla { font-size: 38px; font-weight: 800; font-stretch: 125%; font-style: italic; line-height: 1; opacity: .9; }
-.etiqueta .nome-jogo { font-size: 14px; font-weight: 650; line-height: 1.2; }
-
-.peso {
-  position: absolute;
-  top: 24px;
-  right: 18px;
-  padding: 1px 7px;
-  border-radius: 99px;
-  background: rgba(0, 0, 0, .45);
-  color: #fff;
-  font-size: 12px;
-}
-
-/* tirar da prateleira */
-.cartucho:hover,
-.cartucho:focus-visible {
-  transform: translateY(-10px) rotate(-1.2deg);
-  box-shadow: 0 6px 0 #5e5a67, 0 22px 24px rgba(0, 0, 0, .28);
-  outline: 4px solid var(--foco);
+/* item selecionado: contorno azul afastado da capa, que "respira" enquanto está em foco */
+.tile:focus-visible,
+.tile:hover {
+  outline: 5px solid var(--foco);
   outline-offset: 4px;
 }
 
-/* cor da etiqueta: cada jogo tem a sua (games.py → "cor") */
+.tile:focus-visible { animation: respira 1.6s ease-in-out infinite; }
+
+@keyframes respira {
+  50% { outline-color: color-mix(in srgb, var(--foco) 45%, #fff); }
+}
+
+/* cores para jogos sem capa (games.py → "cor") */
 .etiqueta-0 { --etiqueta: #4d3f8c; }
 .etiqueta-1 { --etiqueta: #b8323a; }
 .etiqueta-2 { --etiqueta: #2d5bb4; }
@@ -233,50 +144,163 @@
 .etiqueta-4 { --etiqueta: #c98d12; }
 .etiqueta-5 { --etiqueta: #7a2f6e; }
 .etiqueta-6 { --etiqueta: #1f6f78; }
-.etiqueta { background: var(--etiqueta, var(--roxo)); }
 
-/* corpo do cartucho por console */
-.cartucho.cor-n64,
-.cartucho.cor-megadrive { background: linear-gradient(to bottom, #4a4752, #39363f); box-shadow: 0 6px 0 #26242b, 0 10px 14px rgba(0, 0, 0, .18); }
-.cartucho.cor-gb,
-.cartucho.cor-gba { aspect-ratio: 1; }
+/* ---------- dock: ícones redondos ---------- */
 
-/* PlayStation: estojo de CD em vez de cartucho */
-.cartucho.cor-psx {
-  aspect-ratio: 1;
-  padding: 8px;
-  border-radius: 4px;
-  background: linear-gradient(135deg, #f4f4f6, #c9c8cf);
-  box-shadow: 0 5px 0 #8d8a96, 0 10px 14px rgba(0, 0, 0, .18);
+.dock {
+  display: flex;
+  align-self: center;
+  gap: clamp(10px, 2vw, 22px);
+  margin-top: clamp(18px, 5vh, 46px);
+  padding: 10px 22px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .55);
 }
 
-.cartucho.cor-psx::before {
-  top: 8px;
-  bottom: 8px;
-  left: 8px;
-  right: auto;
-  width: 10px;
-  height: auto;
-  background: #2a2830;
+.dock-form { margin: 0; display: contents; }
+
+.dock-btn {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 62px;
+  height: 62px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--plastico-claro);
+  color: var(--cor);
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .1);
 }
 
-.cartucho.cor-psx .etiqueta {
-  margin-left: 14px;
-  background:
-    radial-gradient(circle at 70% 62%, transparent 9%, rgba(255,255,255,.75) 9.5% 11%, transparent 11.5%),
-    conic-gradient(from 210deg at 70% 62%, #d8d6e0, #a7a3b6, #e9e8ee, #b9b6c6, #d8d6e0);
-  color: var(--grafite);
+.dock-btn svg {
+  width: 30px;
+  height: 30px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
-.cartucho.cor-psx .peso { top: auto; bottom: -9px; right: 6px; }
+.dock-btn.cor-a { --cor: var(--a); }
+.dock-btn.cor-b { --cor: #b8860b; }
+.dock-btn.cor-x { --cor: var(--x); }
+.dock-btn.cor-y { --cor: var(--y); }
 
-.cartucho.cor-psx .etiqueta img { inset: 8px 8px 8px 22px; width: calc(100% - 30px); height: calc(100% - 16px); }
+.dock-btn:focus-visible,
+.dock-btn:hover { outline: 4px solid var(--foco); outline-offset: 3px; }
 
-@media (max-width: 760px) {
-  .painel { grid-template-columns: 1fr; }
-  .tampa { grid-template-columns: 1fr; }
-  .grade { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 22px 12px; }
-  .etiqueta .sigla { font-size: 30px; }
-  .continuar .cartucho { width: 72px; }
-  .continuar .etiqueta .sigla { font-size: 20px; }
+.selo-salas {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 99px;
+  background: var(--a);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 22px;
+}
+
+.dock-legenda {
+  min-height: 24px;
+  margin: 10px 0 0;
+  text-align: center;
+  color: var(--x);
+  font-weight: 600;
+}
+
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ---------- canto: "A Jogar" ---------- */
+
+.dica-ok {
+  position: absolute;
+  right: clamp(16px, 4vw, 48px);
+  bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-weight: 600;
+}
+
+.dica-ok i {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--grafite);
+  color: #fff;
+  font-style: normal;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+/* ---------- sem jogos ---------- */
+
+.centro .vazio { display: grid; gap: 14px; justify-items: center; }
+.centro .vazio p { margin: 0; }
+
+/* ---------- diálogo "Jogar junto" ---------- */
+
+.dialogo-junto { width: min(520px, calc(100vw - 24px)); }
+.dialogo-junto h3 { margin: 0 0 8px; font-size: 16px; color: var(--grafite-2); font-weight: 600; }
+
+.lista-salas { list-style: none; margin: 0 0 16px; padding: 0; display: grid; gap: 8px; }
+
+.sala {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--plastico);
+  text-decoration: none;
+}
+
+.sala .pulso { width: 10px; height: 10px; flex: none; border-radius: 50%; background: var(--x); }
+.sala-texto { flex: 1; min-width: 0; line-height: 1.3; }
+.sala-texto strong { display: block; }
+.sala-texto span { color: var(--grafite-2); font-size: 14px; }
+.sala:focus-visible, .sala:hover { outline: 3px solid var(--foco); outline-offset: 2px; }
+
+.convite { display: flex; align-items: center; gap: 14px; margin: 6px 0 4px; }
+.convite p { margin: 0; font-size: 15px; color: var(--grafite-2); }
+.convite strong { color: var(--grafite); }
+
+#qr { width: 104px; height: 104px; flex: none; padding: 5px; border-radius: 8px; background: #fff; box-shadow: inset 0 0 0 1px var(--plastico-sombra); }
+#qr svg { display: block; width: 100%; height: 100%; }
+
+/* ---------- telas pequenas e de toque ---------- */
+
+@media (max-width: 700px) {
+  body.inicio { height: auto; min-height: 100vh; overflow: auto; }
+  .menu { min-height: 100vh; }
+  .fileira { --tile: 42vw; }
+  .legenda { flex-direction: column; gap: 0; transform: none !important; }
+  .legenda strong { font-size: 20px; }
+  .dock-btn { width: 56px; height: 56px; }
+  .dock { padding: 8px 14px; }
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .dica-ok { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .legenda { transition: none; }
 }

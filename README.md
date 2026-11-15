@@ -85,19 +85,25 @@ BIOS do PS1: `bios/scph5501.bin`.
 
 ## Visual
 
-Tema do próprio Super Nintendo: plástico cinza-lilás, cartuchos de verdade na
-prateleira (cada jogo com a cor de etiqueta dele; PS1 vira estojo de CD) e as
-quatro cores dos botões como sistema de ações, iguais em todas as páginas:
+Menu no jeito de console moderno: perfis da casa e relógio no topo, uma fileira
+de capas (o último jogo que você jogou vem primeiro; o nome do jogo em foco
+aparece em cima dele), ícones redondos embaixo (Jogar junto, Placar da casa,
+Enviar ROMs, Trocar jogador) e "A Jogar" no canto. As cores dos botões do
+controle continuam como sistema de ações em todas as páginas:
 
 | botão | cor | significa |
 |---|---|---|
 | A | vermelho | jogar, confirmar |
 | B | amarelo | voltar, cancelar |
-| X | azul | jogar junto (sala), placar |
+| X | azul | jogar junto |
 | Y | verde | adicionar jogador, enviar ROMs |
 
-Dá para navegar tudo com controle (direcional + A/B/X/Y) ou setas e Esc.
+Dá para navegar tudo com controle (direcional + A/B/X/Y) ou setas, Enter e Esc.
 Fonte: Saira (OFL, em `static/fonts/`), sem nada de fora.
+
+**Jogos de CD em vários arquivos:** faixas "(Track 01).bin", "(Track 02).bin"...
+viram um jogo só, aberto pela faixa 1 (o jogo roda, mas sem as músicas do CD).
+Um `.cue` sem os `.bin` que ele cita fica fora do menu até o jogo estar completo.
 
 ## Estrutura
 
