@@ -3,8 +3,26 @@ roms/*/*
 bios/*
 covers/*/*
 
-# EmulatorJS é baixado à parte (ver README)
-emulatorjs/
+# EmulatorJS: vai junto, mas só com os núcleos dos consoles usados
+# (para um console novo, adicione o núcleo aqui)
+emulatorjs/cores/*
+!emulatorjs/cores/snes9x-*
+!emulatorjs/cores/fceumm-*
+!emulatorjs/cores/mupen64plus_next-*
+!emulatorjs/cores/mgba-*
+!emulatorjs/cores/gambatte-*
+!emulatorjs/cores/genesis_plus_gx-*
+!emulatorjs/cores/pcsx_rearmed-*
+!emulatorjs/cores/reports/
+emulatorjs/cores/reports/*
+!emulatorjs/cores/reports/snes9x.json
+!emulatorjs/cores/reports/fceumm.json
+!emulatorjs/cores/reports/mupen64plus_next.json
+!emulatorjs/cores/reports/mgba.json
+!emulatorjs/cores/reports/gambatte.json
+!emulatorjs/cores/reports/genesis_plus_gx.json
+!emulatorjs/cores/reports/pcsx_rearmed.json
+emulatorjs/*.map
 
 __pycache__/
 *.pyc

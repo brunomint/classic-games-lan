@@ -58,18 +58,25 @@ netplay.py      servidor de salas (substitui o servidor oficial do EmulatorJS)
 uploads.py      envio de ROMs pelo navegador
 templates/      páginas
 static/         css, js e qrcode.js
-emulatorjs/     EmulatorJS 4.3.0-pre (pasta data/ do release, com os cores)
+emulatorjs/     EmulatorJS 4.3.0-pre (pasta data/ do release, só com os núcleos usados)
 roms/ bios/ covers/   seus arquivos (fora do git)
 ```
 
 ## EmulatorJS
 
-Usa o **4.3.0-pre**, a primeira versão com netplay por WebRTC.
-Para reinstalar: baixe `4.3.0-pre.7z` em
-https://github.com/EmulatorJS/EmulatorJS/releases e extraia a pasta `data/`
-como `emulatorjs/`.
+Usa o **4.3.0-pre**, a primeira versão com netplay por WebRTC (licença GPL-3.0,
+em `emulatorjs/LICENSE`). Já vem no repositório, com o núcleo padrão de cada
+console da tabela acima: snes9x, fceumm, mupen64plus_next, mgba, gambatte,
+genesis_plus_gx e pcsx_rearmed.
+
+Para outro console: baixe `4.3.0-pre.7z` em
+https://github.com/EmulatorJS/EmulatorJS/releases, copie o núcleo de
+`data/cores/` (os 4 arquivos `.data` + `reports/<núcleo>.json`) para
+`emulatorjs/cores/`, libere-o no `.gitignore` e adicione o console em `games.py`.
+
+Alguns núcleos (ex.: snes9x) proíbem uso comercial.
 
 ## Observações
 
 - Qualquer aparelho da rede pode enviar ROMs. Use só em rede de confiança.
-- ROMs têm direitos autorais: só o código vai para o git.
+- ROMs e BIOS têm direitos autorais e não vão para o git.
