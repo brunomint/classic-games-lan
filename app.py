@@ -14,6 +14,7 @@ from flask_socketio import SocketIO
 
 from auth import login_obrigatorio, register_auth
 import db
+import capas
 from games import Catalog
 from netplay import list_rooms, register_netplay
 from registro import register_registro
@@ -124,4 +125,6 @@ def emulatorjs(filename):
 if __name__ == "__main__":
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 5000
     print(f"\n  Classic Games LAN  →  http://{lan_ip()}:{port}\n")
+    # capas que faltam: baixa da internet em segundo plano (sem internet, só pula)
+    capas.em_segundo_plano(capas.baixar_faltantes, BASE_DIR)
     socketio.run(app, host="0.0.0.0", port=port, allow_unsafe_werkzeug=True)

@@ -3,8 +3,12 @@ import os
 
 from flask import jsonify, render_template, request
 
+import capas
 from auth import login_obrigatorio
 from games import CONSOLES
+
+
+CONSOLES_POR_LABEL = {label: key for key, (label, _, _) in CONSOLES.items()}
 
 
 def _console_for(filename, chosen):
@@ -52,4 +56,8 @@ def register_uploads(app, catalog):
                 continue
             file.save(dest)
             results.append({"arquivo": name, "ok": True, "console": CONSOLES[console][0]})
+        novas = {f"{CONSOLES_POR_LABEL[r['console']]}/{r['arquivo']}" for r in results if r["ok"]}
+        if novas:
+            # busca a capa das ROMs novas sem fazer quem enviou esperar
+            capas.em_segundo_plano(capas.baixar_faltantes, catalog.base_dir, roms=novas, avisar=lambda m: None)
         return jsonify(results)

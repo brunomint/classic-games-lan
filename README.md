@@ -76,8 +76,11 @@ quem joga com quem e as partidas recentes.
 | `roms/megadrive` | Mega Drive | .md .gen .smd |
 | `roms/psx` | PlayStation | .bin .cue .chd .pbp .iso |
 
-Capas (opcional): `covers/<console>/<slug>.jpg`. O slug é o final do link do jogo,
-ex.: `covers/snes/top-gear.jpg`.
+**Capas:** baixadas sozinhas do [libretro-thumbnails](https://github.com/libretro-thumbnails)
+(o acervo do RetroArch) quando o servidor liga e a cada ROM enviada; sem internet,
+o cartucho mostra a sigla. Para buscar na mão: `python capas.py` (ou `--de-novo`
+para tentar de novo as que não foram achadas). Também dá para pôr a sua:
+`covers/<console>/<slug>.png` (o slug é o final do link do jogo).
 BIOS do PS1: `bios/scph5501.bin`.
 
 ## Visual
