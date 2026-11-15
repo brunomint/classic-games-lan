@@ -12,6 +12,7 @@ window.CG = window.CG || {};
 
   function opcao(valor, texto, marcado) {
     const label = document.createElement("label");
+    label.tabIndex = 0;   // focável pelo controle; A marca a opção
     const input = document.createElement("input");
     input.type = "radio";
     input.name = "vencedor";
@@ -38,6 +39,9 @@ window.CG = window.CG || {};
         form.placar.value = p.placar || "";
         erro.hidden = true;
         dialogo.showModal();
+        // foco na opção marcada (ou na primeira), para o controle começar dali
+        const marcada = opcoes.querySelector("input:checked");
+        (marcada ? marcada.closest("label") : opcoes.querySelector("label")).focus();
       })
       .catch(() => {});
   };

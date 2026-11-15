@@ -2,6 +2,7 @@
 {% block title %}{{ game.title }} · Classic Games{% endblock %}
 {% block css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/jogo.css') }}">{% endblock %}
 {% block body_class %}jogo{% endblock %}
+{% from "_teclado.html" import teclado %}
 
 {% block content %}
 <header class="barra">
@@ -16,6 +17,7 @@
   </div>
 
   <div class="acoes-jogo">
+    <button type="button" class="botao botao-peq botao-tela" id="abrir-pausa" title="Select + Start no controle">Menu</button>
     <button type="button" class="botao botao-peq" data-botao="X" id="jogar-junto" hidden
             title="Criar uma sala para os outros aparelhos entrarem">Jogar junto</button>
     <button type="button" class="botao botao-peq botao-tela" id="abrir-resultado" hidden>Anotar resultado</button>
@@ -35,25 +37,54 @@
 {% include "_dialogo_resultado.html" %}
 
 <!-- Mais um jogador neste aparelho -->
-<dialog id="dialogo-local" class="dialogo">
+<dialog id="dialogo-local" class="dialogo dialogo-local">
   <form id="form-local">
     <h2 id="titulo-local">Quem mais está jogando aqui?</h2>
-    <p class="texto-apoio" id="texto-local">Jogador 2 (ou 3, 4) neste aparelho, com outro controle.
-      Entre com o nome e o PIN dele, ou crie um novo.</p>
-    <label class="campo" id="campo-nome-local">
+    <p class="texto-apoio" id="texto-local">Escolha quem vai jogar com o outro controle e digite o PIN.</p>
+    {% if perfis %}
+    <div class="perfis perfis-local" id="perfis-local">
+      {% for p in perfis %}
+      <button type="button" class="perfil-btn" data-nome="{{ p.nome }}">
+        <span class="avatar avatar-{{ (loop.index) % 5 }}" aria-hidden="true">{{ p.nome[:1]|upper }}</span>
+        <span>{{ p.nome }}</span>
+      </button>
+      {% endfor %}
+      <button type="button" class="perfil-btn" data-nome="">
+        <span class="avatar avatar-novo" aria-hidden="true">+</span>
+        <span>Outra pessoa</span>
+      </button>
+    </div>
+    {% endif %}
+    <label class="campo" id="campo-nome-local" {% if perfis %}hidden{% endif %}>
       <span>Nome</span>
-      <input type="text" name="nome" maxlength="20" required autocomplete="off" autocapitalize="words">
+      <input type="text" name="nome" maxlength="20" autocomplete="off" autocapitalize="words">
     </label>
-    <label class="campo">
+    <label class="campo campo-pin" id="campo-pin-local" {% if perfis %}hidden{% endif %}>
       <span id="rotulo-pin-local">PIN</span>
-      <input type="password" name="pin" inputmode="numeric" pattern="[0-9]{4,8}" maxlength="8" required autocomplete="off">
+      <input type="password" name="pin" id="pin-local" inputmode="numeric" pattern="[0-9]{4,8}" maxlength="8" required autocomplete="off">
     </label>
+    {{ teclado("#pin-local", id="teclado-local", ok="Entrar", escondido=(perfis|length > 0)) }}
     <p class="erro-form" id="erro-local" hidden></p>
     <div class="acoes">
       <button type="button" class="botao botao-claro" data-botao="B" id="cancelar-local">Cancelar</button>
       <button type="submit" class="botao" data-botao="A" id="enviar-local">Entrar</button>
     </div>
   </form>
+</dialog>
+
+<!-- Menu de pausa: Select + Start no controle, ou o botão Menu -->
+<dialog id="dialogo-pausa" class="dialogo dialogo-pausa">
+  <h2>Jogo pausado</h2>
+  <div class="menu-pausa">
+    <button type="button" class="botao" data-botao="B" id="pausa-continuar">Continuar jogando</button>
+    <button type="button" class="botao botao-claro" id="pausa-salvar">Salvar agora</button>
+    <button type="button" class="botao botao-claro" id="pausa-carregar">Carregar save</button>
+    <button type="button" class="botao botao-claro" data-botao="X" id="pausa-sala">Criar sala para jogar junto</button>
+    <button type="button" class="botao botao-claro" data-botao="Y" id="pausa-jogador">Adicionar jogador</button>
+    <button type="button" class="botao botao-claro" id="pausa-resultado">Anotar resultado</button>
+    <a class="botao botao-claro" href="/" id="pausa-sair">Sair do jogo</a>
+  </div>
+  <p class="texto-apoio dica-pausa">No controle: Select + Start abre este menu. B continua o jogo.</p>
 </dialog>
 
 <!-- Continuar do save automático -->
@@ -84,5 +115,8 @@
 <script src="{{ url_for('static', filename='js/locais.js') }}"></script>
 <script src="{{ url_for('static', filename='js/saves.js') }}"></script>
 <script src="{{ url_for('static', filename='js/autosave.js') }}"></script>
+<script src="{{ url_for('static', filename='js/teclado.js') }}"></script>
+<script src="{{ url_for('static', filename='js/pausa.js') }}"></script>
+<script src="{{ url_for('static', filename='js/gamepad-menu.js') }}"></script>
 <script src="{{ url_for('static', filename='js/play.js') }}"></script>
 {% endblock %}

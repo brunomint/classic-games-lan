@@ -179,3 +179,19 @@ body.jogo {
 .apagar-save:hover { background: var(--a); }
 .vazio-saves { color: var(--grafite-2); }
 .dialogo .texto-apoio { margin-top: -6px; color: var(--grafite-2); }
+
+/* ---------- menu de pausa ---------- */
+
+.dialogo-pausa { width: min(380px, calc(100vw - 24px)); }
+.menu-pausa { display: flex; flex-direction: column; gap: 10px; }
+.menu-pausa .botao { justify-content: flex-start; width: 100%; }
+.dialogo .dica-pausa { margin: 16px 0 0; font-size: 14px; }
+
+/* ---------- "+ Jogador": perfis menores dentro do diálogo ---------- */
+
+.dialogo-local { width: min(460px, calc(100vw - 24px)); }
+.perfis-local { margin: 4px 0 8px; gap: 10px; }
+.perfis-local .perfil-btn { width: 84px; }
+.perfis-local .perfil-btn .avatar { width: 56px; height: 56px; font-size: 24px; }
+.dialogo-local .teclado { max-width: 300px; align-self: center; width: 100%; }
+.dialogo-local .tecla { aspect-ratio: 2; font-size: 22px; }

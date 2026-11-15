@@ -130,7 +130,9 @@ body.inicio { height: 100vh; overflow: hidden; }
   outline-offset: 4px;
 }
 
-.tile:focus-visible { animation: respira 1.6s ease-in-out infinite; }
+.tile:focus-visible,
+.usando-controle .tile:focus { outline: 5px solid var(--foco); outline-offset: 4px; animation: respira 1.6s ease-in-out infinite; }
+.usando-controle .dock-btn:focus { outline: 4px solid var(--foco); outline-offset: 3px; }
 
 @keyframes respira {
   50% { outline-color: color-mix(in srgb, var(--foco) 45%, #fff); }

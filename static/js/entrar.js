@@ -35,17 +35,4 @@
     });
   });
 
-  // teclado na tela (toque, controle) — o teclado físico continua funcionando no campo
-  teclado.addEventListener("click", (e) => {
-    const tecla = e.target.closest("[data-tecla]");
-    if (!tecla) return;
-    if (tecla.dataset.tecla === "apagar") pin.value = pin.value.slice(0, -1);
-    else if (pin.value.length < 8) pin.value += tecla.dataset.tecla;
-  });
-
-  // digitar números com o foco no teclado da tela também vale
-  teclado.addEventListener("keydown", (e) => {
-    if (/^\d$/.test(e.key) && pin.value.length < 8) { pin.value += e.key; e.preventDefault(); }
-    if (e.key === "Backspace") { pin.value = pin.value.slice(0, -1); e.preventDefault(); }
-  });
 })();

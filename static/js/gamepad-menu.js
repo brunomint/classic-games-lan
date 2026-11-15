@@ -1,21 +1,37 @@
 // Navegar pelas páginas com o controle (ou o teclado), como no menu de um console.
 //   direcional / setas  → move o foco entre os itens navegáveis
 //   A / Enter           → abre o item em foco
-//   B / Esc             → volta (o que estiver marcado com data-atalho="b", senão a página anterior)
-//   X, Y                → atalhos marcados com data-atalho="x" / "y" (aparecem na barra de dicas)
+//   B / Esc             → fecha o diálogo aberto; sem diálogo, volta (data-atalho="b" ou página anterior)
+//   X, Y                → atalhos marcados com data-atalho="x" / "y"
+//
+// Na tela do jogo (body.jogo) o controle é do jogo: aqui só vale dentro dos nossos
+// diálogos (menu de pausa, resultado...) e para abrir o menu de pausa (Select + Start).
+// Os controles com numeração própria são traduzidos por perfis-controle.js.
 (function () {
-  const SELETOR = "a.tile, .dock-btn, a.sala, [data-nav]";
+  const SELETOR = [
+    "a.tile", ".dock-btn", "a.sala", "[data-nav]",
+    "dialog[open] button", "dialog[open] a[href]", "dialog[open] .opcoes label",
+    "dialog[open] input:not([type=hidden]):not([type=radio])", "dialog[open] select",
+  ].join(", ");
+  const naTelaDoJogo = () => document.body.classList.contains("jogo");
+  const dialogoAberto = () => document.querySelector("dialog[open]");
+
   // com um diálogo aberto, só os itens dele contam
-  const itens = () => {
-    const raiz = document.querySelector("dialog[open]") || document;
-    return Array.from(raiz.querySelectorAll(SELETOR + ", dialog[open] button")).filter((el) => el.offsetParent !== null);
-  };
+  function itens() {
+    const raiz = dialogoAberto() || document;
+    return Array.from(raiz.querySelectorAll(SELETOR)).filter((el) => el.offsetParent !== null && !el.disabled);
+  }
+
+  function focar(el) {
+    el.focus();
+    el.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
+  }
 
   function mover(dx, dy) {
     const lista = itens();
     if (!lista.length) return;
     const atual = document.activeElement;
-    if (!lista.includes(atual)) { lista[0].focus(); return; }
+    if (!lista.includes(atual)) { focar(lista[0]); return; }
 
     const r0 = atual.getBoundingClientRect();
     const c0 = { x: r0.left + r0.width / 2, y: r0.top + r0.height / 2 };
@@ -29,56 +45,102 @@
       const vx = c.x - c0.x;
       const vy = c.y - c0.y;
       // só considera itens na direção pedida
-      if (dx && Math.sign(vx) !== dx) continue;
-      if (dy && Math.sign(vy) !== dy) continue;
-      if (dx && Math.abs(vy) > r0.height) continue;
-      const dist = Math.hypot(vx, vy * (dx ? 3 : 1));
+      if (dx && (Math.sign(vx) !== dx || Math.abs(vx) < 4)) continue;
+      if (dy && (Math.sign(vy) !== dy || Math.abs(vy) < 4)) continue;
+      // peso maior para o desvio lateral: prefere o vizinho "em linha"
+      const dist = dx ? Math.abs(vx) + Math.abs(vy) * 3 : Math.abs(vy) + Math.abs(vx) * 0.6;
       if (dist < melhorDist) { melhorDist = dist; melhor = el; }
     }
-    if (melhor) {
-      melhor.focus();
-      melhor.scrollIntoView({ block: "nearest", behavior: "smooth" });
-    }
+    if (melhor) focar(melhor);
   }
 
   function atalho(letra) {
-    const alvo = document.querySelector(`[data-atalho="${letra}"]`);
-    if (alvo) { alvo.click(); return true; }
+    const raiz = dialogoAberto() || document;
+    const alvo = raiz.querySelector(`[data-atalho="${letra}"]`);
+    if (alvo && alvo.offsetParent !== null) { alvo.click(); return true; }
     return false;
   }
 
   function voltar() {
-    if (document.querySelector("dialog[open]")) return;   // o diálogo cuida do próprio Esc
+    const d = dialogoAberto();
+    if (d) {
+      // fecha pelo botão de cancelar do diálogo (assim cada um faz o que precisa ao fechar)
+      const cancelar = d.querySelector('[data-botao="B"], [data-atalho="b"]');
+      if (cancelar) cancelar.click(); else d.close();
+      return;
+    }
+    if (naTelaDoJogo()) return;
     if (!atalho("b") && history.length > 1) history.back();
   }
 
+  function confirmar() {
+    const el = document.activeElement;
+    if (!itens().includes(el)) return;
+    if (el.tagName === "INPUT" && el.type !== "checkbox" && el.type !== "file") return;  // texto: usa o teclado
+    el.click();
+  }
+
+  // ---------- teclado ----------
+
   document.addEventListener("keydown", (e) => {
-    if (["INPUT", "SELECT", "TEXTAREA"].includes(e.target.tagName)) return;
+    const campo = ["INPUT", "SELECT", "TEXTAREA"].includes(e.target.tagName);
+    if (naTelaDoJogo() && !dialogoAberto()) return;
     const mapa = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
-    if (mapa[e.key]) { e.preventDefault(); mover(...mapa[e.key]); }
-    else if (e.key === "Escape") voltar();
+    if (mapa[e.key] && !(campo && (e.key === "ArrowLeft" || e.key === "ArrowRight"))) {
+      e.preventDefault();
+      document.body.classList.add("usando-controle");
+      mover(...mapa[e.key]);
+    } else if (e.key === "Escape" && !dialogoAberto()) {
+      voltar();
+    }
   });
 
-  // Gamepad API: lê os botões a cada quadro (só enquanto há controle conectado)
+  // mexeu o mouse ou tocou na tela: some o destaque de "usando controle"
+  ["pointerdown", "mousemove"].forEach((ev) =>
+    document.addEventListener(ev, () => document.body.classList.remove("usando-controle"), { passive: true }));
+
+  // ---------- controle (Gamepad API) ----------
+
   const anterior = {};
+  let rodando = false;
+
   function loop() {
     const controles = navigator.getGamepads ? Array.from(navigator.getGamepads()).filter(Boolean) : [];
     for (const gp of controles) {
-      // perfis-controle.js traduz controles com numeração própria
       const agora = CG.lerControle(gp);
       const antes = anterior[gp.index] || {};
       const apertou = (k) => agora[k] && !antes[k];
+      anterior[gp.index] = agora;
+
+      // Select + Start: menu de pausa (só na tela do jogo)
+      if (naTelaDoJogo() && agora.select && agora.start && !(antes.select && antes.start)) {
+        document.dispatchEvent(new CustomEvent("cg:menu-pausa"));
+        continue;
+      }
+      if (naTelaDoJogo() && !dialogoAberto()) continue;   // o controle é do jogo
+
+      const algum = ["esq", "dir", "cima", "baixo", "a", "b", "x", "y"].some(apertou);
+      if (algum) document.body.classList.add("usando-controle");
       if (apertou("esq")) mover(-1, 0);
       if (apertou("dir")) mover(1, 0);
       if (apertou("cima")) mover(0, -1);
       if (apertou("baixo")) mover(0, 1);
-      if (apertou("a") && itens().includes(document.activeElement)) document.activeElement.click();
+      if (apertou("a")) confirmar();
       if (apertou("b")) voltar();
       if (apertou("x")) atalho("x");
       if (apertou("y")) atalho("y");
-      anterior[gp.index] = agora;
     }
     if (controles.length) requestAnimationFrame(loop);
+    else rodando = false;
   }
-  window.addEventListener("gamepadconnected", () => requestAnimationFrame(loop));
+
+  function iniciar() {
+    if (rodando) return;
+    rodando = true;
+    requestAnimationFrame(loop);
+  }
+
+  window.addEventListener("gamepadconnected", iniciar);
+  // controles já conectados antes da página abrir aparecem no primeiro aperto
+  if (navigator.getGamepads && Array.from(navigator.getGamepads()).some(Boolean)) iniciar();
 })();

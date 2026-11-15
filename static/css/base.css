@@ -55,7 +55,8 @@ body {
 a { color: inherit; }
 img { max-width: 100%; }
 
-:focus-visible {
+:focus-visible,
+body.usando-controle :focus {
   outline: 3px solid var(--foco);
   outline-offset: 3px;
 }
@@ -213,6 +214,62 @@ body > :not(dialog):not(script) { width: 100%; }
   text-align: center;
   font-size: 17px;
 }
+
+/* ---------- escolher perfil e teclado do PIN (entrada e "+ Jogador") ---------- */
+
+.perfis {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 18px;
+  margin: 26px 0 30px;
+}
+
+.perfil-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 96px;
+  padding: 8px 4px;
+  border: 0;
+  border-radius: 14px;
+  background: none;
+  color: var(--grafite);
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.perfil-btn .avatar { width: 72px; height: 72px; font-size: 32px; transition: transform .12s ease; }
+.perfil-btn:hover .avatar,
+.perfil-btn:focus-visible .avatar { transform: scale(1.08); }
+.perfil-btn[aria-pressed="true"] .avatar { box-shadow: 0 0 0 3px var(--plastico-claro), 0 0 0 6px var(--x); }
+.perfil-btn[aria-pressed="true"] { color: var(--x); }
+
+.teclado {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.tecla {
+  aspect-ratio: 1.6;
+  border: 0;
+  border-radius: 14px;
+  background: var(--plastico-claro);
+  color: var(--grafite);
+  font: inherit;
+  font-size: 26px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 0 var(--plastico-sombra);
+}
+
+.tecla:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--plastico-sombra); }
+.tecla-apagar { color: var(--grafite-2); }
+.tecla-ok { background: var(--a); color: #fff; box-shadow: 0 4px 0 #8f1d26; }
+
 
 /* ---------- campos ---------- */
 

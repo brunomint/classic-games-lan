@@ -23,7 +23,7 @@
 
     <label class="campo">
       <span>Console</span>
-      <select name="console" id="console">
+      <select name="console" id="console" data-nav>
         <option value="auto">Descobrir pelo tipo do arquivo</option>
         {% for key, label, exts in consoles %}
         <option value="{{ key }}">{{ label }} ({{ exts|join(', ') }})</option>
@@ -31,7 +31,7 @@
       </select>
     </label>
 
-    <button type="submit" id="enviar" class="botao" data-botao="A" disabled>Enviar ROMs</button>
+    <button type="submit" id="enviar" class="botao" data-botao="A" data-nav disabled>Enviar ROMs</button>
   </form>
 
   <p class="nota">Jogo de PlayStation em vários arquivos (<code>.cue</code> e um ou mais <code>.bin</code>)? Envie todos juntos.</p>

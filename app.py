@@ -83,7 +83,9 @@ def play(console, slug):
     game = catalog.get(console, slug)
     if not game:
         abort(404)
-    return render_template("play.html", game=game)
+    with db.ler() as con:
+        perfis = [p for p in db.perfis(con) if p["id"] != session.get("jogador_id")]
+    return render_template("play.html", game=game, perfis=perfis)
 
 
 @app.get("/controles")

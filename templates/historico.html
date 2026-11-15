@@ -41,7 +41,7 @@
             {% if p.empate %}<span class="vencedor">Empate</span>
             {% elif p.vencedor %}<span class="vencedor">{{ p.vencedor }} venceu</span>{% endif %}
             {% if p.placar %}<span class="placar-numero">{{ p.placar }}</span>{% endif %}
-            <button type="button" class="link-botao" data-partida="{{ p.id }}">
+            <button type="button" class="link-botao" data-nav data-partida="{{ p.id }}">
               {{ "Corrigir" if (p.placar or p.vencedor or p.empate) else "Anotar resultado" }}
             </button>
           </div>

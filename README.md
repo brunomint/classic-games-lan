@@ -116,6 +116,11 @@ própria (adaptadores genéricos) são ajustados por `static/js/perfis-controle.
 
 O perfil vale para o menu e para o jogo (ajusta os botões do emulador uma vez
 por controle; remapeamentos feitos no menu de controles do jogo são mantidos).
+**Tudo pelo controle, como num console:** direcional escolhe, A confirma, B volta
+ou fecha a janela aberta. Na entrada e no "+ Jogador", o PIN é digitado num
+teclado na tela. No jogo, **Select + Start** pausa e abre o menu (continuar,
+salvar, carregar, criar sala, adicionar jogador, anotar resultado, sair).
+
 Para ver o que um controle manda, abra **/controles** ("Testar controles").
 Para incluir um controle novo, acrescente um item em `PERFIS`.
 

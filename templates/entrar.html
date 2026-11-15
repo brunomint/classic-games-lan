@@ -2,6 +2,7 @@
 {% block title %}Quem está jogando? · Classic Games{% endblock %}
 {% block css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/paginas.css') }}">{% endblock %}
 {% block body_class %}entrada{% endblock %}
+{% from "_teclado.html" import teclado %}
 
 {% block content %}
 <main class="entrada-main">
@@ -49,16 +50,11 @@
              {% if criar or nome %}autofocus{% endif %}>
     </label>
 
-    <div class="teclado" id="teclado" aria-label="Teclado do PIN" {% if perfis and not nome and not criar %}hidden{% endif %}>
-      {% for n in [1, 2, 3, 4, 5, 6, 7, 8, 9] %}<button type="button" class="tecla" data-nav data-tecla="{{ n }}">{{ n }}</button>{% endfor %}
-      <button type="button" class="tecla tecla-apagar" data-nav data-tecla="apagar" aria-label="Apagar">⌫</button>
-      <button type="button" class="tecla" data-nav data-tecla="0">0</button>
-      <button type="submit" class="tecla tecla-ok" data-nav aria-label="{{ 'Criar jogador' if criar else 'Entrar' }}">OK</button>
-    </div>
+    {{ teclado("#pin", id="teclado", ok=("Criar jogador" if criar else "Entrar"), escondido=(perfis and not nome and not criar)) }}
 
     {% if erro %}<p class="erro-form" role="alert">{{ erro }}</p>{% endif %}
 
-    <button type="submit" class="botao" data-botao="A" id="botao-entrar"
+    <button type="submit" class="botao" data-botao="A" data-nav id="botao-entrar"
             {% if perfis and not nome and not criar %}hidden{% endif %}>{{ "Criar jogador" if criar else "Entrar" }}</button>
   </form>
 </main>
@@ -75,6 +71,7 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="{{ url_for('static', filename='js/teclado.js') }}"></script>
 <script src="{{ url_for('static', filename='js/entrar.js') }}"></script>
 <script src="{{ url_for('static', filename='js/gamepad-menu.js') }}"></script>
 {% endblock %}
