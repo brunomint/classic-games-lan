@@ -3,6 +3,7 @@
 //   A / Enter           → abre o item em foco
 //   B / Esc             → fecha o diálogo aberto; sem diálogo, volta (data-atalho="b" ou página anterior)
 //   X, Y                → atalhos marcados com data-atalho="x" / "y"
+//   L1, R1              → evento cg:aba (troca a aba de consoles do menu inicial)
 //
 // Na tela do jogo (body.jogo) o controle é do jogo: aqui só vale dentro dos nossos
 // diálogos (menu de pausa, resultado...) e para os atalhos com Select:
@@ -131,6 +132,12 @@
         if (combo("r1")) document.dispatchEvent(new CustomEvent("cg:salvar-rapido"));
         if (combo("l1")) document.dispatchEvent(new CustomEvent("cg:carregar-rapido"));
         continue;   // o resto do controle é do jogo
+      }
+
+      // L1 / R1 fora do jogo: troca a aba de consoles do menu inicial
+      if (!dialogoAberto()) {
+        if (apertou("l1")) document.dispatchEvent(new CustomEvent("cg:aba", { detail: { passo: -1 } }));
+        if (apertou("r1")) document.dispatchEvent(new CustomEvent("cg:aba", { detail: { passo: 1 } }));
       }
 
       const algum = ["esq", "dir", "cima", "baixo", "a", "b", "x", "y"].some(apertou);

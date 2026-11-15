@@ -80,7 +80,14 @@ def index():
     jogos.sort(key=lambda g: (ordem.index(g["game_id"]) if g["game_id"] in recentes else len(ordem)))
     for g in jogos:
         g["jogou_em"] = recentes.get(g["game_id"])
-    return render_template("index.html", jogos=jogos, perfis=perfis)
+    # abas de console acima da fileira: só os consoles que têm jogo, em ordem alfabética
+    abas = {}
+    for g in jogos:
+        aba = abas.setdefault(g["console"], {"console": g["console"], "rotulo": g["console_label"], "total": 0})
+        aba["total"] += 1
+    abas = sorted(abas.values(), key=lambda a: a["rotulo"].lower())
+    tem_recentes = any(g["jogou_em"] for g in jogos)
+    return render_template("index.html", jogos=jogos, perfis=perfis, abas=abas, tem_recentes=tem_recentes)
 
 
 @app.get("/jogo/<console>/<slug>")

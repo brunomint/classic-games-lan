@@ -36,6 +36,27 @@
 
   <main class="centro">
     {% if jogos %}
+    <div class="barra-jogos">
+      <nav class="abas" id="abas" aria-label="Consoles">
+        <span class="dica-ombro" aria-hidden="true">L</span>
+        <button type="button" class="aba" data-nav data-aba="todos" aria-pressed="true">Todos <small>{{ jogos|length }}</small></button>
+        {% if tem_recentes %}
+        <button type="button" class="aba" data-nav data-aba="recentes" aria-pressed="false">Recentes</button>
+        {% endif %}
+        {% if abas|length > 1 %}
+        {% for a in abas %}
+        <button type="button" class="aba" data-nav data-aba="{{ a.console }}" aria-pressed="false">{{ a.rotulo }} <small>{{ a.total }}</small></button>
+        {% endfor %}
+        {% endif %}
+        <span class="dica-ombro" aria-hidden="true">R</span>
+      </nav>
+      <button type="button" class="botao-pesquisa" data-nav id="abrir-pesquisa" aria-haspopup="dialog">
+        {{ icone("lupa") }}
+        <span id="rotulo-pesquisa">Pesquisar</span>
+      </button>
+      <button type="button" class="limpar-pesquisa" data-nav id="limpar-pesquisa" hidden aria-label="Limpar pesquisa">×</button>
+    </div>
+
     <div class="legenda" aria-live="polite">
       <strong id="titulo-foco">{{ jogos[0].title }}</strong>
       <span id="info-foco"></span>
@@ -44,7 +65,7 @@
     <div class="fileira" id="fileira" role="list">
       {% for g in jogos %}
       <a class="tile" role="listitem" href="/jogo/{{ g.console }}/{{ g.slug }}"
-         data-titulo="{{ g.title }}"
+         data-titulo="{{ g.title }}" data-console="{{ g.console }}"{% if g.jogou_em %} data-recente{% endif %}
          data-info="{{ g.console_label }}{% if g.jogou_em %}, você jogou {{ g.jogou_em|quando }}{% endif %}{% if g.size_mb > 50 %}, {{ g.size_mb|round|int }} MB{% endif %}"
          aria-label="{{ g.title }}, {{ g.console_label }}">
         {% if g.cover %}
@@ -54,6 +75,10 @@
         {% endif %}
       </a>
       {% endfor %}
+    </div>
+    <div class="sem-resultado" id="sem-resultado" hidden>
+      <p id="sem-resultado-texto"></p>
+      <button type="button" class="botao botao-claro" data-nav id="limpar-sem-resultado">Limpar pesquisa</button>
     </div>
     {% else %}
     <div class="vazio">
@@ -100,6 +125,32 @@
   <p class="dica-ok" id="dica-ok"><i>A</i> <span id="dica-ok-texto">Jogar</span></p>
 </div>
 
+<!-- Pesquisa: teclado na tela (controle e toque) e os jogos encontrados -->
+<dialog id="dialogo-pesquisa" class="dialogo dialogo-pesquisa" aria-labelledby="titulo-pesquisa">
+  <h2 id="titulo-pesquisa">Pesquisar jogo</h2>
+  <label class="campo-pesquisa">
+    {{ icone("lupa") }}
+    <input type="search" id="campo-pesquisa" placeholder="Nome do jogo" autocomplete="off" spellcheck="false" enterkeyhint="done">
+  </label>
+  <div class="teclado-letras" id="teclado-letras" aria-label="Teclado">
+    {% for linha in ["1234567890", "QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"] %}
+    <div class="linha-teclas">
+      {% for c in linha %}<button type="button" class="tecla-letra" data-letra="{{ c }}">{{ c }}</button>{% endfor %}
+    </div>
+    {% endfor %}
+    <div class="linha-teclas">
+      <button type="button" class="tecla-letra tecla-larga" data-letra="apagar" aria-label="Apagar">⌫ Apagar</button>
+      <button type="button" class="tecla-letra tecla-espaco" data-letra=" ">Espaço</button>
+      <button type="button" class="tecla-letra tecla-larga" data-letra="limpar">Limpar</button>
+    </div>
+  </div>
+  <p class="contagem-pesquisa" id="contagem-pesquisa" aria-live="polite"></p>
+  <ul class="resultados" id="resultados"></ul>
+  <div class="acoes">
+    <button type="button" class="botao" data-botao="B" id="fechar-pesquisa">Ver na fileira</button>
+  </div>
+</dialog>
+
 <!-- Jogar junto: salas abertas + QR para os outros aparelhos -->
 <dialog id="dialogo-junto" class="dialogo dialogo-junto">
   <h2>Jogar junto</h2>
@@ -121,5 +172,6 @@
 {% block scripts %}
 <script src="{{ url_for('static', filename='vendor/qrcode.js') }}"></script>
 <script src="{{ url_for('static', filename='js/home.js') }}"></script>
+<script src="{{ url_for('static', filename='js/filtro-jogos.js') }}"></script>
 <script src="{{ url_for('static', filename='js/gamepad-menu.js') }}"></script>
 {% endblock %}

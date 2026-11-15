@@ -31,14 +31,29 @@
       t.addEventListener("focus", () => mostrarJogo(t));
       t.addEventListener("mouseenter", () => mostrarJogo(t));
     });
+    const primeiroVisivel = () => tiles.find((t) => !t.hidden);
     fileira.addEventListener("scroll", () => {
-      const atual = document.activeElement.classList.contains("tile") ? document.activeElement : tiles[0];
-      mostrarJogo(atual);
+      const ativo = document.activeElement;
+      const atual = ativo.classList.contains("tile") && !ativo.hidden ? ativo : primeiroVisivel();
+      if (atual) mostrarJogo(atual);
     }, { passive: true });
+
+    // filtro-jogos.js trocou a aba ou a pesquisa: a legenda vai para o primeiro jogo que sobrou
+    document.addEventListener("cg:fileira-mudou", (e) => {
+      const primeiro = primeiroVisivel();
+      if (!primeiro) return;
+      const ativo = document.activeElement;
+      const perdeuFoco = ativo && ativo.classList.contains("tile") && ativo.hidden;
+      if (perdeuFoco || (e.detail && e.detail.focarPrimeiro && !document.querySelector("dialog[open]"))) {
+        primeiro.focus({ preventScroll: true });
+      }
+      const atual = document.activeElement.classList.contains("tile") ? document.activeElement : primeiro;
+      requestAnimationFrame(() => mostrarJogo(atual));
+    });
     if (tiles.length) {
       mostrarJogo(tiles[0]);
       // como num console: já começa com o primeiro jogo selecionado
-      if (window.matchMedia("(hover: hover)").matches) tiles[0].focus({ preventScroll: true });
+      if (window.matchMedia("(hover: hover)").matches) (primeiroVisivel() || tiles[0]).focus({ preventScroll: true });
     }
   }
 
