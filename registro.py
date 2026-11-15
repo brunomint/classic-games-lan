@@ -2,6 +2,7 @@
 import os
 import re
 import uuid
+import zlib
 from datetime import datetime
 
 from flask import abort, jsonify, render_template, request, send_from_directory
@@ -23,6 +24,18 @@ def _jogador_id(valor):
     if not isinstance(valor, str) or not ID_VALIDO.match(valor):
         abort(400, "jogador_id inválido")
     return valor
+
+
+def _descomprimir(dados):
+    """gzip com limite de tamanho (evita 'bomba' de compressão)."""
+    d = zlib.decompressobj(16 + zlib.MAX_WBITS)
+    try:
+        saida = d.decompress(dados, MAX_SAVE_BYTES)
+    except zlib.error:
+        abort(400, "Save comprimido inválido")
+    if d.unconsumed_tail:
+        abort(413)
+    return saida
 
 
 def duracao(segundos):
@@ -79,7 +92,7 @@ def register_registro(app, catalog):
         with db.conectar() as con:
             locais = []
             if antiga and db.participacao_do_jogador(con, antiga, jogador_id):
-                locais = db.jogadores_locais(con, antiga)      # lê antes de encerrar
+                locais = db.locais_para_retomar(con, antiga)   # lê antes de encerrar
                 db.encerrar_participacao(con, antiga, jogador_id=jogador_id)
             if sala:
                 nova = db.nova_participacao(con, jogador_id, jogo, sala=str(sala)[:64], papel=papel)
@@ -145,7 +158,7 @@ def register_registro(app, catalog):
             dono = _minha_participacao(con, dados)
             local_id = int(dados.get("local_id") or 0)
             if any(l["participacao_id"] == local_id for l in db.jogadores_locais(con, dono)):
-                db.encerrar_participacao(con, local_id)
+                db.remover_local(con, local_id)
             return jsonify(locais=db.jogadores_locais(con, dono))
 
     # ---------- partidas e resultado ----------
@@ -187,13 +200,24 @@ def register_registro(app, catalog):
             abort(400, "Faltou o estado")
         if request.content_length and request.content_length > MAX_SAVE_BYTES:
             abort(413)
+        automatico = request.form.get("automatico") == "1"
+        # save automático guardado no aparelho e enviado depois: mantém a hora original
+        criado_em = None
+        if automatico and (request.form.get("criado_em") or "").isdigit():
+            criado_em = min(int(request.form["criado_em"]) // 1000, db.agora())
 
         pasta_rel = os.path.join(jogador_id, str(jogo["game_id"]))
         pasta = os.path.join(db.SAVES_DIR, pasta_rel)
         os.makedirs(pasta, exist_ok=True)
         base = uuid.uuid4().hex
         arquivo = os.path.join(pasta_rel, base + ".state")
-        estado.save(os.path.join(db.SAVES_DIR, arquivo))
+        if request.form.get("comprimido") == "gzip":
+            # o save automático vem comprimido para caber no envio rápido de quando a tela apaga
+            dados = _descomprimir(estado.read())
+            with open(os.path.join(db.SAVES_DIR, arquivo), "wb") as f:
+                f.write(dados)
+        else:
+            estado.save(os.path.join(db.SAVES_DIR, arquivo))
 
         imagem = None
         foto = request.files.get("imagem")
@@ -203,7 +227,13 @@ def register_registro(app, catalog):
             foto.save(os.path.join(db.SAVES_DIR, imagem))
 
         with db.conectar() as con:
-            save_id = db.registrar_save(con, jogador_id, jogo, arquivo, imagem)
+            save_id, antigos = db.registrar_save(con, jogador_id, jogo, arquivo, imagem,
+                                                 automatico=automatico, criado_em=criado_em)
+        for rel in antigos:
+            try:
+                os.remove(os.path.join(db.SAVES_DIR, rel))
+            except FileNotFoundError:
+                pass
         return jsonify(id=save_id)
 
     @app.get("/api/saves")
@@ -214,6 +244,7 @@ def register_registro(app, catalog):
             saves = db.listar_saves(con, jogador_id, int(request.args.get("game_id") or 0))
         for s in saves:
             s["quando"] = data_hora(s["criado_em"])
+            s["automatico"] = bool(s["automatico"])
             s["imagem_url"] = f"/saves/{s['id']}/imagem" if s.pop("imagem") else None
         return jsonify(saves)
 

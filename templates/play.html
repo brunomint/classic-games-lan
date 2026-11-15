@@ -49,6 +49,16 @@
   </form>
 </dialog>
 
+<!-- Continuar do save automático -->
+<dialog id="dialogo-continuar" class="dialogo">
+  <h2>Continuar de onde parou?</h2>
+  <p class="login-texto">Tem um save automático seu deste jogo, de <strong id="quando-continuar"></strong>.</p>
+  <div class="acoes">
+    <button type="button" class="botao botao-sec" id="nao-continuar">Começar do início</button>
+    <button type="button" class="botao" id="sim-continuar" autofocus>Continuar</button>
+  </div>
+</dialog>
+
 <!-- Saves no servidor -->
 <dialog id="dialogo-saves" class="dialogo">
   <h2>Carregar save</h2>
@@ -66,5 +76,6 @@
 <script src="{{ url_for('static', filename='js/registro.js') }}"></script>
 <script src="{{ url_for('static', filename='js/locais.js') }}"></script>
 <script src="{{ url_for('static', filename='js/saves.js') }}"></script>
+<script src="{{ url_for('static', filename='js/autosave.js') }}"></script>
 <script src="{{ url_for('static', filename='js/play.js') }}"></script>
 {% endblock %}

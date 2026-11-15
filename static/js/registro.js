@@ -38,11 +38,17 @@
       .catch(() => {});
   }
 
-  // o servidor encerrou a participação (ex.: aparelho dormiu); abre outra
+  // o servidor encerrou a participação (ex.: aparelho dormiu); abre outra.
+  // Mandamos o id antigo: o servidor traz de volta os jogadores deste aparelho.
   function reabrir() {
-    estado.participacaoId = null;
-    trocarSala(estado.sala, false);
+    const netplay = window.EJS_emulator && window.EJS_emulator.netplay;
+    trocarSala(estado.sala, !!(netplay && netplay.owner));
   }
+
+  // voltou para a página (tela acendeu, voltou do outro app): confere a sessão na hora
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") ping();
+  });
 
   function trocarSala(sala, anfitriao) {
     if (estado.ocupado) return;

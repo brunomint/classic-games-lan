@@ -50,6 +50,13 @@ Tudo fica num banco SQLite em `dados/classic-games.db` (fora do git), criado soz
   placar). Também dá para anotar ou corrigir depois na página **Histórico**.
 - **Saves:** os botões de salvar/carregar estado do emulador guardam no servidor
   (`dados/saves/`), por jogador e jogo, com a captura de tela do momento.
+- **Save automático:** quando a página some (tela apagou, trocou de app, aba
+  fechando) o jogo pausa e salva na hora; jogando, salva a cada 2 minutos. Se o
+  envio não terminar (sem rede, aparelho dormiu), fica guardado no navegador e
+  sobe na próxima vez. Há um só automático por jogador e jogo; ao abrir o jogo,
+  ele pergunta "Continuar de onde parou?". Em netplay, só o anfitrião salva.
+- **Sessão que expirou** (aparelho sem sinal por mais de 90 s): ao voltar, a
+  sessão reabre sozinha e os jogadores extras do aparelho voltam junto.
 
 A página **/historico** mostra tempo e vitórias por jogador, jogos mais jogados,
 quem joga com quem e as partidas recentes.

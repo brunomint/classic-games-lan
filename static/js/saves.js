@@ -51,6 +51,13 @@
       }
       const quando = document.createElement("span");
       quando.textContent = s.quando;
+      if (s.automatico) {
+        const selo = document.createElement("em");
+        selo.className = "selo-auto";
+        selo.textContent = "Automático";
+        quando.prepend(selo, " ");
+        if (!s.imagem_url) carregar.prepend(Object.assign(document.createElement("div"), { className: "save-sem-imagem", textContent: "⟳" }));
+      }
       carregar.append(quando);
       carregar.addEventListener("click", () => carregarSave(s.id));
 

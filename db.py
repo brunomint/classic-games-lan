@@ -15,6 +15,8 @@ SAVES_DIR = os.path.join(DATA_DIR, "saves")
 
 # participação sem sinal de vida há mais que isso é considerada encerrada
 INATIVO_SEG = 90
+# ao voltar (tela apagou, aparelho dormiu), os jogadores do aparelho voltam juntos se faz menos que isso
+RETOMAR_LOCAIS_SEG = 12 * 3600
 # partida solo mais curta que isso é descartada (alguém só abriu e fechou o jogo)
 SOLO_MINIMO_SEG = 20
 
@@ -64,7 +66,8 @@ CREATE TABLE IF NOT EXISTS saves (
     jogo        TEXT NOT NULL,
     criado_em   INTEGER NOT NULL,
     arquivo     TEXT NOT NULL,             -- caminho relativo a dados/saves/
-    imagem      TEXT                       -- captura de tela do momento do save
+    imagem      TEXT,                      -- captura de tela do momento do save
+    automatico  INTEGER NOT NULL DEFAULT 0 -- 1 = save automático (só existe um por jogador e jogo)
 );
 CREATE INDEX IF NOT EXISTS idx_saves ON saves(jogador_id, game_id);
 """
@@ -104,6 +107,9 @@ def iniciar_banco():
     if "dono_id" not in colunas:
         con.execute("ALTER TABLE participacoes ADD COLUMN dono_id INTEGER REFERENCES participacoes(id)")
     con.execute("CREATE INDEX IF NOT EXISTS idx_part_dono ON participacoes(dono_id, ativa)")
+    colunas = {r[1] for r in con.execute("PRAGMA table_info(saves)")}
+    if "automatico" not in colunas:
+        con.execute("ALTER TABLE saves ADD COLUMN automatico INTEGER NOT NULL DEFAULT 0")
     con.execute("CREATE INDEX IF NOT EXISTS idx_jogadores_nome ON jogadores(nome COLLATE NOCASE)")
     con.commit()
     con.close()
@@ -238,6 +244,29 @@ def jogadores_locais(con, dono_id):
     ).fetchall()]
 
 
+def locais_para_retomar(con, participacao_id):
+    """Jogadores do aparelho de uma participação que expirou (para trazer de volta ao reabrir)."""
+    dono = con.execute("SELECT ativa, saiu FROM participacoes WHERE id = ?", (participacao_id,)).fetchone()
+    if not dono:
+        return []
+    if dono["ativa"]:
+        return jogadores_locais(con, participacao_id)
+    if agora() - dono["saiu"] > RETOMAR_LOCAIS_SEG:
+        return []
+    # quem foi tirado pelo ✕ perde o vínculo (dono_id = NULL), então não volta
+    return [dict(r) for r in con.execute(
+        """SELECT MAX(pa.id) AS participacao_id, j.id AS jogador_id, j.nome
+           FROM participacoes pa JOIN jogadores j ON j.id = pa.jogador_id
+           WHERE pa.dono_id = ? GROUP BY j.id ORDER BY MIN(pa.id)""",
+        (participacao_id,),
+    ).fetchall()]
+
+
+def remover_local(con, local_id):
+    encerrar_participacao(con, local_id)
+    con.execute("UPDATE participacoes SET dono_id = NULL WHERE id = ?", (local_id,))
+
+
 def adicionar_local(con, dono_id, jogador_id):
     """Coloca mais um jogador (mesmo aparelho) na partida do dono."""
     dono = con.execute(
@@ -295,18 +324,28 @@ def salvar_resultado(con, partida_id, placar, vencedor_id, empate):
 
 # ---------- saves ----------
 
-def registrar_save(con, jogador_id, jogo, arquivo, imagem):
+def registrar_save(con, jogador_id, jogo, arquivo, imagem, automatico=False, criado_em=None):
+    """Grava o save. O automático substitui o anterior: devolve (id, arquivos antigos para apagar)."""
+    antigos = []
+    if automatico:
+        for row in con.execute(
+            "SELECT id, arquivo, imagem FROM saves WHERE jogador_id = ? AND game_id = ? AND automatico = 1",
+            (jogador_id, jogo["game_id"]),
+        ).fetchall():
+            antigos += [row["arquivo"], row["imagem"]]
+            con.execute("DELETE FROM saves WHERE id = ?", (row["id"],))
     cur = con.execute(
-        """INSERT INTO saves (jogador_id, game_id, jogo, criado_em, arquivo, imagem)
-           VALUES (?, ?, ?, ?, ?, ?)""",
-        (jogador_id, jogo["game_id"], jogo["title"], agora(), arquivo, imagem),
+        """INSERT INTO saves (jogador_id, game_id, jogo, criado_em, arquivo, imagem, automatico)
+           VALUES (?, ?, ?, ?, ?, ?, ?)""",
+        (jogador_id, jogo["game_id"], jogo["title"], criado_em or agora(), arquivo, imagem, 1 if automatico else 0),
     )
-    return cur.lastrowid
+    return cur.lastrowid, [a for a in antigos if a]
 
 
 def listar_saves(con, jogador_id, game_id):
     return [dict(r) for r in con.execute(
-        "SELECT id, criado_em, imagem FROM saves WHERE jogador_id = ? AND game_id = ? ORDER BY criado_em DESC",
+        """SELECT id, criado_em, imagem, automatico FROM saves WHERE jogador_id = ? AND game_id = ?
+           ORDER BY automatico DESC, criado_em DESC""",
         (jogador_id, game_id),
     ).fetchall()]
 

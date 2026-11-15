@@ -565,6 +565,24 @@ body.jogo {
   cursor: pointer;
 }
 
+.selo-auto {
+  padding: 1px 6px;
+  border-radius: 99px;
+  background: color-mix(in srgb, #5fd38d 25%, transparent);
+  font-style: normal;
+  font-size: 11px;
+}
+
+.save-sem-imagem {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 4 / 3;
+  border-radius: 4px;
+  background: var(--fundo-2);
+  color: var(--texto-2);
+  font-size: 32px;
+}
+
 .save img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 4px; image-rendering: pixelated; }
 .save:hover, .save:focus-visible { border-color: var(--foco); outline: none; }
 
