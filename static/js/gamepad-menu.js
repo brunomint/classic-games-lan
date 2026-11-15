@@ -1,6 +1,11 @@
-// Navegar no menu pelo controle (ou setas do teclado): direcional move, A/Enter abre.
+// Navegar pelas páginas com o controle (ou o teclado), como no menu de um console.
+//   direcional / setas  → move o foco entre os itens navegáveis
+//   A / Enter           → abre o item em foco
+//   B / Esc             → volta (o que estiver marcado com data-atalho="b", senão a página anterior)
+//   X, Y                → atalhos marcados com data-atalho="x" / "y" (aparecem na barra de dicas)
 (function () {
-  const itens = () => Array.from(document.querySelectorAll("a.sala, a.cartucho"));
+  const SELETOR = "a.continuar, a.sala, a.cartucho, [data-nav]";
+  const itens = () => Array.from(document.querySelectorAll(SELETOR)).filter((el) => el.offsetParent !== null);
 
   function mover(dx, dy) {
     const lista = itens();
@@ -32,34 +37,50 @@
     }
   }
 
+  function atalho(letra) {
+    const alvo = document.querySelector(`[data-atalho="${letra}"]`);
+    if (alvo) { alvo.click(); return true; }
+    return false;
+  }
+
+  function voltar() {
+    if (document.querySelector("dialog[open]")) return;   // o diálogo cuida do próprio Esc
+    if (!atalho("b") && history.length > 1) history.back();
+  }
+
   document.addEventListener("keydown", (e) => {
-    if (e.target.tagName === "INPUT") return;
+    if (["INPUT", "SELECT", "TEXTAREA"].includes(e.target.tagName)) return;
     const mapa = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
     if (mapa[e.key]) { e.preventDefault(); mover(...mapa[e.key]); }
+    else if (e.key === "Escape") voltar();
   });
 
-  // Gamepad API: lê os botões a cada quadro
+  // Gamepad API: lê os botões a cada quadro (só enquanto há controle conectado)
   const anterior = {};
   function loop() {
-    for (const gp of navigator.getGamepads ? navigator.getGamepads() : []) {
-      if (!gp) continue;
+    const controles = navigator.getGamepads ? Array.from(navigator.getGamepads()).filter(Boolean) : [];
+    for (const gp of controles) {
       const b = (i) => gp.buttons[i] && gp.buttons[i].pressed;
       const ax = gp.axes[0] || 0;
       const ay = gp.axes[1] || 0;
-      const estado = {
+      const agora = {
         esq: b(14) || ax < -0.5, dir: b(15) || ax > 0.5,
         cima: b(12) || ay < -0.5, baixo: b(13) || ay > 0.5,
-        a: b(0),
+        a: b(0), b: b(1), x: b(2), y: b(3),
       };
-      const prev = anterior[gp.index] || {};
-      if (estado.esq && !prev.esq) mover(-1, 0);
-      if (estado.dir && !prev.dir) mover(1, 0);
-      if (estado.cima && !prev.cima) mover(0, -1);
-      if (estado.baixo && !prev.baixo) mover(0, 1);
-      if (estado.a && !prev.a && itens().includes(document.activeElement)) document.activeElement.click();
-      anterior[gp.index] = estado;
+      const antes = anterior[gp.index] || {};
+      const apertou = (k) => agora[k] && !antes[k];
+      if (apertou("esq")) mover(-1, 0);
+      if (apertou("dir")) mover(1, 0);
+      if (apertou("cima")) mover(0, -1);
+      if (apertou("baixo")) mover(0, 1);
+      if (apertou("a") && itens().includes(document.activeElement)) document.activeElement.click();
+      if (apertou("b")) voltar();
+      if (apertou("x")) atalho("x");
+      if (apertou("y")) atalho("y");
+      anterior[gp.index] = agora;
     }
-    requestAnimationFrame(loop);
+    if (controles.length) requestAnimationFrame(loop);
   }
-  window.addEventListener("gamepadconnected", () => requestAnimationFrame(loop), { once: true });
+  window.addEventListener("gamepadconnected", () => requestAnimationFrame(loop));
 })();

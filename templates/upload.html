@@ -1,43 +1,46 @@
 {% extends "base.html" %}
 {% block title %}Enviar ROMs · Classic Games{% endblock %}
+{% block css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/paginas.css') }}">{% endblock %}
 {% block body_class %}envio{% endblock %}
 
 {% block content %}
-<header class="barra">
-  <a class="voltar" href="/">← Jogos</a>
+<header class="topo-pagina">
   <h1>Enviar ROMs</h1>
 </header>
 
 <main class="envio-main">
   <form id="form-envio" class="caixa-envio">
+    <label class="soltar" id="soltar">
+      <input type="file" name="roms" id="arquivos" multiple data-nav>
+      <span class="fenda" aria-hidden="true"></span>
+      <strong>Escolha os arquivos do jogo</strong>
+      <span>ou arraste para cá. Cada um vira um cartucho na prateleira.</span>
+    </label>
+
+    <ul id="fila" class="fila"></ul>
+
     <label class="campo">
       <span>Console</span>
       <select name="console" id="console">
-        <option value="auto">Detectar pela extensão</option>
+        <option value="auto">Descobrir pelo tipo do arquivo</option>
         {% for key, label, exts in consoles %}
         <option value="{{ key }}">{{ label }} ({{ exts|join(', ') }})</option>
         {% endfor %}
       </select>
     </label>
 
-    <label class="soltar" id="soltar">
-      <input type="file" name="roms" id="arquivos" multiple>
-      <strong>Toque para escolher</strong>
-      <span>ou arraste as ROMs para cá</span>
-    </label>
-
-    <ul id="fila" class="fila"></ul>
-
-    <button type="submit" id="enviar" class="botao" disabled>Enviar</button>
+    <button type="submit" id="enviar" class="botao" data-botao="A" disabled>Enviar ROMs</button>
   </form>
 
-  <p class="nota">
-    Jogos de PlayStation em <code>.bin</code> + <code>.cue</code>: envie os dois juntos.
-    A ROM aparece no menu assim que o envio termina.
-  </p>
+  <p class="nota">Jogo de PlayStation com <code>.bin</code> e <code>.cue</code>? Envie os dois juntos.</p>
 </main>
+
+<nav class="dicas" aria-label="Atalhos">
+  <a href="/" data-atalho="b"><i class="b">B</i> Voltar aos jogos</a>
+</nav>
 {% endblock %}
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/upload.js') }}"></script>
+<script src="{{ url_for('static', filename='js/gamepad-menu.js') }}"></script>
 {% endblock %}

@@ -1,0 +1,181 @@
+/* Tela do jogo: a TV na sala. Fundo escuro para o foco ficar no jogo;
+   a barra de cima é o "console" embaixo da TV, com os mesmos botões coloridos. */
+
+body.jogo {
+  display: flex;
+  flex-direction: column;
+  background: #26232e;
+  background-image: radial-gradient(ellipse at 50% 40%, #34303f, #1e1c25 70%);
+  color: var(--plastico-claro);
+}
+
+.barra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+  padding: 10px 16px;
+  background: var(--plastico);
+  color: var(--grafite);
+  box-shadow: 0 3px 0 var(--plastico-sombra);
+}
+
+.barra h1 {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 750;
+  font-stretch: 112%;
+  line-height: 1.2;
+}
+
+.barra h1 small {
+  margin-left: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--grafite-2);
+  font-stretch: 100%;
+}
+
+.jogadores-aparelho {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+#chips-locais { display: contents; }
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 99px;
+  background: var(--plastico-claro);
+  font-size: 14px;
+  font-weight: 650;
+  box-shadow: 0 2px 0 var(--plastico-sombra);
+}
+
+.chip-eu { background: var(--grafite); color: #fff; box-shadow: none; }
+
+.chip button {
+  padding: 0 2px;
+  border: 0;
+  background: none;
+  color: var(--grafite-2);
+  font: inherit;
+  cursor: pointer;
+}
+
+.chip button:hover { color: var(--a); }
+
+.acoes-jogo { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.botao-tela { background: var(--plastico-claro); color: var(--grafite); box-shadow: 0 3px 0 var(--plastico-sombra); }
+
+.dica {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 14px;
+  color: var(--grafite-2);
+}
+
+.dica:empty { display: none; }
+
+/* ---------- a TV ---------- */
+
+.palco {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  padding: 20px 16px;
+}
+
+#game {
+  width: min(100%, 960px);
+  aspect-ratio: 4 / 3;
+  max-height: calc(100vh - 120px);
+  border-radius: 18px;
+  overflow: hidden;
+  background: #000;
+  /* moldura da TV */
+  box-shadow: 0 0 0 14px #121117, 0 0 0 16px #3a3644, 0 30px 80px rgba(0, 0, 0, .6);
+}
+
+@media (max-width: 700px) {
+  .jogadores-aparelho { margin-left: 0; }
+  .palco { padding: 0; }
+  #game { border-radius: 0; box-shadow: none; max-height: none; }
+}
+
+/* ---------- lista de saves (diálogo "Carregar save") ---------- */
+
+.lista-saves {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.lista-saves li { position: relative; }
+
+.save {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px;
+  border: 0;
+  border-radius: 10px;
+  background: #f6f5f8;
+  color: var(--grafite);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 0 3px 0 var(--plastico-sombra);
+}
+
+.save img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 6px; image-rendering: pixelated; }
+
+.save-sem-imagem {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 4 / 3;
+  border-radius: 6px;
+  background: var(--plastico);
+  color: var(--grafite-2);
+  font-size: 32px;
+}
+
+.selo-auto {
+  padding: 1px 7px;
+  border-radius: 99px;
+  background: var(--y);
+  color: #fff;
+  font-style: normal;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.apagar-save {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, .65);
+  color: #fff;
+  cursor: pointer;
+}
+
+.apagar-save:hover { background: var(--a); }
+.vazio-saves { color: var(--grafite-2); }
+.dialogo .texto-apoio { margin-top: -6px; color: var(--grafite-2); }

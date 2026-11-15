@@ -19,6 +19,7 @@
       return li;
     }));
     botao.disabled = arquivos.length === 0;
+    botao.textContent = "Enviar ROMs";
   }
 
   input.addEventListener("change", () => { arquivos = Array.from(input.files); mostrarFila(); });
@@ -54,14 +55,14 @@
         const li = fila.querySelector(`li[data-nome="${CSS.escape(r.arquivo)}"]`);
         if (!li) return;
         li.classList.add(r.ok ? "ok" : "erro");
-        li.querySelector(".estado").textContent = r.ok ? `✓ ${r.console}` : r.erro;
+        li.querySelector(".estado").textContent = r.ok ? `Na prateleira de ${r.console}` : r.erro;
       });
-      if (xhr.status !== 200) botao.textContent = "Erro no envio";
-      else botao.textContent = "Enviado";
+      if (xhr.status !== 200) { botao.textContent = "O servidor recusou o envio"; botao.disabled = false; }
+      else botao.textContent = "ROMs enviadas";
       arquivos = [];
       input.value = "";
     });
-    xhr.addEventListener("error", () => { botao.textContent = "Falhou — tente de novo"; botao.disabled = false; });
+    xhr.addEventListener("error", () => { botao.textContent = "A conexão caiu. Enviar de novo"; botao.disabled = false; });
     xhr.send(dados);
   });
 })();

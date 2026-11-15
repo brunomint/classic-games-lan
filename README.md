@@ -80,6 +80,22 @@ Capas (opcional): `covers/<console>/<slug>.jpg`. O slug é o final do link do jo
 ex.: `covers/snes/top-gear.jpg`.
 BIOS do PS1: `bios/scph5501.bin`.
 
+## Visual
+
+Tema do próprio Super Nintendo: plástico cinza-lilás, cartuchos de verdade na
+prateleira (cada jogo com a cor de etiqueta dele; PS1 vira estojo de CD) e as
+quatro cores dos botões como sistema de ações, iguais em todas as páginas:
+
+| botão | cor | significa |
+|---|---|---|
+| A | vermelho | jogar, confirmar |
+| B | amarelo | voltar, cancelar |
+| X | azul | jogar junto (sala), placar |
+| Y | verde | adicionar jogador, enviar ROMs |
+
+Dá para navegar tudo com controle (direcional + A/B/X/Y) ou setas e Esc.
+Fonte: Saira (OFL, em `static/fonts/`), sem nada de fora.
+
 ## Estrutura
 
 ```
@@ -91,7 +107,7 @@ auth.py         login (nome + PIN) e sessão
 db.py           banco SQLite (jogadores, partidas, participações, saves)
 registro.py     API de partidas/resultados/saves e página de histórico
 templates/      páginas
-static/         css, js e qrcode.js
+static/         css (base, inicio, jogo, paginas), js, fonte e qrcode.js
 emulatorjs/     EmulatorJS 4.3.0-pre (pasta data/ do release, só com os núcleos usados)
 roms/ bios/ covers/   seus arquivos (fora do git)
 dados/          banco, saves e chave da sessão (fora do git)

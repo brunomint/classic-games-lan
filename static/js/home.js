@@ -26,14 +26,22 @@
       a.href = linkSala(sala);
       a.className = "sala";
 
+      const pulso = document.createElement("span");
+      pulso.className = "pulso";
+      const texto = document.createElement("span");
+      texto.className = "sala-texto";
       const jogo = document.createElement("strong");
       jogo.textContent = sala.title;
-      const info = document.createElement("span");
-      info.textContent = `${sala.player_name} · ${sala.current}/${sala.max} jogadores`;
-      const entrar = document.createElement("em");
-      entrar.textContent = sala.hasPassword ? "Entrar 🔒" : "Entrar";
+      const quem = document.createElement("span");
+      const vagas = sala.max - sala.current;
+      quem.textContent = `${sala.player_name} está esperando, ${vagas === 1 ? "falta 1 jogador" : `cabem mais ${vagas}`}`;
+      texto.append(jogo, quem);
+      const entrar = document.createElement("span");
+      entrar.className = "botao botao-peq";
+      entrar.dataset.botao = "X";
+      entrar.textContent = sala.hasPassword ? "Entrar (com senha)" : "Entrar";
 
-      a.append(jogo, info, entrar);
+      a.append(pulso, texto, entrar);
       li.append(a);
       return li;
     }));

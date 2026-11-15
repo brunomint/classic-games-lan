@@ -7,10 +7,13 @@ import os
 import socket
 import sys
 
-from flask import Flask, abort, jsonify, render_template, request, send_from_directory
+from datetime import datetime
+
+from flask import Flask, abort, jsonify, render_template, request, send_from_directory, session
 from flask_socketio import SocketIO
 
 from auth import login_obrigatorio, register_auth
+import db
 from games import Catalog
 from netplay import list_rooms, register_netplay
 from registro import register_registro
@@ -43,6 +46,12 @@ def lan_ip():
 
 
 @app.context_processor
+def inject_saudacao():
+    hora = datetime.now().hour
+    return {"saudacao": "Bom dia" if 5 <= hora < 12 else "Boa tarde" if hora < 18 else "Boa noite"}
+
+
+@app.context_processor
 def inject_lan_url():
     """Endereço que os outros aparelhos usam para entrar (vai no QR code)."""
     port = request.host.rsplit(":", 1)[1] if ":" in request.host else "80"
@@ -53,7 +62,15 @@ def inject_lan_url():
 
 @app.get("/")
 def index():
-    return render_template("index.html", consoles=catalog.by_console())
+    continuar = None
+    if session.get("jogador_id"):
+        with db.conectar() as con:
+            ultimo = db.ultimo_jogo(con, session["jogador_id"])
+        if ultimo:
+            jogo = catalog.by_game_id().get(ultimo["game_id"])
+            if jogo:
+                continuar = {**ultimo, "jogo": jogo}
+    return render_template("index.html", consoles=catalog.by_console(), continuar=continuar)
 
 
 @app.get("/jogo/<console>/<slug>")

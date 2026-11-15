@@ -1,40 +1,80 @@
 {% extends "base.html" %}
-{% block title %}Entrar · Classic Games{% endblock %}
-{% block body_class %}login{% endblock %}
+{% block title %}Quem está jogando? · Classic Games{% endblock %}
+{% block css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/paginas.css') }}">{% endblock %}
+{% block body_class %}entrada{% endblock %}
 
 {% block content %}
-<main class="login-main">
-  <a class="voltar" href="/">← Jogos</a>
+<main class="entrada-main">
+  {% if criar %}
+  <h1>Primeira vez, {{ nome }}?</h1>
+  <p class="apoio">Digite o mesmo PIN mais uma vez para criar seu jogador.</p>
+  {% else %}
+  <h1>Quem está jogando?</h1>
+  {% if perfis %}
+  <div class="perfis" role="list">
+    {% for p in perfis %}
+    <button type="button" class="perfil-btn" role="listitem" data-nav data-nome="{{ p.nome }}"
+            {% if p.nome|lower == nome|lower and nome %}aria-pressed="true"{% endif %}>
+      <span class="avatar avatar-{{ loop.index0 % 5 }}" aria-hidden="true">{{ p.nome[:1]|upper }}</span>
+      <span>{{ p.nome }}</span>
+    </button>
+    {% endfor %}
+    <button type="button" class="perfil-btn" role="listitem" data-nav data-nome="">
+      <span class="avatar avatar-novo" aria-hidden="true">+</span>
+      <span>Sou novo aqui</span>
+    </button>
+  </div>
+  {% else %}
+  <p class="apoio">Escreva seu nome e escolha um PIN de 4 a 8 números. Na próxima vez, seu nome aparece aqui.</p>
+  {% endif %}
+  {% endif %}
 
-  <form method="post" action="/entrar" class="login-caixa">
+  <form method="post" action="/entrar" class="caixa-pin" id="form-entrar">
     <input type="hidden" name="proximo" value="{{ proximo }}">
-
     {% if criar %}
-    <h1>Novo jogador</h1>
-    <p class="login-texto">Ainda não existe ninguém chamado <strong>{{ nome }}</strong>.
-      Digite o PIN de novo para criar.</p>
     <input type="hidden" name="nome" value="{{ nome }}">
     <input type="hidden" name="criar" value="1">
     {% else %}
-    <h1>Quem está jogando?</h1>
-    <p class="login-texto">Entre com seu nome e PIN. Se for a primeira vez, escolha um PIN agora.</p>
-    <label class="campo">
-      <span>Nome</span>
-      <input type="text" name="nome" value="{{ nome }}" maxlength="20" required autofocus
+    <label class="campo" id="campo-nome" {% if perfis and not nome %}hidden{% endif %}>
+      <span>Seu nome</span>
+      <input type="text" name="nome" value="{{ nome }}" maxlength="20" required
              autocomplete="username" autocapitalize="words">
     </label>
     {% endif %}
 
-    <label class="campo">
-      <span>PIN {% if criar %}(confirmação){% else %}(4 a 8 números){% endif %}</span>
-      <input type="password" name="pin" inputmode="numeric" pattern="[0-9]{4,8}" maxlength="8" required
-             autocomplete="{{ 'new-password' if criar else 'current-password' }}" {% if criar %}autofocus{% endif %}>
+    <label class="campo campo-pin" id="campo-pin" {% if perfis and not nome and not criar %}hidden{% endif %}>
+      <span id="rotulo-pin">{% if criar %}Repita o PIN{% elif nome %}PIN de {{ nome }}{% else %}PIN (4 a 8 números){% endif %}</span>
+      <input type="password" name="pin" id="pin" inputmode="numeric" pattern="[0-9]{4,8}" maxlength="8" required
+             autocomplete="{{ 'new-password' if criar else 'current-password' }}"
+             {% if criar or nome %}autofocus{% endif %}>
     </label>
 
-    {% if erro %}<p class="erro-form">{{ erro }}</p>{% endif %}
+    <div class="teclado" id="teclado" aria-label="Teclado do PIN" {% if perfis and not nome and not criar %}hidden{% endif %}>
+      {% for n in [1, 2, 3, 4, 5, 6, 7, 8, 9] %}<button type="button" class="tecla" data-nav data-tecla="{{ n }}">{{ n }}</button>{% endfor %}
+      <button type="button" class="tecla tecla-apagar" data-nav data-tecla="apagar" aria-label="Apagar">⌫</button>
+      <button type="button" class="tecla" data-nav data-tecla="0">0</button>
+      <button type="submit" class="tecla tecla-ok" data-nav aria-label="{{ 'Criar jogador' if criar else 'Entrar' }}">OK</button>
+    </div>
 
-    <button type="submit" class="botao">{{ "Criar jogador" if criar else "Entrar" }}</button>
-    {% if criar %}<a class="login-alt" href="/entrar?proximo={{ proximo|urlencode }}">Não sou novo, voltar</a>{% endif %}
+    {% if erro %}<p class="erro-form" role="alert">{{ erro }}</p>{% endif %}
+
+    <button type="submit" class="botao" data-botao="A" id="botao-entrar"
+            {% if perfis and not nome and not criar %}hidden{% endif %}>{{ "Criar jogador" if criar else "Entrar" }}</button>
   </form>
 </main>
+
+<nav class="dicas" aria-label="Atalhos">
+  <span><i class="dir">✛</i> Escolher</span>
+  <span><i class="a">A</i> Confirmar</span>
+  {% if criar %}
+  <a href="/entrar?proximo={{ proximo|urlencode }}" data-atalho="b"><i class="b">B</i> Não sou novo</a>
+  {% else %}
+  <a href="/" data-atalho="b"><i class="b">B</i> Voltar aos jogos</a>
+  {% endif %}
+</nav>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/entrar.js') }}"></script>
+<script src="{{ url_for('static', filename='js/gamepad-menu.js') }}"></script>
 {% endblock %}

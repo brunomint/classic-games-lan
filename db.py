@@ -359,6 +359,32 @@ def apagar_save(con, save_id):
     con.execute("DELETE FROM saves WHERE id = ?", (save_id,))
 
 
+# ---------- página inicial e escolha de perfil ----------
+
+def ultimo_jogo(con, jogador_id):
+    """Último jogo do jogador, para o 'Continuar' da página inicial."""
+    row = con.execute(
+        """SELECT p.game_id, MAX(pa.saiu) AS quando
+           FROM participacoes pa JOIN partidas p ON p.id = pa.partida_id
+           WHERE pa.jogador_id = ? GROUP BY p.game_id ORDER BY quando DESC LIMIT 1""",
+        (jogador_id,),
+    ).fetchone()
+    if not row:
+        return None
+    save = con.execute(
+        "SELECT criado_em FROM saves WHERE jogador_id = ? AND game_id = ? AND automatico = 1",
+        (jogador_id, row["game_id"]),
+    ).fetchone()
+    return {"game_id": row["game_id"], "quando": row["quando"], "save_em": save["criado_em"] if save else None}
+
+
+def perfis(con):
+    """Jogadores com login (para a tela 'Quem está jogando?'), os mais recentes primeiro."""
+    return [dict(r) for r in con.execute(
+        "SELECT id, nome FROM jogadores WHERE pin_hash IS NOT NULL ORDER BY visto_em DESC LIMIT 12"
+    ).fetchall()]
+
+
 # ---------- histórico e estatísticas ----------
 
 def estatisticas(con):

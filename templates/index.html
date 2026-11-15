@@ -1,65 +1,105 @@
 {% extends "base.html" %}
-{% block body_class %}home{% endblock %}
+{% block css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/inicio.css') }}">{% endblock %}
+{% block body_class %}inicio{% endblock %}
 
 {% block content %}
-<header class="topo">
-  <div class="marca">
-    <h1>Classic Games</h1>
-    <p class="assinatura">por Bruno Fragoso</p>
-  </div>
-
-  <nav class="atalhos">
-    <a class="botao botao-sec" href="/historico">Histórico</a>
-    <a class="botao botao-sec" href="/enviar">＋ Enviar ROMs</a>
-  </nav>
-
-  {% if jogador %}
-  <form class="quem" method="post" action="/sair">
-    <span>Jogando como</span>
-    <strong>{{ jogador.nome }}</strong>
-    <button type="submit" class="link-botao">Sair</button>
-  </form>
-  {% else %}
-  <a class="botao" href="/entrar">Entrar</a>
-  {% endif %}
-
-  <div class="entrar" title="Aponte a câmera do celular">
-    <div id="qr" data-url="{{ lan_url }}"></div>
-    <div class="entrar-texto">
-      <strong>Jogue junto</strong>
-      <span>Na mesma rede, abra</span>
-      <code>{{ lan_url }}</code>
+<div class="console">
+  <header class="tampa">
+    <div>
+      <h1 class="marca">Classic Games</h1>
+      {% if jogador %}
+      <p class="ola">{{ saudacao }}, <strong>{{ jogador.nome }}</strong>. Escolha um cartucho.</p>
+      {% else %}
+      <p class="ola">{{ saudacao }}! Entre para jogar e guardar seu progresso.</p>
+      {% endif %}
     </div>
-  </div>
-</header>
 
-<main>
-  <section id="salas" class="salas" hidden>
-    <h2>Salas abertas</h2>
-    <ul id="lista-salas"></ul>
+    <div class="perfil">
+      {% if jogador %}
+      <span class="avatar" aria-hidden="true">{{ jogador.nome[:1]|upper }}</span>
+      <div class="perfil-nome">
+        <strong>{{ jogador.nome }}</strong>
+        <form method="post" action="/sair"><button type="submit" class="link-botao">Trocar jogador</button></form>
+      </div>
+      {% else %}
+      <a class="botao" data-botao="A" href="/entrar">Entrar</a>
+      {% endif %}
+    </div>
+  </header>
+
+  <section class="painel">
+    {% if continuar %}
+    <a class="continuar" href="/jogo/{{ continuar.jogo.console }}/{{ continuar.jogo.slug }}">
+      <span class="cartucho cor-{{ continuar.jogo.console }}" aria-hidden="true">
+        <span class="etiqueta etiqueta-{{ continuar.jogo.cor }}">
+          {% if continuar.jogo.cover %}<img src="/covers/{{ continuar.jogo.cover }}" alt="">
+          {% else %}<span class="sigla">{{ continuar.jogo.initials }}</span>{% endif %}
+        </span>
+      </span>
+      <div>
+        <h2>Continuar</h2>
+        <span class="titulo-jogo">{{ continuar.jogo.title }}</span>
+        <span class="detalhe">
+          {% if continuar.save_em %}Salvo {{ continuar.save_em|quando }}{% else %}Jogou {{ continuar.quando|quando }}{% endif %}
+        </span>
+        <span class="botao" data-botao="A">Jogar</span>
+      </div>
+    </a>
+    {% else %}
+    <div class="continuar">
+      <span class="avatar" aria-hidden="true">?</span>
+      <div>
+        <h2>Primeira vez por aqui?</h2>
+        <span class="titulo-jogo">Escolha um jogo na prateleira</span>
+        <span class="detalhe">Seu progresso fica salvo e você continua de qualquer aparelho.</span>
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="lado">
+      <section class="salas" id="salas" hidden>
+        <h2>Gente jogando agora</h2>
+        <ul id="lista-salas"></ul>
+      </section>
+
+      <section class="junto">
+        <div id="qr" data-url="{{ lan_url }}" role="img" aria-label="QR code com o endereço"></div>
+        <div>
+          <h2>Jogar junto</h2>
+          <p>No celular, na mesma rede Wi-Fi, aponte a câmera ou abra
+            <code>{{ lan_url }}</code></p>
+        </div>
+      </section>
+    </div>
   </section>
 
   {% for console_label, games in consoles.items() %}
-  <section class="console">
-    <h2>{{ console_label }}</h2>
+  <section class="prateleira">
+    <h2>{{ console_label }} <small>{{ games|length }} jogo{{ "s" if games|length > 1 }}</small></h2>
     <div class="grade">
       {% for game in games %}
-      <a class="cartucho cor-{{ game.console }}" href="/jogo/{{ game.console }}/{{ game.slug }}">
-        {% if game.cover %}
-        <img src="/covers/{{ game.cover }}" alt="" loading="lazy">
-        {% else %}
-        <span class="sigla">{{ game.initials }}</span>
-        {% endif %}
-        <span class="titulo">{{ game.title }}</span>
+      <a class="cartucho cor-{{ game.console }}" href="/jogo/{{ game.console }}/{{ game.slug }}" title="{{ game.title }}">
+        <span class="etiqueta etiqueta-{{ game.cor }}">
+          {% if game.cover %}<img src="/covers/{{ game.cover }}" alt="" loading="lazy">
+          {% else %}<span class="sigla" aria-hidden="true">{{ game.initials }}</span>{% endif %}
+          <span class="nome-jogo">{{ game.title }}</span>
+        </span>
         {% if game.size_mb > 50 %}<span class="peso">{{ game.size_mb|round|int }} MB</span>{% endif %}
       </a>
       {% endfor %}
     </div>
   </section>
   {% else %}
-  <p class="vazio">Nenhum jogo encontrado. Coloque as ROMs em <code>roms/&lt;console&gt;/</code>.</p>
+  <p class="vazio">A prateleira está vazia. <a href="/enviar">Envie a primeira ROM</a> e ela aparece aqui.</p>
   {% endfor %}
-</main>
+</div>
+
+<nav class="dicas" aria-label="Atalhos">
+  <span><i class="dir">✛</i> Escolher</span>
+  <span><i class="a">A</i> Jogar</span>
+  <a href="/historico" data-atalho="x"><i class="x">X</i> Placar da casa</a>
+  <a href="/enviar" data-atalho="y"><i class="y">Y</i> Enviar ROMs</a>
+</nav>
 {% endblock %}
 
 {% block scripts %}

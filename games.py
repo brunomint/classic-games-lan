@@ -89,6 +89,8 @@ class Catalog:
                     "size_mb": round(os.path.getsize(os.path.join(folder, filename)) / 1e6, 1),
                     # número estável: o netplay usa para separar as salas por jogo
                     "game_id": zlib.crc32(f"{console}/{slug}".encode()) & 0x7FFFFFFF,
+                    # cor da etiqueta do cartucho: fixa para cada jogo, varia entre jogos
+                    "cor": zlib.crc32(slug.encode()) % 7,
                     "bios": bios if bios and os.path.isfile(os.path.join(self.bios_dir, bios)) else None,
                     "cover": self._cover_for(console, slug),
                 })

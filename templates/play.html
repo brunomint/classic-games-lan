@@ -1,19 +1,26 @@
 {% extends "base.html" %}
 {% block title %}{{ game.title }} · Classic Games{% endblock %}
+{% block css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/jogo.css') }}">{% endblock %}
 {% block body_class %}jogo{% endblock %}
 
 {% block content %}
 <header class="barra">
-  <a class="voltar" href="/">← Jogos</a>
+  <a class="botao botao-peq" data-botao="B" href="/">Sair do jogo</a>
   <h1>{{ game.title }} <small>{{ game.console_label }}</small></h1>
-  <p class="dica" id="dica">Para jogar junto: menu do jogo ▸ <b>Netplay</b> ▸ <b>Criar sala</b></p>
-  <div class="jogadores-aparelho">
+
+  <div class="jogadores-aparelho" aria-label="Quem está jogando neste aparelho">
     <span class="chip chip-eu">{{ jogador.nome }}</span>
     <span id="chips-locais"></span>
-    <button type="button" class="botao botao-sec botao-peq" id="abrir-local" hidden
-            title="Outra pessoa jogando neste mesmo aparelho (2º controle)">＋ Jogador</button>
-    <button type="button" class="botao botao-sec botao-peq" id="abrir-resultado" hidden>Registrar resultado</button>
+    <button type="button" class="botao botao-peq" data-botao="Y" id="abrir-local" hidden
+            title="Outra pessoa jogando neste mesmo aparelho, com o 2º controle">Jogador</button>
   </div>
+
+  <div class="acoes-jogo">
+    <button type="button" class="botao botao-peq" data-botao="X" id="jogar-junto" hidden
+            title="Criar uma sala para os outros aparelhos entrarem">Jogar junto</button>
+    <button type="button" class="botao botao-peq botao-tela" id="abrir-resultado" hidden>Anotar resultado</button>
+  </div>
+  <p class="dica" id="dica" aria-live="polite"></p>
 </header>
 
 <div class="palco">
@@ -31,7 +38,7 @@
 <dialog id="dialogo-local" class="dialogo">
   <form id="form-local">
     <h2 id="titulo-local">Quem mais está jogando aqui?</h2>
-    <p class="login-texto" id="texto-local">Jogador 2 (ou 3, 4) neste aparelho, com outro controle.
+    <p class="texto-apoio" id="texto-local">Jogador 2 (ou 3, 4) neste aparelho, com outro controle.
       Entre com o nome e o PIN dele, ou crie um novo.</p>
     <label class="campo" id="campo-nome-local">
       <span>Nome</span>
@@ -43,8 +50,8 @@
     </label>
     <p class="erro-form" id="erro-local" hidden></p>
     <div class="acoes">
-      <button type="button" class="botao botao-sec" id="cancelar-local">Cancelar</button>
-      <button type="submit" class="botao" id="enviar-local">Entrar</button>
+      <button type="button" class="botao botao-claro" data-botao="B" id="cancelar-local">Cancelar</button>
+      <button type="submit" class="botao" data-botao="A" id="enviar-local">Entrar</button>
     </div>
   </form>
 </dialog>
@@ -52,10 +59,10 @@
 <!-- Continuar do save automático -->
 <dialog id="dialogo-continuar" class="dialogo">
   <h2>Continuar de onde parou?</h2>
-  <p class="login-texto">Tem um save automático seu deste jogo, de <strong id="quando-continuar"></strong>.</p>
+  <p class="texto-apoio">Tem um save automático seu deste jogo, de <strong id="quando-continuar"></strong>.</p>
   <div class="acoes">
-    <button type="button" class="botao botao-sec" id="nao-continuar">Começar do início</button>
-    <button type="button" class="botao" id="sim-continuar" autofocus>Continuar</button>
+    <button type="button" class="botao botao-claro" data-botao="B" id="nao-continuar">Começar do início</button>
+    <button type="button" class="botao" data-botao="A" id="sim-continuar" autofocus>Continuar</button>
   </div>
 </dialog>
 
@@ -65,7 +72,7 @@
   <p class="vazio-saves" id="sem-saves" hidden>Nenhum save seu neste jogo ainda. Use o botão de salvar estado do emulador.</p>
   <ul class="lista-saves" id="lista-saves"></ul>
   <div class="acoes">
-    <button type="button" class="botao botao-sec" id="fechar-saves">Fechar</button>
+    <button type="button" class="botao botao-claro" data-botao="B" id="fechar-saves">Fechar</button>
   </div>
 </dialog>
 {% endblock %}

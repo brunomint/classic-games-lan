@@ -12,7 +12,7 @@
   window.EJS_gameName = d.title;
   window.EJS_gameID = Number(d.gameId);
   window.EJS_language = "pt";
-  window.EJS_color = "#e4572e";
+  window.EJS_color = "#4d3f8c";
   window.EJS_startOnLoaded = true;
   if (d.bios) window.EJS_biosUrl = d.bios;
 
@@ -32,6 +32,14 @@
     if (nome) netplay.name = nome;
 
     if (salaDoLink) entrarNaSala(netplay, salaDoLink);
+
+    // "Jogar junto": abre direto o menu de salas do netplay
+    const botaoJunto = document.getElementById("jogar-junto");
+    botaoJunto.hidden = false;
+    botaoJunto.addEventListener("click", () => {
+      if (!netplay.isMenuCreated()) netplay.createNetplayMenu();
+      netplay.openMenu();
+    });
   };
 
   function entrarNaSala(netplay, sessionId) {
@@ -41,7 +49,7 @@
       .then((salas) => {
         const sala = salas[sessionId];
         if (!sala) {
-          dica.textContent = "A sala não existe mais. Crie outra pelo menu Netplay.";
+          dica.textContent = "Essa sala já fechou. Crie outra em Jogar junto.";
           return;
         }
         if (!netplay.name) netplay.name = "Jogador";
@@ -52,9 +60,9 @@
         } else {
           netplay.joinRoom(sessionId, sala.room_name, sala.max, null);
         }
-        dica.textContent = `Na sala de ${sala.player_name}`;
+        dica.textContent = `Você está na sala de ${sala.player_name}`;
       })
-      .catch(() => { dica.textContent = "Não consegui entrar na sala. Use o menu Netplay."; });
+      .catch(() => { dica.textContent = "Não deu para entrar na sala. Tente de novo em Jogar junto."; });
   }
 
   const loader = document.createElement("script");

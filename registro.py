@@ -49,6 +49,20 @@ def duracao(segundos):
     return f"{segundos} s"
 
 
+def quando(ts):
+    """'hoje às 09:07', 'ontem às 21:30', 'em 12/11 às 14:00'."""
+    if not ts:
+        return ""
+    momento = datetime.fromtimestamp(ts)
+    dias = (datetime.now().date() - momento.date()).days
+    hora = momento.strftime("%H:%M")
+    if dias == 0:
+        return f"hoje às {hora}"
+    if dias == 1:
+        return f"ontem às {hora}"
+    return f"em {momento.strftime('%d/%m')} às {hora}"
+
+
 def data_hora(ts):
     return datetime.fromtimestamp(ts).strftime("%d/%m %H:%M") if ts else ""
 
@@ -56,6 +70,7 @@ def data_hora(ts):
 def register_registro(app, catalog):
     app.add_template_filter(duracao, "duracao")
     app.add_template_filter(data_hora, "data_hora")
+    app.add_template_filter(quando, "quando")
 
     def jogo_por_id(game_id):
         try:

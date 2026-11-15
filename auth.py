@@ -139,11 +139,20 @@ def register_auth(app):
     def injetar_jogador():
         return {"jogador": jogador_atual()}
 
+    @app.context_processor
+    def injetar_perfis():
+        # só a tela de entrada usa; é uma consulta pequena
+        if request.endpoint != "entrar":
+            return {}
+        with db.conectar() as con:
+            return {"perfis": db.perfis(con)}
+
     @app.route("/entrar", methods=["GET", "POST"])
     def entrar():
         proximo = _destino_seguro(request.values.get("proximo"))
         if request.method == "GET":
-            return render_template("entrar.html", proximo=proximo, nome="", erro=None, criar=False)
+            return render_template("entrar.html", proximo=proximo, nome=request.args.get("nome", ""),
+                                   erro=None, criar=False)
 
         nome = limpar_nome(request.form.get("nome", ""))
         pin = request.form.get("pin", "").strip()
