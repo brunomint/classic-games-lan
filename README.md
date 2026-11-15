@@ -105,6 +105,20 @@ Fonte: Saira (OFL, em `static/fonts/`), sem nada de fora.
 viram um jogo só, aberto pela faixa 1 (o jogo roda, mas sem as músicas do CD).
 Um `.cue` sem os `.bin` que ele cita fica fora do menu até o jogo estar completo.
 
+## Controles
+
+A maioria dos controles USB/Bluetooth funciona direto. Controles com numeração
+própria (adaptadores genéricos) são ajustados por `static/js/perfis-controle.js`:
+
+- **Twin USB Joystick (ShanWan, 20bc:5500)**, adaptador para 2 controles estilo
+  PS2: perfil próprio (direcional vem como eixos 6/7; botões 0/1/3/4).
+- Outros fora do padrão: perfil genérico (direcional nos dois últimos eixos).
+
+O perfil vale para o menu e para o jogo (ajusta os botões do emulador uma vez
+por controle; remapeamentos feitos no menu de controles do jogo são mantidos).
+Para ver o que um controle manda, abra **/controles** ("Testar controles").
+Para incluir um controle novo, acrescente um item em `PERFIS`.
+
 ## Estrutura
 
 ```

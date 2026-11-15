@@ -64,14 +64,8 @@
   function loop() {
     const controles = navigator.getGamepads ? Array.from(navigator.getGamepads()).filter(Boolean) : [];
     for (const gp of controles) {
-      const b = (i) => gp.buttons[i] && gp.buttons[i].pressed;
-      const ax = gp.axes[0] || 0;
-      const ay = gp.axes[1] || 0;
-      const agora = {
-        esq: b(14) || ax < -0.5, dir: b(15) || ax > 0.5,
-        cima: b(12) || ay < -0.5, baixo: b(13) || ay > 0.5,
-        a: b(0), b: b(1), x: b(2), y: b(3),
-      };
+      // perfis-controle.js traduz controles com numeração própria
+      const agora = CG.lerControle(gp);
       const antes = anterior[gp.index] || {};
       const apertou = (k) => agora[k] && !antes[k];
       if (apertou("esq")) mover(-1, 0);

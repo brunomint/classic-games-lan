@@ -65,6 +65,27 @@
       .catch(() => { dica.textContent = "Não deu para entrar na sala. Tente de novo em Jogar junto."; });
   }
 
+  // Controles com numeração própria: ajusta os botões de cada jogador no emulador.
+  // Roda uma vez por controle (fica anotado), para não desfazer um remapeamento manual.
+  function ajustarControles() {
+    const emu = window.EJS_emulator;
+    if (!emu || !emu.controls || !emu.gamepadSelection) return;
+    const conectados = Array.from(navigator.getGamepads ? navigator.getGamepads() : []).filter(Boolean);
+    let mudou = false;
+    emu.gamepadSelection.forEach((sel, jogador) => {
+      const g = conectados.find((c) => `${c.id}_${c.index}` === sel);
+      if (!g) return;
+      const chave = `cg-controle-ajustado:${g.id}:${jogador}`;
+      try { if (localStorage.getItem(chave)) return; } catch (e) { /* sem localStorage: ajusta sempre */ }
+      if (CG.ajustarControlesEmulador(emu.controls[jogador], g)) {
+        mudou = true;
+        try { localStorage.setItem(chave, "1"); } catch (e) { /* ignora */ }
+      }
+    });
+    if (mudou && typeof emu.saveSettings === "function") emu.saveSettings();
+  }
+  setInterval(ajustarControles, 1000);
+
   const loader = document.createElement("script");
   loader.src = "/emulatorjs/loader.js";
   document.body.appendChild(loader);

@@ -86,6 +86,30 @@ def play(console, slug):
     return render_template("play.html", game=game)
 
 
+@app.get("/controles")
+def controles():
+    return render_template("controles.html")
+
+
+# registro dos últimos eventos de controle (para diagnosticar compatibilidade)
+_eventos_controle = []
+
+
+@app.post("/api/controles/eventos")
+def api_controles_eventos():
+    dados = request.get_json(silent=True) or {}
+    for ev in (dados.get("eventos") or [])[:200]:
+        if isinstance(ev, str):
+            _eventos_controle.append(ev[:300])
+    del _eventos_controle[:-500]
+    return jsonify(ok=True)
+
+
+@app.get("/api/controles/eventos")
+def api_controles_eventos_ler():
+    return jsonify(_eventos_controle)
+
+
 # ---------- API ----------
 
 @app.get("/api/salas")

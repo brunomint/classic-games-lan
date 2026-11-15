@@ -242,3 +242,39 @@
 @media (max-width: 760px) {
   .colunas { grid-template-columns: 1fr; }
 }
+
+/* ---------- testar controles ---------- */
+
+.controles-main { max-width: 900px; margin: 0 auto; padding: 8px 16px 32px; }
+.lista-controles { display: grid; gap: 16px; }
+
+.controle {
+  padding: 16px 18px;
+  border-radius: var(--raio-plastico);
+  background: var(--plastico-claro);
+  box-shadow: 0 4px 0 var(--plastico-sombra);
+}
+
+.controle h2 { margin: 0; font-size: 20px; }
+.controle-id { margin: 2px 0; color: var(--grafite-2); font-size: 14px; overflow-wrap: anywhere; }
+.controle-tipo { margin: 0 0 6px; font-weight: 600; }
+.entende { margin: 0 0 12px; }
+.entende .leitura { font-weight: 700; color: var(--x); }
+
+.botoes, .eixos { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+
+.bt, .ex {
+  display: grid;
+  place-items: center;
+  min-width: 42px;
+  height: 42px;
+  padding: 0 10px;
+  border-radius: 99px;
+  background: var(--plastico);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.ex { border-radius: 10px; font-size: 13px; font-weight: 600; line-height: 1.1; height: auto; padding: 6px 10px; }
+.ex b { font-size: 14px; }
+.bt.ativo, .ex.ativo { background: var(--x); color: #fff; }

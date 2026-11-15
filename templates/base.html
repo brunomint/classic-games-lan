@@ -12,6 +12,7 @@
 </head>
 <body class="{% block body_class %}{% endblock %}" data-jogador-nome="{{ jogador.nome if jogador else '' }}">
   {% block content %}{% endblock %}
+  <script src="{{ url_for('static', filename='js/perfis-controle.js') }}"></script>
   {% block scripts %}{% endblock %}
 </body>
 </html>
