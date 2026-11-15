@@ -35,23 +35,31 @@ window.CG = window.CG || {};
     return PERFIS.find((p) => p.teste(g.id)) || generico(g);
   };
 
+  const botaoDe = (g, p) => (pos) => {
+    const i = p ? p.botoes[pos] : pos;
+    return i !== undefined && !!(g.buttons[i] && g.buttons[i].pressed);
+  };
+
+  /** Só o direcional (sem o analógico): { cima, baixo, esq, dir }. */
+  CG.lerDirecional = function (g) {
+    const p = CG.perfilDoControle(g);
+    const bt = botaoDe(g, p);
+    const eixo = (i) => g.axes[i] || 0;
+    if (!p) return { cima: bt(12), baixo: bt(13), esq: bt(14), dir: bt(15) };
+    if (p.dpad) {
+      return {
+        cima: eixo(p.dpad.y) < -0.5, baixo: eixo(p.dpad.y) > 0.5,
+        esq: eixo(p.dpad.x) < -0.5, dir: eixo(p.dpad.x) > 0.5,
+      };
+    }
+    return { cima: false, baixo: false, esq: false, dir: false };
+  };
+
   /** Lê o controle já traduzido para as posições do padrão. */
   CG.lerControle = function (g) {
-    const p = CG.perfilDoControle(g);
-    const bt = (pos) => {
-      const i = p ? p.botoes[pos] : pos;
-      return i !== undefined && !!(g.buttons[i] && g.buttons[i].pressed);
-    };
+    const bt = botaoDe(g, CG.perfilDoControle(g));
     const eixo = (i) => g.axes[i] || 0;
-    let cima, baixo, esq, dir;
-    if (!p) {
-      cima = bt(12); baixo = bt(13); esq = bt(14); dir = bt(15);
-    } else if (p.dpad) {
-      cima = eixo(p.dpad.y) < -0.5; baixo = eixo(p.dpad.y) > 0.5;
-      esq = eixo(p.dpad.x) < -0.5; dir = eixo(p.dpad.x) > 0.5;
-    } else {
-      cima = baixo = esq = dir = false;
-    }
+    let { cima, baixo, esq, dir } = CG.lerDirecional(g);
     // o analógico esquerdo também move
     cima = cima || eixo(1) < -0.5; baixo = baixo || eixo(1) > 0.5;
     esq = esq || eixo(0) < -0.5; dir = dir || eixo(0) > 0.5;

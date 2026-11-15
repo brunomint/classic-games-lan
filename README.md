@@ -174,6 +174,10 @@ O que acontece por fora do jogo vira aviso rápido no canto (salvo, controle con
 fulano entrou na sala...). Se o controle desconecta, o jogo pausa e continua sozinho
 quando ele volta (em sala de netplay só avisa, para não travar os outros).
 
+O **analógico esquerdo** também funciona como direcional nos jogos (SNES, PS1 etc.): esses consoles
+— e o controle do PS1 no modo digital, o padrão do emulador — ignoram o analógico. Fica de fora
+nos consoles que usam analógico de verdade (N64, PSP...). Ver `static/js/analogico-direcional.js`.
+
 Para ver o que um controle manda, abra **/controles** ("Testar controles").
 Para incluir um controle novo, acrescente um item em `PERFIS`.
 
