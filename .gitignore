@@ -1,0 +1,12 @@
+# ROMs, BIOS e capas não vão para o git (direitos autorais + tamanho)
+roms/*/*
+bios/*
+covers/*/*
+
+# EmulatorJS é baixado à parte (ver README)
+emulatorjs/
+
+__pycache__/
+*.pyc
+.venv/
+venv/

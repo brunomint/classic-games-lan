@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block body_class %}home{% endblock %}
+
+{% block content %}
+<header class="topo">
+  <div class="marca">
+    <h1>Classic Games</h1>
+    <p class="assinatura">por Bruno Fragoso</p>
+  </div>
+
+  <a class="botao botao-sec" href="/enviar">＋ Enviar ROMs</a>
+
+  <label class="nome">
+    <span>Seu nome</span>
+    <input id="nome-jogador" type="text" maxlength="20" placeholder="Jogador" autocomplete="off">
+  </label>
+
+  <div class="entrar" title="Aponte a câmera do celular">
+    <div id="qr" data-url="{{ lan_url }}"></div>
+    <div class="entrar-texto">
+      <strong>Jogue junto</strong>
+      <span>Na mesma rede, abra</span>
+      <code>{{ lan_url }}</code>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section id="salas" class="salas" hidden>
+    <h2>Salas abertas</h2>
+    <ul id="lista-salas"></ul>
+  </section>
+
+  {% for console_label, games in consoles.items() %}
+  <section class="console">
+    <h2>{{ console_label }}</h2>
+    <div class="grade">
+      {% for game in games %}
+      <a class="cartucho cor-{{ game.console }}" href="/jogo/{{ game.console }}/{{ game.slug }}">
+        {% if game.cover %}
+        <img src="/covers/{{ game.cover }}" alt="" loading="lazy">
+        {% else %}
+        <span class="sigla">{{ game.initials }}</span>
+        {% endif %}
+        <span class="titulo">{{ game.title }}</span>
+        {% if game.size_mb > 50 %}<span class="peso">{{ game.size_mb|round|int }} MB</span>{% endif %}
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+  {% else %}
+  <p class="vazio">Nenhum jogo encontrado. Coloque as ROMs em <code>roms/&lt;console&gt;/</code>.</p>
+  {% endfor %}
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='vendor/qrcode.js') }}"></script>
+<script src="{{ url_for('static', filename='js/nome.js') }}"></script>
+<script src="{{ url_for('static', filename='js/home.js') }}"></script>
+<script src="{{ url_for('static', filename='js/gamepad-menu.js') }}"></script>
+{% endblock %}

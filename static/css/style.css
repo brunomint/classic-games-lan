@@ -1,0 +1,415 @@
+/* Classic Games LAN — menu estilo console.
+   Sem fontes externas: tudo funciona sem internet. */
+
+:root {
+  --fundo: #15161b;
+  --fundo-2: #1e2027;
+  --linha: #2c2f39;
+  --texto: #eceae4;
+  --texto-2: #9a9ca6;
+  --destaque: #e4572e;   /* laranja do menu antigo, mais sóbrio */
+  --foco: #ffd23f;
+
+  --snes: #6b5fb5;
+  --nes: #c8322f;
+  --n64: #2f8f4e;
+  --gba: #3e5fbf;
+  --gb: #8a9a2c;
+  --megadrive: #2b2b2b;
+  --psx: #7d8590;
+
+  --raio: 10px;
+  --fonte: system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, sans-serif;
+  --mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+
+* { box-sizing: border-box; }
+
+html, body { margin: 0; }
+
+body {
+  background: var(--fundo);
+  color: var(--texto);
+  font-family: var(--fonte);
+  line-height: 1.4;
+  /* linhas de TV de tubo, bem discretas */
+  background-image: repeating-linear-gradient(0deg, rgba(255,255,255,.018) 0 1px, transparent 1px 3px);
+}
+
+a { color: inherit; }
+code { font-family: var(--mono); }
+
+/* ---------- topo da home ---------- */
+
+.topo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px 32px;
+  padding: 24px 16px;
+  max-width: 1200px;
+  margin: 0 auto;
+  border-bottom: 1px solid var(--linha);
+}
+
+.marca { margin-right: auto; }
+
+.marca h1 {
+  margin: 0;
+  font-size: clamp(28px, 6vw, 44px);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+}
+
+.marca h1::first-letter { color: var(--destaque); }
+
+.assinatura {
+  margin: 2px 0 0;
+  color: var(--texto-2);
+  font-size: 13px;
+}
+
+.nome {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--texto-2);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.nome input {
+  width: 180px;
+  padding: 8px 10px;
+  border: 1px solid var(--linha);
+  border-radius: 6px;
+  background: var(--fundo-2);
+  color: var(--texto);
+  font: inherit;
+  font-size: 15px;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+.nome input:focus { outline: 2px solid var(--foco); outline-offset: 1px; }
+
+.entrar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px 8px 8px;
+  border: 1px solid var(--linha);
+  border-radius: var(--raio);
+  background: var(--fundo-2);
+}
+
+#qr {
+  width: 84px;
+  height: 84px;
+  background: #fff;
+  border-radius: 6px;
+  flex: none;
+}
+
+#qr svg { width: 100%; height: 100%; display: block; }
+
+.entrar-texto {
+  display: flex;
+  flex-direction: column;
+  font-size: 13px;
+  color: var(--texto-2);
+}
+
+.entrar-texto strong { color: var(--texto); font-size: 15px; }
+.entrar-texto code { color: var(--foco); font-size: 14px; margin-top: 2px; }
+
+/* ---------- conteúdo ---------- */
+
+main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 8px 16px 48px;
+}
+
+main h2 {
+  margin: 32px 0 14px;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .14em;
+  color: var(--texto-2);
+}
+
+.vazio { color: var(--texto-2); margin-top: 40px; }
+
+/* ---------- salas abertas ---------- */
+
+.salas ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+}
+
+.sala {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 12px;
+  padding: 12px 14px;
+  border-radius: var(--raio);
+  border: 1px solid var(--destaque);
+  background: color-mix(in srgb, var(--destaque) 12%, var(--fundo-2));
+  text-decoration: none;
+  animation: pulsa 2.4s ease-in-out infinite;
+}
+
+.sala strong { font-size: 16px; }
+.sala span { grid-column: 1; color: var(--texto-2); font-size: 13px; }
+.sala em {
+  grid-row: 1 / span 2;
+  grid-column: 2;
+  align-self: center;
+  font-style: normal;
+  font-weight: 700;
+  color: var(--destaque);
+}
+
+.sala:focus-visible, .sala:hover { outline: 3px solid var(--foco); outline-offset: 2px; animation: none; }
+
+@keyframes pulsa {
+  50% { border-color: color-mix(in srgb, var(--destaque) 40%, transparent); }
+}
+
+/* ---------- cartuchos ---------- */
+
+.grade {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+}
+
+.cartucho {
+  --cor: var(--snes);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  aspect-ratio: 3 / 4;
+  border-radius: var(--raio) var(--raio) 4px 4px;
+  background: var(--fundo-2);
+  border: 1px solid var(--linha);
+  border-top: 6px solid var(--cor);
+  overflow: hidden;
+  text-decoration: none;
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+
+.cor-snes { --cor: var(--snes); }
+.cor-nes { --cor: var(--nes); }
+.cor-n64 { --cor: var(--n64); }
+.cor-gba { --cor: var(--gba); }
+.cor-gb { --cor: var(--gb); }
+.cor-megadrive { --cor: #555; }
+.cor-psx { --cor: var(--psx); }
+
+.cartucho img {
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  object-fit: cover;
+}
+
+.sigla {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  font-size: 46px;
+  font-weight: 900;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--cor) 70%, white);
+  background:
+    radial-gradient(circle at 30% 20%, color-mix(in srgb, var(--cor) 35%, transparent), transparent 70%),
+    var(--fundo-2);
+}
+
+.titulo {
+  padding: 10px 12px;
+  font-size: 14px;
+  font-weight: 600;
+  background: rgba(0,0,0,.25);
+  border-top: 1px solid var(--linha);
+}
+
+.peso {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(0,0,0,.6);
+  font-size: 11px;
+  color: var(--texto-2);
+}
+
+.cartucho:hover,
+.cartucho:focus-visible {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 24px rgba(0,0,0,.45);
+  outline: 3px solid var(--foco);
+  outline-offset: 2px;
+}
+
+/* ---------- tela do jogo ---------- */
+
+body.jogo {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.barra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 20px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--linha);
+}
+
+.voltar {
+  text-decoration: none;
+  color: var(--texto-2);
+  font-weight: 600;
+}
+
+.voltar:hover, .voltar:focus-visible { color: var(--foco); }
+
+.barra h1 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.barra h1 small {
+  margin-left: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--texto-2);
+}
+
+.dica {
+  margin: 0 0 0 auto;
+  font-size: 13px;
+  color: var(--texto-2);
+}
+
+.dica b { color: var(--texto); }
+
+.palco {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  padding: 12px;
+}
+
+#game {
+  width: min(100%, 960px);
+  aspect-ratio: 4 / 3;
+  max-height: calc(100vh - 90px);
+}
+
+/* ---------- botões ---------- */
+
+.botao {
+  display: inline-block;
+  padding: 10px 18px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--destaque);
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.botao:disabled { opacity: .5; cursor: default; }
+.botao:focus-visible { outline: 3px solid var(--foco); outline-offset: 2px; }
+
+.botao-sec {
+  background: var(--fundo-2);
+  border: 1px solid var(--linha);
+  color: var(--texto);
+}
+
+.botao-sec:hover { border-color: var(--destaque); }
+
+/* ---------- envio de ROMs ---------- */
+
+.envio-main { max-width: 640px; }
+
+.caixa-envio {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.campo { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--texto-2); }
+
+.campo select {
+  padding: 10px;
+  border: 1px solid var(--linha);
+  border-radius: 8px;
+  background: var(--fundo-2);
+  color: var(--texto);
+  font: inherit;
+}
+
+.soltar {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 36px 16px;
+  border: 2px dashed var(--linha);
+  border-radius: var(--raio);
+  background: var(--fundo-2);
+  text-align: center;
+  cursor: pointer;
+}
+
+.soltar input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.soltar span { color: var(--texto-2); font-size: 14px; }
+.soltar.ativo, .soltar:focus-within { border-color: var(--foco); }
+
+.fila { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+
+.fila li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: var(--fundo-2);
+  font-size: 14px;
+}
+
+.fila .nome-arq { overflow-wrap: anywhere; }
+.fila .estado { color: var(--texto-2); white-space: nowrap; }
+.fila li.ok .estado { color: #5fd38d; }
+.fila li.erro .estado { color: #ff7b6b; white-space: normal; text-align: right; }
+
+.nota { color: var(--texto-2); font-size: 13px; margin-top: 24px; }
+
+@media (max-width: 600px) {
+  .entrar { width: 100%; }
+  .nome, .nome input { width: 100%; }
+  .grade { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+  .dica { margin-left: 0; width: 100%; }
+  .palco { padding: 0; }
+}

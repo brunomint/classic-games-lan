@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}{{ game.title }} · Classic Games{% endblock %}
+{% block body_class %}jogo{% endblock %}
+
+{% block content %}
+<header class="barra">
+  <a class="voltar" href="/">← Jogos</a>
+  <h1>{{ game.title }} <small>{{ game.console_label }}</small></h1>
+  <p class="dica" id="dica">Para jogar junto: menu do jogo ▸ <b>Netplay</b> ▸ <b>Criar sala</b></p>
+</header>
+
+<div class="palco">
+  <div id="game"
+       data-core="{{ game.core }}"
+       data-rom="/roms/{{ game.rom }}"
+       data-bios="{{ '/bios/' ~ game.bios if game.bios else '' }}"
+       data-title="{{ game.title }}"
+       data-game-id="{{ game.game_id }}"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/nome.js') }}"></script>
+<script src="{{ url_for('static', filename='js/play.js') }}"></script>
+{% endblock %}
