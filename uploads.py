@@ -3,6 +3,7 @@ import os
 
 from flask import jsonify, render_template, request
 
+from auth import login_obrigatorio
 from games import CONSOLES
 
 
@@ -26,11 +27,13 @@ def _safe_name(filename):
 def register_uploads(app, catalog):
 
     @app.get("/enviar")
+    @login_obrigatorio()
     def upload_page():
         consoles = [(key, label, sorted(exts)) for key, (label, _, exts) in CONSOLES.items()]
         return render_template("upload.html", consoles=consoles)
 
     @app.post("/api/roms")
+    @login_obrigatorio(api=True)
     def upload_roms():
         chosen = request.form.get("console", "auto")
         results = []

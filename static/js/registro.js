@@ -13,7 +13,7 @@
   };
 
   function base() {
-    return { jogador_id: CG.getJogadorId(), nome: CG.getNome(), game_id: gameId };
+    return { game_id: gameId };
   }
 
   function aplicar(r) {

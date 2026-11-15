@@ -7,6 +7,7 @@ from datetime import datetime
 from flask import abort, jsonify, render_template, request, send_from_directory
 
 import db
+from auth import login_obrigatorio
 
 ID_VALIDO = re.compile(r"^[A-Za-z0-9-]{8,64}$")
 FORMATOS_IMAGEM = {"png": "png", "jpeg": "jpg", "jpg": "jpg", "webp": "webp"}
@@ -22,11 +23,6 @@ def _jogador_id(valor):
     if not isinstance(valor, str) or not ID_VALIDO.match(valor):
         abort(400, "jogador_id inválido")
     return valor
-
-
-def _nome(valor):
-    nome = (valor or "").strip()[:20]
-    return nome or "Jogador"
 
 
 def duracao(segundos):
@@ -45,7 +41,6 @@ def data_hora(ts):
 
 
 def register_registro(app, catalog):
-    db.iniciar_banco()
     app.add_template_filter(duracao, "duracao")
     app.add_template_filter(data_hora, "data_hora")
 
@@ -58,63 +53,49 @@ def register_registro(app, catalog):
             abort(404, "Jogo não encontrado")
         return jogo
 
-    # ---------- jogadores ----------
-
-    @app.post("/api/jogador")
-    def api_jogador():
-        dados = _json()
-        jogador_id = _jogador_id(dados.get("id"))
-        with db.conectar() as con:
-            db.salvar_jogador(con, jogador_id, _nome(dados.get("nome")))
-        return jsonify(ok=True)
-
-    @app.get("/api/jogadores")
-    def api_jogadores():
-        """Lista para escolher 'quem sou eu' num aparelho novo."""
-        with db.conectar() as con:
-            rows = con.execute("SELECT id, nome FROM jogadores ORDER BY visto_em DESC").fetchall()
-        return jsonify([dict(r) for r in rows])
-
     # ---------- sessões de jogo ----------
 
     @app.post("/api/sessao/iniciar")
+    @login_obrigatorio(api=True)
     def api_sessao_iniciar():
         dados = _json()
-        jogador_id = _jogador_id(dados.get("jogador_id"))
+        jogador_id = request.jogador["id"]
         jogo = jogo_por_id(dados.get("game_id"))
         with db.conectar() as con:
             db.encerrar_inativas(con)
-            db.garantir_jogador(con, jogador_id, dados.get("nome"))
+            db.marcar_visto(con, jogador_id)
             return jsonify(db.nova_participacao(con, jogador_id, jogo))
 
     @app.post("/api/sessao/sala")
+    @login_obrigatorio(api=True)
     def api_sessao_sala():
         """Entrou ou saiu de uma sala: fecha a participação atual e abre outra."""
         dados = _json()
-        jogador_id = _jogador_id(dados.get("jogador_id"))
+        jogador_id = request.jogador["id"]
         jogo = jogo_por_id(dados.get("game_id"))
         sala = dados.get("sala") or None
         papel = "anfitriao" if dados.get("anfitriao") else "convidado"
         with db.conectar() as con:
             if dados.get("participacao_id"):
-                db.encerrar_participacao(con, int(dados["participacao_id"]))
-            db.garantir_jogador(con, jogador_id, dados.get("nome"))
+                db.encerrar_participacao(con, int(dados["participacao_id"]), jogador_id=jogador_id)
             if sala:
                 return jsonify(db.nova_participacao(con, jogador_id, jogo, sala=str(sala)[:64], papel=papel))
             return jsonify(db.nova_participacao(con, jogador_id, jogo))
 
     @app.post("/api/sessao/ping")
+    @login_obrigatorio(api=True)
     def api_sessao_ping():
         dados = _json()
         with db.conectar() as con:
-            ativa = db.sinal_de_vida(con, int(dados.get("participacao_id") or 0))
+            ativa = db.sinal_de_vida(con, int(dados.get("participacao_id") or 0), request.jogador["id"])
         return jsonify(ativa=ativa)
 
     @app.post("/api/sessao/fim")
+    @login_obrigatorio(api=True)
     def api_sessao_fim():
         dados = _json()
         with db.conectar() as con:
-            db.encerrar_participacao(con, int(dados.get("participacao_id") or 0))
+            db.encerrar_participacao(con, int(dados.get("participacao_id") or 0), jogador_id=request.jogador["id"])
         return jsonify(ok=True)
 
     # ---------- partidas e resultado ----------
@@ -128,6 +109,7 @@ def register_registro(app, catalog):
         return jsonify(partida)
 
     @app.post("/api/partidas/<int:partida_id>/resultado")
+    @login_obrigatorio(api=True)
     def api_resultado(partida_id):
         dados = _json()
         placar = (dados.get("placar") or "").strip()[:40]
@@ -146,8 +128,9 @@ def register_registro(app, catalog):
     # ---------- saves (estados salvos) ----------
 
     @app.post("/api/saves")
+    @login_obrigatorio(api=True)
     def api_save_novo():
-        jogador_id = _jogador_id(request.form.get("jogador_id"))
+        jogador_id = request.jogador["id"]
         jogo = jogo_por_id(request.form.get("game_id"))
         estado = request.files.get("estado")
         if not estado:
@@ -170,13 +153,13 @@ def register_registro(app, catalog):
             foto.save(os.path.join(db.SAVES_DIR, imagem))
 
         with db.conectar() as con:
-            db.garantir_jogador(con, jogador_id)
             save_id = db.registrar_save(con, jogador_id, jogo, arquivo, imagem)
         return jsonify(id=save_id)
 
     @app.get("/api/saves")
+    @login_obrigatorio(api=True)
     def api_saves():
-        jogador_id = _jogador_id(request.args.get("jogador_id"))
+        jogador_id = request.jogador["id"]
         with db.conectar() as con:
             saves = db.listar_saves(con, jogador_id, int(request.args.get("game_id") or 0))
         for s in saves:
@@ -185,18 +168,21 @@ def register_registro(app, catalog):
         return jsonify(saves)
 
     def _save_do_jogador(save_id):
+        """Cada jogador só vê, carrega e apaga os próprios saves."""
         with db.conectar() as con:
             save = db.obter_save(con, save_id)
-        if not save:
+        if not save or save["jogador_id"] != request.jogador["id"]:
             abort(404)
         return save
 
     @app.get("/saves/<int:save_id>/estado")
+    @login_obrigatorio(api=True)
     def save_estado(save_id):
         save = _save_do_jogador(save_id)
         return send_from_directory(db.SAVES_DIR, save["arquivo"], mimetype="application/octet-stream")
 
     @app.get("/saves/<int:save_id>/imagem")
+    @login_obrigatorio(api=True)
     def save_imagem(save_id):
         save = _save_do_jogador(save_id)
         if not save["imagem"]:
@@ -204,11 +190,9 @@ def register_registro(app, catalog):
         return send_from_directory(db.SAVES_DIR, save["imagem"], max_age=86400)
 
     @app.delete("/api/saves/<int:save_id>")
+    @login_obrigatorio(api=True)
     def api_save_apagar(save_id):
-        jogador_id = _jogador_id(request.args.get("jogador_id"))
         save = _save_do_jogador(save_id)
-        if save["jogador_id"] != jogador_id:
-            abort(403, "Esse save é de outro jogador")
         for campo in ("arquivo", "imagem"):
             if save[campo]:
                 try:

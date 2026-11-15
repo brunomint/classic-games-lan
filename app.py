@@ -10,6 +10,7 @@ import sys
 from flask import Flask, abort, jsonify, render_template, request, send_from_directory
 from flask_socketio import SocketIO
 
+from auth import login_obrigatorio, register_auth
 from games import Catalog
 from netplay import list_rooms, register_netplay
 from registro import register_registro
@@ -21,6 +22,7 @@ EJS_DIR = os.path.join(BASE_DIR, "emulatorjs")   # conteúdo da pasta data/ do E
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading")
 catalog = Catalog(BASE_DIR)
+register_auth(app)
 register_netplay(app, socketio)
 register_uploads(app, catalog)
 register_registro(app, catalog)
@@ -55,6 +57,7 @@ def index():
 
 
 @app.get("/jogo/<console>/<slug>")
+@login_obrigatorio()
 def play(console, slug):
     game = catalog.get(console, slug)
     if not game:

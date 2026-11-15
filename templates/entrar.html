@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Entrar · Classic Games{% endblock %}
+{% block body_class %}login{% endblock %}
+
+{% block content %}
+<main class="login-main">
+  <a class="voltar" href="/">← Jogos</a>
+
+  <form method="post" action="/entrar" class="login-caixa">
+    <input type="hidden" name="proximo" value="{{ proximo }}">
+
+    {% if criar %}
+    <h1>Novo jogador</h1>
+    <p class="login-texto">Ainda não existe ninguém chamado <strong>{{ nome }}</strong>.
+      Digite o PIN de novo para criar.</p>
+    <input type="hidden" name="nome" value="{{ nome }}">
+    <input type="hidden" name="criar" value="1">
+    {% else %}
+    <h1>Quem está jogando?</h1>
+    <p class="login-texto">Entre com seu nome e PIN. Se for a primeira vez, escolha um PIN agora.</p>
+    <label class="campo">
+      <span>Nome</span>
+      <input type="text" name="nome" value="{{ nome }}" maxlength="20" required autofocus
+             autocomplete="username" autocapitalize="words">
+    </label>
+    {% endif %}
+
+    <label class="campo">
+      <span>PIN {% if criar %}(confirmação){% else %}(4 a 8 números){% endif %}</span>
+      <input type="password" name="pin" inputmode="numeric" pattern="[0-9]{4,8}" maxlength="8" required
+             autocomplete="{{ 'new-password' if criar else 'current-password' }}" {% if criar %}autofocus{% endif %}>
+    </label>
+
+    {% if erro %}<p class="erro-form">{{ erro }}</p>{% endif %}
+
+    <button type="submit" class="botao">{{ "Criar jogador" if criar else "Entrar" }}</button>
+    {% if criar %}<a class="login-alt" href="/entrar?proximo={{ proximo|urlencode }}">Não sou novo, voltar</a>{% endif %}
+  </form>
+</main>
+{% endblock %}

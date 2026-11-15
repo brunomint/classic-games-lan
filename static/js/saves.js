@@ -1,6 +1,6 @@
 // Saves no servidor: os botões "salvar estado" e "carregar estado" do EmulatorJS
 // passam a guardar o progresso no servidor, por jogador.
-// Em outro aparelho, escolha o mesmo jogador na página inicial para ver os seus saves.
+// Em qualquer aparelho, entrando com o mesmo nome e PIN, os saves aparecem.
 (function () {
   const gameId = document.getElementById("game").dataset.gameId;
   const dialogo = document.getElementById("dialogo-saves");
@@ -15,7 +15,6 @@
   // Chamado pelo EmulatorJS ao clicar em "salvar estado"
   window.EJS_onSaveState = function ({ state, screenshot, format }) {
     const dados = new FormData();
-    dados.append("jogador_id", CG.getJogadorId());
     dados.append("game_id", gameId);
     dados.append("estado", new Blob([state]), "estado.state");
     if (screenshot) {
@@ -29,8 +28,7 @@
 
   // Chamado pelo EmulatorJS ao clicar em "carregar estado"
   window.EJS_onLoadState = function () {
-    const params = new URLSearchParams({ jogador_id: CG.getJogadorId(), game_id: gameId });
-    fetch(`/api/saves?${params}`)
+    fetch(`/api/saves?game_id=${encodeURIComponent(gameId)}`)
       .then((r) => r.json())
       .then(mostrar)
       .catch(() => aviso("Não consegui buscar os saves", "error"));
@@ -81,8 +79,7 @@
   }
 
   function apagarSave(id, li) {
-    const params = new URLSearchParams({ jogador_id: CG.getJogadorId() });
-    fetch(`/api/saves/${id}?${params}`, { method: "DELETE" })
+    fetch(`/api/saves/${id}`, { method: "DELETE" })
       .then((r) => (r.ok ? r.json() : Promise.reject()))
       .then(() => {
         li.remove();

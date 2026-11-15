@@ -9,7 +9,7 @@ import time
 from contextlib import contextmanager
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.path.join(BASE_DIR, "dados")
+DATA_DIR = os.environ.get("CG_DADOS") or os.path.join(BASE_DIR, "dados")   # CG_DADOS: outra pasta (ex.: testes)
 DB_PATH = os.path.join(DATA_DIR, "classic-games.db")
 SAVES_DIR = os.path.join(DATA_DIR, "saves")
 
@@ -22,6 +22,7 @@ SCHEMA = """
 CREATE TABLE IF NOT EXISTS jogadores (
     id          TEXT PRIMARY KEY,          -- gerado no navegador, fica salvo no aparelho
     nome        TEXT NOT NULL,
+    pin_hash    TEXT,                      -- PIN do login (com hash); vazio = jogador antigo sem PIN
     criado_em   INTEGER NOT NULL,
     visto_em    INTEGER NOT NULL
 );
@@ -94,28 +95,44 @@ def iniciar_banco():
     con = sqlite3.connect(DB_PATH)
     con.execute("PRAGMA journal_mode = WAL")   # leituras não travam as escritas
     con.executescript(SCHEMA)
+    # migração: bancos criados antes do login não têm a coluna do PIN
+    colunas = {r[1] for r in con.execute("PRAGMA table_info(jogadores)")}
+    if "pin_hash" not in colunas:
+        con.execute("ALTER TABLE jogadores ADD COLUMN pin_hash TEXT")
+    con.execute("CREATE INDEX IF NOT EXISTS idx_jogadores_nome ON jogadores(nome COLLATE NOCASE)")
+    con.commit()
     con.close()
 
 
 # ---------- jogadores ----------
 
-def salvar_jogador(con, jogador_id, nome):
+def buscar_por_nome(con, nome):
+    """Nome não diferencia maiúsculas; se houver repetidos (antigos), pega o mais usado por último."""
+    row = con.execute(
+        "SELECT * FROM jogadores WHERE nome = ? COLLATE NOCASE ORDER BY visto_em DESC LIMIT 1", (nome,)
+    ).fetchone()
+    return dict(row) if row else None
+
+
+def buscar_jogador(con, jogador_id):
+    row = con.execute("SELECT id, nome FROM jogadores WHERE id = ?", (jogador_id,)).fetchone()
+    return dict(row) if row else None
+
+
+def criar_jogador(con, jogador_id, nome, pin_hash):
     t = agora()
     con.execute(
-        """INSERT INTO jogadores (id, nome, criado_em, visto_em) VALUES (?, ?, ?, ?)
-           ON CONFLICT(id) DO UPDATE SET nome = excluded.nome, visto_em = excluded.visto_em""",
-        (jogador_id, nome, t, t),
+        "INSERT INTO jogadores (id, nome, pin_hash, criado_em, visto_em) VALUES (?, ?, ?, ?, ?)",
+        (jogador_id, nome, pin_hash, t, t),
     )
 
 
-def garantir_jogador(con, jogador_id, nome=None):
-    """Cria o jogador se ainda não existir (nome provisório)."""
-    t = agora()
-    con.execute(
-        "INSERT OR IGNORE INTO jogadores (id, nome, criado_em, visto_em) VALUES (?, ?, ?, ?)",
-        (jogador_id, nome or "Jogador", t, t),
-    )
-    con.execute("UPDATE jogadores SET visto_em = ? WHERE id = ?", (t, jogador_id))
+def definir_pin(con, jogador_id, pin_hash):
+    con.execute("UPDATE jogadores SET pin_hash = ?, visto_em = ? WHERE id = ?", (pin_hash, agora(), jogador_id))
+
+
+def marcar_visto(con, jogador_id):
+    con.execute("UPDATE jogadores SET visto_em = ? WHERE id = ?", (agora(), jogador_id))
 
 
 # ---------- partidas e participações ----------
@@ -157,12 +174,12 @@ def nova_participacao(con, jogador_id, jogo, sala=None, papel="solo"):
     return {"participacao_id": cur.lastrowid, "partida_id": partida_id}
 
 
-def sinal_de_vida(con, participacao_id):
+def sinal_de_vida(con, participacao_id, jogador_id):
     t = agora()
     row = con.execute(
         "SELECT partida_id, jogador_id, ativa FROM participacoes WHERE id = ?", (participacao_id,)
     ).fetchone()
-    if not row or not row["ativa"]:
+    if not row or not row["ativa"] or row["jogador_id"] != jogador_id:
         return False
     con.execute("UPDATE participacoes SET saiu = ? WHERE id = ?", (t, participacao_id))
     con.execute("UPDATE partidas SET fim = MAX(fim, ?) WHERE id = ?", (t, row["partida_id"]))
@@ -170,11 +187,14 @@ def sinal_de_vida(con, participacao_id):
     return True
 
 
-def encerrar_participacao(con, participacao_id, marcar_saida=True):
+def encerrar_participacao(con, participacao_id, marcar_saida=True, jogador_id=None):
+    """jogador_id: quando vem de um pedido do navegador, só o dono pode encerrar."""
     row = con.execute(
-        "SELECT partida_id, ativa FROM participacoes WHERE id = ?", (participacao_id,)
+        "SELECT partida_id, jogador_id, ativa FROM participacoes WHERE id = ?", (participacao_id,)
     ).fetchone()
     if not row or not row["ativa"]:
+        return
+    if jogador_id is not None and row["jogador_id"] != jogador_id:
         return
     if marcar_saida:
         con.execute("UPDATE participacoes SET saiu = ? WHERE id = ?", (agora(), participacao_id))
