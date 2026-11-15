@@ -7,7 +7,13 @@
   <a class="voltar" href="/">← Jogos</a>
   <h1>{{ game.title }} <small>{{ game.console_label }}</small></h1>
   <p class="dica" id="dica">Para jogar junto: menu do jogo ▸ <b>Netplay</b> ▸ <b>Criar sala</b></p>
-  <button type="button" class="botao botao-sec botao-peq" id="abrir-resultado" hidden>Registrar resultado</button>
+  <div class="jogadores-aparelho">
+    <span class="chip chip-eu">{{ jogador.nome }}</span>
+    <span id="chips-locais"></span>
+    <button type="button" class="botao botao-sec botao-peq" id="abrir-local" hidden
+            title="Outra pessoa jogando neste mesmo aparelho (2º controle)">＋ Jogador</button>
+    <button type="button" class="botao botao-sec botao-peq" id="abrir-resultado" hidden>Registrar resultado</button>
+  </div>
 </header>
 
 <div class="palco">
@@ -20,6 +26,28 @@
 </div>
 
 {% include "_dialogo_resultado.html" %}
+
+<!-- Mais um jogador neste aparelho -->
+<dialog id="dialogo-local" class="dialogo">
+  <form id="form-local">
+    <h2 id="titulo-local">Quem mais está jogando aqui?</h2>
+    <p class="login-texto" id="texto-local">Jogador 2 (ou 3, 4) neste aparelho, com outro controle.
+      Entre com o nome e o PIN dele, ou crie um novo.</p>
+    <label class="campo" id="campo-nome-local">
+      <span>Nome</span>
+      <input type="text" name="nome" maxlength="20" required autocomplete="off" autocapitalize="words">
+    </label>
+    <label class="campo">
+      <span id="rotulo-pin-local">PIN</span>
+      <input type="password" name="pin" inputmode="numeric" pattern="[0-9]{4,8}" maxlength="8" required autocomplete="off">
+    </label>
+    <p class="erro-form" id="erro-local" hidden></p>
+    <div class="acoes">
+      <button type="button" class="botao botao-sec" id="cancelar-local">Cancelar</button>
+      <button type="submit" class="botao" id="enviar-local">Entrar</button>
+    </div>
+  </form>
+</dialog>
 
 <!-- Saves no servidor -->
 <dialog id="dialogo-saves" class="dialogo">
@@ -36,6 +64,7 @@
 <script src="{{ url_for('static', filename='js/jogador.js') }}"></script>
 <script src="{{ url_for('static', filename='js/resultado.js') }}"></script>
 <script src="{{ url_for('static', filename='js/registro.js') }}"></script>
+<script src="{{ url_for('static', filename='js/locais.js') }}"></script>
 <script src="{{ url_for('static', filename='js/saves.js') }}"></script>
 <script src="{{ url_for('static', filename='js/play.js') }}"></script>
 {% endblock %}

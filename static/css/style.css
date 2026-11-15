@@ -25,6 +25,9 @@
 
 * { box-sizing: border-box; }
 
+/* o atributo hidden vence qualquer display definido nas classes */
+[hidden] { display: none !important; }
+
 html, body { margin: 0; }
 
 body {
@@ -386,6 +389,41 @@ body.jogo {
 
 .botao-peq { padding: 6px 12px; font-size: 13px; }
 
+/* quem joga neste aparelho (barra do jogo) */
+.jogadores-aparelho {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+#chips-locais { display: contents; }
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid var(--linha);
+  border-radius: 99px;
+  background: var(--fundo-2);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.chip-eu { border-color: var(--destaque); }
+
+.chip button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--texto-2);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.chip button:hover { color: #ff7b6b; }
+
 /* quem está logado (topo da home) */
 .quem {
   display: flex;
@@ -435,7 +473,8 @@ body.jogo {
 }
 
 .login-caixa input:focus { outline: 2px solid var(--foco); outline-offset: 1px; }
-.login-caixa input[type=password] { letter-spacing: .3em; }
+.login-caixa input[type=password],
+.dialogo input[type=password] { letter-spacing: .3em; }
 .login-alt { color: var(--texto-2); font-size: 13px; text-align: center; }
 
 .atalhos { display: flex; gap: 8px; }
@@ -461,7 +500,8 @@ body.jogo {
 
 .dialogo form { display: flex; flex-direction: column; gap: 16px; }
 
-.dialogo input[type=text] {
+.dialogo input[type=text],
+.dialogo input[type=password] {
   padding: 10px;
   border: 1px solid var(--linha);
   border-radius: 8px;

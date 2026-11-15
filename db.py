@@ -51,7 +51,8 @@ CREATE TABLE IF NOT EXISTS participacoes (
     papel       TEXT NOT NULL CHECK (papel IN ('solo', 'anfitriao', 'convidado')),
     entrou      INTEGER NOT NULL,
     saiu        INTEGER NOT NULL,          -- atualizado a cada sinal de vida
-    ativa       INTEGER NOT NULL DEFAULT 1
+    ativa       INTEGER NOT NULL DEFAULT 1,
+    dono_id     INTEGER REFERENCES participacoes(id)  -- jogador 2+ no mesmo aparelho: segue esta
 );
 CREATE INDEX IF NOT EXISTS idx_part_partida ON participacoes(partida_id);
 CREATE INDEX IF NOT EXISTS idx_part_jogador ON participacoes(jogador_id);
@@ -99,6 +100,10 @@ def iniciar_banco():
     colunas = {r[1] for r in con.execute("PRAGMA table_info(jogadores)")}
     if "pin_hash" not in colunas:
         con.execute("ALTER TABLE jogadores ADD COLUMN pin_hash TEXT")
+    colunas = {r[1] for r in con.execute("PRAGMA table_info(participacoes)")}
+    if "dono_id" not in colunas:
+        con.execute("ALTER TABLE participacoes ADD COLUMN dono_id INTEGER REFERENCES participacoes(id)")
+    con.execute("CREATE INDEX IF NOT EXISTS idx_part_dono ON participacoes(dono_id, ativa)")
     con.execute("CREATE INDEX IF NOT EXISTS idx_jogadores_nome ON jogadores(nome COLLATE NOCASE)")
     con.commit()
     con.close()
@@ -181,7 +186,10 @@ def sinal_de_vida(con, participacao_id, jogador_id):
     ).fetchone()
     if not row or not row["ativa"] or row["jogador_id"] != jogador_id:
         return False
-    con.execute("UPDATE participacoes SET saiu = ? WHERE id = ?", (t, participacao_id))
+    con.execute(
+        "UPDATE participacoes SET saiu = ? WHERE (id = ? OR dono_id = ?) AND ativa = 1",
+        (t, participacao_id, participacao_id),
+    )
     con.execute("UPDATE partidas SET fim = MAX(fim, ?) WHERE id = ?", (t, row["partida_id"]))
     con.execute("UPDATE jogadores SET visto_em = ? WHERE id = ?", (t, row["jogador_id"]))
     return True
@@ -196,6 +204,11 @@ def encerrar_participacao(con, participacao_id, marcar_saida=True, jogador_id=No
         return
     if jogador_id is not None and row["jogador_id"] != jogador_id:
         return
+    # quem joga no mesmo aparelho sai junto
+    for local in con.execute(
+        "SELECT id FROM participacoes WHERE dono_id = ? AND ativa = 1", (participacao_id,)
+    ).fetchall():
+        encerrar_participacao(con, local["id"], marcar_saida=marcar_saida)
     if marcar_saida:
         con.execute("UPDATE participacoes SET saiu = ? WHERE id = ?", (agora(), participacao_id))
     con.execute("UPDATE participacoes SET ativa = 0 WHERE id = ?", (participacao_id,))
@@ -213,6 +226,42 @@ def encerrar_participacao(con, participacao_id, marcar_saida=True, jogador_id=No
     p = con.execute("SELECT tipo, inicio, fim, placar FROM partidas WHERE id = ?", (partida_id,)).fetchone()
     if p["tipo"] == "solo" and not p["placar"] and p["fim"] - p["inicio"] < SOLO_MINIMO_SEG:
         con.execute("DELETE FROM partidas WHERE id = ?", (partida_id,))
+
+
+def jogadores_locais(con, dono_id):
+    """Jogadores 2, 3, 4 ligados à participação de quem está logado no aparelho."""
+    return [dict(r) for r in con.execute(
+        """SELECT pa.id AS participacao_id, j.id AS jogador_id, j.nome
+           FROM participacoes pa JOIN jogadores j ON j.id = pa.jogador_id
+           WHERE pa.dono_id = ? AND pa.ativa = 1 ORDER BY pa.id""",
+        (dono_id,),
+    ).fetchall()]
+
+
+def adicionar_local(con, dono_id, jogador_id):
+    """Coloca mais um jogador (mesmo aparelho) na partida do dono."""
+    dono = con.execute(
+        "SELECT partida_id, jogador_id, ativa FROM participacoes WHERE id = ?", (dono_id,)
+    ).fetchone()
+    if not dono or not dono["ativa"]:
+        raise ValueError("A sessão de jogo terminou. Recarregue a página.")
+    if dono["jogador_id"] == jogador_id:
+        raise ValueError("Esse jogador já está jogando aqui.")
+    if any(l["jogador_id"] == jogador_id for l in jogadores_locais(con, dono_id)):
+        raise ValueError("Esse jogador já está jogando aqui.")
+    if len(jogadores_locais(con, dono_id)) >= 3:
+        raise ValueError("Máximo de 4 jogadores por aparelho.")
+    t = agora()
+    con.execute(
+        """INSERT INTO participacoes (partida_id, jogador_id, papel, entrou, saiu, dono_id)
+           VALUES (?, ?, 'convidado', ?, ?, ?)""",
+        (dono["partida_id"], jogador_id, t, t, dono_id),
+    )
+
+
+def participacao_do_jogador(con, participacao_id, jogador_id):
+    row = con.execute("SELECT jogador_id FROM participacoes WHERE id = ?", (participacao_id,)).fetchone()
+    return bool(row) and row["jogador_id"] == jogador_id
 
 
 def partida_detalhe(con, partida_id):

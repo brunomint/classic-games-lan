@@ -79,6 +79,47 @@ def _errou(nome):
         _tentativas.setdefault(nome, []).append(time.time())
 
 
+class ErroLogin(Exception):
+    pass
+
+
+def limpar_nome(nome):
+    return re.sub(r"\s+", " ", nome or "").strip()[:20]
+
+
+def autenticar(con, nome, pin):
+    """Confere nome + PIN. Devolve o id do jogador, ou None se o nome ainda não existe.
+
+    Usado no login e no "＋ Jogador" (segundo jogador no mesmo aparelho).
+    """
+    if len(nome) < 2:
+        raise ErroLogin("Escreva o nome (pelo menos 2 letras).")
+    if not PIN_VALIDO.match(pin):
+        raise ErroLogin("O PIN tem de 4 a 8 números.")
+    chave = nome.lower()
+    if _bloqueado(chave):
+        raise ErroLogin("Muitas tentativas erradas. Espere 5 minutos.")
+
+    existente = db.buscar_por_nome(con, nome)
+    if not existente:
+        return None
+    if existente["pin_hash"]:
+        if not check_password_hash(existente["pin_hash"], pin):
+            _errou(chave)
+            raise ErroLogin("PIN errado.")
+        db.marcar_visto(con, existente["id"])
+    else:
+        # jogador de antes do login: o primeiro PIN usado passa a ser o dele
+        db.definir_pin(con, existente["id"], generate_password_hash(pin))
+    return existente["id"]
+
+
+def criar_conta(con, nome, pin):
+    jogador_id = str(uuid.uuid4())
+    db.criar_jogador(con, jogador_id, nome, generate_password_hash(pin))
+    return jogador_id
+
+
 def _destino_seguro(proximo):
     """Só redireciona para caminhos do próprio site."""
     if not proximo:
@@ -104,44 +145,28 @@ def register_auth(app):
         if request.method == "GET":
             return render_template("entrar.html", proximo=proximo, nome="", erro=None, criar=False)
 
-        nome = re.sub(r"\s+", " ", request.form.get("nome", "")).strip()[:20]
+        nome = limpar_nome(request.form.get("nome", ""))
         pin = request.form.get("pin", "").strip()
         confirmar_criacao = request.form.get("criar") == "1"
 
-        def erro(msg, criar=False):
-            return render_template("entrar.html", proximo=proximo, nome=nome, erro=msg, criar=criar), 400
+        def erro(msg):
+            return render_template("entrar.html", proximo=proximo, nome=nome, erro=msg, criar=False), 400
 
-        if len(nome) < 2:
-            return erro("Escreva seu nome (pelo menos 2 letras).")
-        if not PIN_VALIDO.match(pin):
-            return erro("O PIN tem de 4 a 8 números.")
-        chave = nome.lower()
-        if _bloqueado(chave):
-            return erro("Muitas tentativas erradas. Espere 5 minutos.")
-
-        with db.conectar() as con:
-            existente = db.buscar_por_nome(con, nome)
-            if existente and existente["pin_hash"]:
-                if not check_password_hash(existente["pin_hash"], pin):
-                    _errou(chave)
-                    return erro("PIN errado.")
-                jogador_id = existente["id"]
-                db.marcar_visto(con, jogador_id)
-            elif existente:
-                # jogador de antes do login: o primeiro PIN usado passa a ser o dele
-                jogador_id = existente["id"]
-                db.definir_pin(con, jogador_id, generate_password_hash(pin))
-            else:
-                # nome novo: pede o PIN de novo para confirmar antes de criar
-                pendente = session.get("novo_jogador")
-                if not (confirmar_criacao and pendente and pendente["nome"].lower() == chave):
-                    session["novo_jogador"] = {"nome": nome, "pin_hash": generate_password_hash(pin)}
-                    return render_template("entrar.html", proximo=proximo, nome=nome, erro=None, criar=True)
-                if not check_password_hash(pendente["pin_hash"], pin):
-                    session.pop("novo_jogador", None)
-                    return erro("Os PINs não batem. Comece de novo.")
-                jogador_id = str(uuid.uuid4())
-                db.criar_jogador(con, jogador_id, nome, generate_password_hash(pin))
+        try:
+            with db.conectar() as con:
+                jogador_id = autenticar(con, nome, pin)
+                if jogador_id is None:
+                    # nome novo: pede o PIN de novo para confirmar antes de criar
+                    pendente = session.get("novo_jogador")
+                    if not (confirmar_criacao and pendente and pendente["nome"].lower() == nome.lower()):
+                        session["novo_jogador"] = {"nome": nome, "pin_hash": generate_password_hash(pin)}
+                        return render_template("entrar.html", proximo=proximo, nome=nome, erro=None, criar=True)
+                    if not check_password_hash(pendente["pin_hash"], pin):
+                        session.pop("novo_jogador", None)
+                        return erro("Os PINs não batem. Comece de novo.")
+                    jogador_id = criar_conta(con, nome, pin)
+        except ErroLogin as e:
+            return erro(str(e))
 
         session.clear()
         session.permanent = True

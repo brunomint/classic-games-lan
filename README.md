@@ -39,6 +39,10 @@ Tudo fica num banco SQLite em `dados/classic-games.db` (fora do git), criado soz
   IP, trocou de aparelho ou limpou o navegador, é só entrar de novo.
   5 PINs errados seguidos bloqueiam aquele nome por 5 minutos.
   Para jogar e enviar ROMs é preciso estar logado; a home e o histórico são abertos.
+- **Mais de um jogador no mesmo aparelho** (2º, 3º, 4º controle): botão
+  **＋ Jogador** na tela do jogo; a pessoa entra com o próprio nome + PIN (ou cria
+  um jogador). Ela conta no histórico junto com quem está logado e acompanha a
+  sessão: se entrarem numa sala de netplay, vai junto; fechou a página, sai junto.
 - **Partidas:** registradas automaticamente: solo ou em grupo (netplay), quem
   jogou, quem criou a sala, início e duração. Abrir e fechar um jogo em menos de
   20 s não conta.

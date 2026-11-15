@@ -7,7 +7,7 @@ from datetime import datetime
 from flask import abort, jsonify, render_template, request, send_from_directory
 
 import db
-from auth import login_obrigatorio
+from auth import ErroLogin, autenticar, criar_conta, limpar_nome, login_obrigatorio
 
 ID_VALIDO = re.compile(r"^[A-Za-z0-9-]{8,64}$")
 FORMATOS_IMAGEM = {"png": "png", "jpeg": "jpg", "jpg": "jpg", "webp": "webp"}
@@ -75,12 +75,21 @@ def register_registro(app, catalog):
         jogo = jogo_por_id(dados.get("game_id"))
         sala = dados.get("sala") or None
         papel = "anfitriao" if dados.get("anfitriao") else "convidado"
+        antiga = int(dados.get("participacao_id") or 0)
         with db.conectar() as con:
-            if dados.get("participacao_id"):
-                db.encerrar_participacao(con, int(dados["participacao_id"]), jogador_id=jogador_id)
+            locais = []
+            if antiga and db.participacao_do_jogador(con, antiga, jogador_id):
+                locais = db.jogadores_locais(con, antiga)      # lê antes de encerrar
+                db.encerrar_participacao(con, antiga, jogador_id=jogador_id)
             if sala:
-                return jsonify(db.nova_participacao(con, jogador_id, jogo, sala=str(sala)[:64], papel=papel))
-            return jsonify(db.nova_participacao(con, jogador_id, jogo))
+                nova = db.nova_participacao(con, jogador_id, jogo, sala=str(sala)[:64], papel=papel)
+            else:
+                nova = db.nova_participacao(con, jogador_id, jogo)
+            # quem joga no mesmo aparelho vai junto para a nova partida
+            for local in locais:
+                db.adicionar_local(con, nova["participacao_id"], local["jogador_id"])
+            nova["locais"] = db.jogadores_locais(con, nova["participacao_id"])
+            return jsonify(nova)
 
     @app.post("/api/sessao/ping")
     @login_obrigatorio(api=True)
@@ -97,6 +106,47 @@ def register_registro(app, catalog):
         with db.conectar() as con:
             db.encerrar_participacao(con, int(dados.get("participacao_id") or 0), jogador_id=request.jogador["id"])
         return jsonify(ok=True)
+
+    # ---------- mais jogadores no mesmo aparelho ----------
+
+    def _minha_participacao(con, dados):
+        pid = int(dados.get("participacao_id") or 0)
+        if not db.participacao_do_jogador(con, pid, request.jogador["id"]):
+            abort(403, "Essa sessão de jogo não é sua")
+        return pid
+
+    @app.post("/api/sessao/jogador")
+    @login_obrigatorio(api=True)
+    def api_jogador_local():
+        """Jogador 2 (3, 4) entra com nome + PIN; se o nome é novo, pede o PIN duas vezes."""
+        dados = _json()
+        nome = limpar_nome(dados.get("nome"))
+        pin = str(dados.get("pin") or "").strip()
+        try:
+            with db.conectar() as con:
+                dono = _minha_participacao(con, dados)
+                jogador_id = autenticar(con, nome, pin)
+                if jogador_id is None:
+                    if not dados.get("pin2"):
+                        return jsonify(novo=True, nome=nome)
+                    if str(dados["pin2"]).strip() != pin:
+                        return jsonify(erro="Os PINs não batem."), 400
+                    jogador_id = criar_conta(con, nome, pin)
+                db.adicionar_local(con, dono, jogador_id)
+                return jsonify(locais=db.jogadores_locais(con, dono))
+        except (ErroLogin, ValueError) as e:
+            return jsonify(erro=str(e)), 400
+
+    @app.post("/api/sessao/jogador/remover")
+    @login_obrigatorio(api=True)
+    def api_jogador_local_remover():
+        dados = _json()
+        with db.conectar() as con:
+            dono = _minha_participacao(con, dados)
+            local_id = int(dados.get("local_id") or 0)
+            if any(l["participacao_id"] == local_id for l in db.jogadores_locais(con, dono)):
+                db.encerrar_participacao(con, local_id)
+            return jsonify(locais=db.jogadores_locais(con, dono))
 
     # ---------- partidas e resultado ----------
 

@@ -19,6 +19,10 @@
   function aplicar(r) {
     estado.participacaoId = r.participacao_id;
     estado.partidaId = r.partida_id;
+    // jogadores do mesmo aparelho seguem para a nova partida (o servidor já moveu)
+    if (r.locais) document.dispatchEvent(new CustomEvent("cg:locais", { detail: r.locais }));
+    atualizarBotao();
+    document.dispatchEvent(new CustomEvent("cg:sessao", { detail: { ...estado } }));
   }
 
   function iniciar() {
