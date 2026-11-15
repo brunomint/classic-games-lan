@@ -3,14 +3,15 @@
 {% block css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/paginas.css') }}">{% endblock %}
 {% block body_class %}entrada{% endblock %}
 {% from "_teclado.html" import teclado %}
+{% from "_topo.html" import topo %}
 
 {% block content %}
+{{ topo("Primeira vez, " ~ nome ~ "?" if criar else "Quem está jogando?", "jogador", "b") }}
+
 <main class="entrada-main">
   {% if criar %}
-  <h1>Primeira vez, {{ nome }}?</h1>
   <p class="apoio">Digite o mesmo PIN mais uma vez para criar seu jogador.</p>
   {% else %}
-  <h1>Quem está jogando?</h1>
   {% if perfis %}
   <div class="perfis" role="list">
     {% for p in perfis %}
@@ -61,12 +62,12 @@
 
 <nav class="dicas" aria-label="Atalhos">
   <span><i class="dir">✛</i> Escolher</span>
-  <span><i class="a">A</i> Confirmar</span>
   {% if criar %}
   <a href="/entrar?proximo={{ proximo|urlencode }}" data-atalho="b"><i class="b">B</i> Não sou novo</a>
   {% else %}
-  <a href="/" data-atalho="b"><i class="b">B</i> Voltar aos jogos</a>
+  <a href="/" data-atalho="b"><i class="b">B</i> Voltar ao menu</a>
   {% endif %}
+  <span><i class="a">A</i> Confirmar</span>
 </nav>
 {% endblock %}
 

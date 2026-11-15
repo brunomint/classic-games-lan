@@ -1,12 +1,11 @@
 {% extends "base.html" %}
+{% from "_topo.html" import topo %}
 {% block title %}Enviar ROMs · Classic Games{% endblock %}
 {% block css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/paginas.css') }}">{% endblock %}
 {% block body_class %}envio{% endblock %}
 
 {% block content %}
-<header class="topo-pagina">
-  <h1>Enviar ROMs</h1>
-</header>
+{{ topo("Enviar ROMs", "enviar", "y") }}
 
 <main class="envio-main">
   <form id="form-envio" class="caixa-envio">
@@ -38,7 +37,8 @@
 </main>
 
 <nav class="dicas" aria-label="Atalhos">
-  <a href="/" data-atalho="b"><i class="b">B</i> Voltar aos jogos</a>
+  <a href="/" data-atalho="b"><i class="b">B</i> Voltar ao menu</a>
+  <span><i class="a">A</i> OK</span>
 </nav>
 {% endblock %}
 

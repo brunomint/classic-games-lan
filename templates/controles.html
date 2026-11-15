@@ -1,12 +1,11 @@
 {% extends "base.html" %}
+{% from "_topo.html" import topo %}
 {% block title %}Testar controles · Classic Games{% endblock %}
 {% block css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/paginas.css') }}">{% endblock %}
 {% block body_class %}controles{% endblock %}
 
 {% block content %}
-<header class="topo-pagina">
-  <h1>Testar controles</h1>
-</header>
+{{ topo("Testar controles", "controle", "ajustes") }}
 
 <main class="controles-main">
   <p class="apoio" id="aviso">Aperte qualquer botão do controle para ele aparecer aqui.</p>
@@ -15,6 +14,7 @@
 
 <nav class="dicas" aria-label="Atalhos">
   <a href="/" data-atalho="b"><i class="b">B</i> Voltar ao menu</a>
+  <span><i class="a">A</i> OK</span>
 </nav>
 {% endblock %}
 

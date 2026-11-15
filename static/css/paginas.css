@@ -5,17 +5,10 @@
 .entrada-main {
   max-width: 640px;
   margin: 0 auto;
-  padding: 40px 16px 32px;
+  padding: 8px 16px 32px;
   text-align: center;
 }
 
-.entrada-main h1 {
-  margin: 0 0 8px;
-  font-size: clamp(30px, 6vw, 44px);
-  font-weight: 800;
-  font-stretch: 120%;
-  font-style: italic;
-}
 
 .apoio { margin: 0 auto 22px; max-width: 46ch; color: var(--grafite-2); font-size: 17px; }
 
@@ -128,7 +121,6 @@
 /* ---------- enviar ROMs ---------- */
 
 .envio-main { max-width: 620px; margin: 0 auto; padding: 8px 16px 32px; }
-.envio .topo-pagina { max-width: 620px; }
 
 .caixa-envio { display: flex; flex-direction: column; gap: 18px; }
 
@@ -195,6 +187,7 @@
 /* ---------- testar controles ---------- */
 
 .controles-main { max-width: 900px; margin: 0 auto; padding: 8px 16px 32px; }
+.controles-main > .apoio { text-align: center; }
 .lista-controles { display: grid; gap: 16px; }
 
 .controle {
@@ -230,7 +223,6 @@
 
 /* ---------- ajustes ---------- */
 
-.ajustes .topo-pagina { max-width: 760px; }
 .ajustes-main { max-width: 760px; margin: 0 auto; padding: 8px 16px 32px; display: grid; gap: 22px; }
 
 .bloco-ajuste {

@@ -8,16 +8,6 @@
   const dockLegenda = document.getElementById("dock-legenda");
   const dicaTexto = document.getElementById("dica-ok-texto");
 
-  // ---------- relógio ----------
-  const relogio = document.getElementById("relogio");
-  function tic() {
-    const agora = new Date();
-    relogio.textContent = agora.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
-    relogio.dateTime = agora.toISOString();
-  }
-  tic();
-  setInterval(tic, 10000);
-
   // ---------- jogo em foco: nome em cima dele ----------
   function mostrarJogo(tile) {
     tituloFoco.textContent = tile.dataset.titulo;

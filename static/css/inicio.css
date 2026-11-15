@@ -42,7 +42,6 @@ body.inicio { height: 100vh; overflow: hidden; }
 .perfil-topo:focus-visible .avatar { opacity: 1; }
 
 .status { display: flex; align-items: center; gap: 18px; font-stretch: 105%; }
-.relogio { font-size: 24px; font-weight: 600; font-variant-numeric: tabular-nums; }
 
 .jogando {
   display: inline-flex;
@@ -186,11 +185,6 @@ body.inicio { height: 100vh; overflow: hidden; }
   stroke-linejoin: round;
 }
 
-.dock-btn.cor-a { --cor: var(--a); }
-.dock-btn.cor-b { --cor: #b8860b; }
-.dock-btn.cor-x { --cor: var(--x); }
-.dock-btn.cor-y { --cor: var(--y); }
-.dock-btn.cor-ajustes { --cor: var(--grafite-2); }
 
 .dock-btn:focus-visible,
 .dock-btn:hover { outline: 4px solid var(--foco); outline-offset: 3px; }

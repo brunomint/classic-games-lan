@@ -1,0 +1,10 @@
+{# Topo das páginas internas, no mesmo jeito do menu inicial:
+   ícone da página (o mesmo do menu) e título à esquerda, relógio à direita. #}
+{% from "_icones.html" import icone %}
+{% macro topo(titulo, nome_icone, cor) -%}
+<header class="topo-pagina">
+  <span class="icone-pagina cor-{{ cor }}">{{ icone(nome_icone) }}</span>
+  <h1>{{ titulo }}</h1>
+  <time class="relogio" data-relogio></time>
+</header>
+{%- endmacro %}

@@ -132,7 +132,8 @@ body.usando-controle :focus {
   cursor: pointer;
 }
 
-/* ---------- barra de dicas do controle (rodapé) ---------- */
+/* ---------- dicas do controle (rodapé) ----------
+   Como o canto do menu inicial: claras, à direita, com o botão numa bolinha grafite. */
 
 /* blocos de página ocupam a largura toda (o body é uma coluna flex) */
 body > :not(dialog):not(script) { width: 100%; }
@@ -140,42 +141,38 @@ body > :not(dialog):not(script) { width: 100%; }
 .dicas {
   position: sticky;
   bottom: 0;
-  margin-top: auto;   /* em página curta, a barra desce até o rodapé */
+  margin-top: auto;   /* em página curta, as dicas descem até o rodapé */
   display: flex;
   flex-wrap: wrap;
-  gap: 6px 22px;
-  justify-content: center;
-  padding: 10px 16px;
-  background: var(--grafite);
-  color: var(--plastico-claro);
-  font-size: 14px;
-  font-stretch: 110%;
+  gap: 6px 24px;
+  justify-content: flex-end;
+  padding: 12px clamp(16px, 4vw, 48px) 16px;
+  border-top: 1px solid var(--plastico-sombra);
+  background: var(--plastico);
+  color: var(--grafite);
+  font-weight: 600;
 }
 
 .dicas span,
-.dicas a { display: inline-flex; align-items: center; gap: 7px; text-decoration: none; }
-.dicas a:hover { color: #fff; text-decoration: underline; text-underline-offset: 3px; }
+.dicas a { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; }
+.dicas a:hover { text-decoration: underline; text-underline-offset: 3px; }
 
 .dicas i {
   display: grid;
   place-items: center;
-  width: 22px;
-  height: 22px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
-  background: var(--cor, var(--grafite-2));
+  background: var(--grafite);
   color: #fff;
   font-style: normal;
   font-weight: 800;
-  font-size: 12px;
+  font-size: 13px;
 }
 
-.dicas i.a { --cor: var(--a); }
-.dicas i.b { --cor: var(--b); }
-.dicas i.x { --cor: var(--x); }
-.dicas i.y { --cor: var(--y); }
-.dicas i.dir { border-radius: 4px; background: var(--grafite-2); }
+.dicas i.dir { border-radius: 6px; }
 
-/* tela de toque sem controle: a barra vira só os links, no fim da página */
+/* tela de toque sem controle: só os links ficam, no fim da página */
 @media (max-width: 760px), (hover: none) and (pointer: coarse) {
   .dicas { position: static; }
   .dicas span { display: none; }
@@ -336,19 +333,48 @@ input[type=password] { letter-spacing: .3em; }
 .opcoes label:has(input:checked) { background: var(--grafite); color: #fff; }
 .opcoes input { accent-color: var(--a); }
 
-/* ---------- topo comum das páginas internas ---------- */
+/* ---------- topo comum das páginas internas ----------
+   Mesmo alinhamento do menu inicial: ícone da página e título à esquerda, relógio à direita;
+   uma linha fina separa o topo do conteúdo, como no menu de ajustes de um console. */
 
 .topo-pagina {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 10px 20px;
-  max-width: 1080px;
-  margin: 0 auto;
-  padding: 18px 16px 6px;
+  gap: 14px;
+  margin-bottom: 24px;
+  padding: 22px clamp(16px, 4vw, 48px) 16px;
+  border-bottom: 1px solid var(--plastico-sombra);
 }
 
-.topo-pagina h1 { margin: 0; font-size: 28px; font-weight: 800; font-stretch: 120%; }
+.topo-pagina h1 { flex: 1; min-width: 0; margin: 0; font-size: 26px; font-weight: 700; font-stretch: 110%; line-height: 1.15; }
+
+.icone-pagina {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--plastico-claro);
+  color: var(--cor, var(--grafite-2));
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .1);
+}
+
+.icone-pagina svg { width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+
+.relogio { font-size: 24px; font-weight: 600; font-stretch: 105%; font-variant-numeric: tabular-nums; }
+
+/* a mesma cor de cada ícone no menu inicial */
+.cor-a { --cor: var(--a); }
+.cor-b { --cor: #b8860b; }
+.cor-x { --cor: var(--x); }
+.cor-y { --cor: var(--y); }
+.cor-ajustes { --cor: var(--grafite-2); }
+
+@media (max-width: 520px) {
+  .topo-pagina h1 { font-size: 21px; }
+  .topo-pagina .relogio { display: none; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; }
