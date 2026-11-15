@@ -25,17 +25,21 @@ Nos outros aparelhos, escaneie o QR code da página inicial.
 
 ## Menu inicial: consoles e pesquisa
 
-Acima da fileira ficam as abas **Todos**, **Recentes** (quem já jogou algo) e uma por console
+Acima da fileira ficam as abas **Todos**, **Favoritos** (de quem está logado), **Recentes** (quem já jogou algo) e uma por console
 que tem jogo no servidor — um console novo ganha aba sozinho. A aba fica lembrada no aparelho.
 
 | Controle | Teclado | O que faz |
 |---|---|---|
 | L1 / R1 | `[` / `]` | aba anterior / próxima |
 | suba até **Pesquisar** e A | comece a digitar (ou `/`) | abre a pesquisa |
+| Select (−) num jogo | estrela ao lado do nome | favorita / tira dos favoritos |
 
 A pesquisa ignora acento e maiúsculas, procura em todos os consoles e mostra os jogos achados na
 hora (A abre o jogo). Com o controle, use o teclado da tela; no celular aparece o teclado do
 próprio aparelho. B ou "Ver na fileira" fecha e deixa a fileira filtrada; o × ao lado limpa.
+
+Os favoritos ficam no servidor, por jogador (tabela `favoritos`): valem em qualquer aparelho em que
+a pessoa entrar. Dentro do jogo, o menu de pausa também tem **Favoritar**.
 
 ## Jogar junto
 

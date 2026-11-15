@@ -4,6 +4,7 @@
 //   B / Esc             → fecha o diálogo aberto; sem diálogo, volta (data-atalho="b" ou página anterior)
 //   X, Y                → atalhos marcados com data-atalho="x" / "y"
 //   L1, R1              → evento cg:aba (troca a aba de consoles do menu inicial)
+//   Select              → evento cg:select (favoritar o jogo em foco no menu inicial)
 //
 // Na tela do jogo (body.jogo) o controle é do jogo: aqui só vale dentro dos nossos
 // diálogos (menu de pausa, resultado...) e para os atalhos com Select:
@@ -138,6 +139,7 @@
       if (!dialogoAberto()) {
         if (apertou("l1")) document.dispatchEvent(new CustomEvent("cg:aba", { detail: { passo: -1 } }));
         if (apertou("r1")) document.dispatchEvent(new CustomEvent("cg:aba", { detail: { passo: 1 } }));
+        if (apertou("select")) document.dispatchEvent(new CustomEvent("cg:select"));   // favoritar
       }
 
       const algum = ["esq", "dir", "cima", "baixo", "a", "b", "x", "y"].some(apertou);

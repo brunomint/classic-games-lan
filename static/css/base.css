@@ -400,3 +400,38 @@ input[type=password] { letter-spacing: .3em; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; }
 }
+
+/* ---------- avisos rápidos (tela do jogo e menu inicial) ---------- */
+
+.avisos {
+  position: fixed;
+  top: 14px;
+  right: 14px;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  max-width: min(420px, calc(100vw - 80px));
+  pointer-events: none;
+}
+
+.aviso {
+  margin: 0;
+  padding: 9px 16px 9px 14px;
+  border-left: 4px solid var(--grafite-2);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, .94);
+  color: var(--grafite);
+  font-weight: 600;
+  font-size: 15px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, .35);
+  animation: chega .2s ease-out;
+  transition: opacity .3s ease, transform .3s ease;
+}
+
+.aviso-ok { border-left-color: var(--y); }
+.aviso-erro { border-left-color: var(--a); }
+.aviso.saindo { opacity: 0; transform: translateX(12px); }
+
+@keyframes chega { from { opacity: 0; transform: translateX(12px); } }

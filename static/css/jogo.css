@@ -49,41 +49,6 @@ body.jogo {
   .botao-menu { opacity: .6; }
 }
 
-/* ---------- avisos rápidos ---------- */
-
-.avisos {
-  position: fixed;
-  top: 14px;
-  right: 14px;
-  z-index: 6;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 8px;
-  max-width: min(420px, calc(100vw - 80px));
-  pointer-events: none;
-}
-
-.aviso {
-  margin: 0;
-  padding: 9px 16px 9px 14px;
-  border-left: 4px solid var(--grafite-2);
-  border-radius: 10px;
-  background: rgba(255, 255, 255, .94);
-  color: var(--grafite);
-  font-weight: 600;
-  font-size: 15px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, .35);
-  animation: chega .2s ease-out;
-  transition: opacity .3s ease, transform .3s ease;
-}
-
-.aviso-ok { border-left-color: var(--y); }
-.aviso-erro { border-left-color: var(--a); }
-.aviso.saindo { opacity: 0; transform: translateX(12px); }
-
-@keyframes chega { from { opacity: 0; transform: translateX(12px); } }
-
 /* ---------- menu de pausa: tela inteira, no jeito do menu inicial ---------- */
 
 .pausa {
@@ -388,3 +353,7 @@ body.jogo {
 .perfis-local .perfil-btn .avatar { width: 56px; height: 56px; font-size: 24px; }
 .dialogo-local .teclado { max-width: 300px; align-self: center; width: 100%; }
 .dialogo-local .tecla { aspect-ratio: 2; font-size: 22px; }
+
+/* favoritar no menu de pausa: estrela vazia / cheia no fim da linha */
+.item-favorito::after { content: "☆"; margin-left: auto; font-size: 20px; color: var(--grafite-2); }
+.item-favorito[aria-pressed="true"]::after { content: "★"; color: var(--b); }

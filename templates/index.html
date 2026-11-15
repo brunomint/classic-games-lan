@@ -40,6 +40,9 @@
       <nav class="abas" id="abas" aria-label="Consoles">
         <span class="dica-ombro" aria-hidden="true">L</span>
         <button type="button" class="aba" data-nav data-aba="todos" aria-pressed="true">Todos <small>{{ jogos|length }}</small></button>
+        {% if jogador %}
+        <button type="button" class="aba" data-nav data-aba="favoritos" aria-pressed="false">Favoritos <small id="total-favoritos">{{ total_favoritos }}</small></button>
+        {% endif %}
         {% if tem_recentes %}
         <button type="button" class="aba" data-nav data-aba="recentes" aria-pressed="false">Recentes</button>
         {% endif %}
@@ -60,12 +63,17 @@
     <div class="legenda" aria-live="polite">
       <strong id="titulo-foco">{{ jogos[0].title }}</strong>
       <span id="info-foco"></span>
+      {% if jogador %}
+      <button type="button" class="botao-favorito" data-nav id="favoritar-foco" aria-pressed="false">
+        {{ icone("estrela") }}<span id="favoritar-texto">Favoritar</span>
+      </button>
+      {% endif %}
     </div>
 
     <div class="fileira" id="fileira" role="list">
       {% for g in jogos %}
       <a class="tile" role="listitem" href="/jogo/{{ g.console }}/{{ g.slug }}"
-         data-titulo="{{ g.title }}" data-console="{{ g.console }}"{% if g.jogou_em %} data-recente{% endif %}
+         data-titulo="{{ g.title }}" data-console="{{ g.console }}" data-game-id="{{ g.game_id }}"{% if g.jogou_em %} data-recente{% endif %}{% if g.favorito %} data-favorito{% endif %}
          data-info="{{ g.console_label }}{% if g.jogou_em %}, você jogou {{ g.jogou_em|quando }}{% endif %}{% if g.size_mb > 50 %}, {{ g.size_mb|round|int }} MB{% endif %}"
          aria-label="{{ g.title }}, {{ g.console_label }}">
         {% if g.cover %}
@@ -73,6 +81,7 @@
         {% else %}
         <span class="tile-sigla etiqueta-{{ g.cor }}" aria-hidden="true">{{ g.initials }}</span>
         {% endif %}
+        <span class="selo-favorito" aria-hidden="true">{{ icone("estrela") }}</span>
       </a>
       {% endfor %}
     </div>
@@ -122,8 +131,13 @@
     <p class="dock-legenda" id="dock-legenda" aria-hidden="true"></p>
   </main>
 
-  <p class="dica-ok" id="dica-ok"><i>A</i> <span id="dica-ok-texto">Jogar</span></p>
+  <p class="dica-ok" id="dica-ok">
+    {% if jogador %}<span class="dica-favoritar" id="dica-favoritar"><i class="i-select">−</i> <span id="dica-favoritar-texto">Favoritar</span></span>{% endif %}
+    <span><i>A</i> <span id="dica-ok-texto">Jogar</span></span>
+  </p>
 </div>
+
+<div class="avisos" id="avisos" aria-live="polite"></div>
 
 <!-- Pesquisa: teclado na tela (controle e toque) e os jogos encontrados -->
 <dialog id="dialogo-pesquisa" class="dialogo dialogo-pesquisa" aria-labelledby="titulo-pesquisa">
@@ -172,6 +186,8 @@
 {% block scripts %}
 <script src="{{ url_for('static', filename='vendor/qrcode.js') }}"></script>
 <script src="{{ url_for('static', filename='js/home.js') }}"></script>
+<script src="{{ url_for('static', filename='js/avisos.js') }}"></script>
 <script src="{{ url_for('static', filename='js/filtro-jogos.js') }}"></script>
+<script src="{{ url_for('static', filename='js/favoritos.js') }}"></script>
 <script src="{{ url_for('static', filename='js/gamepad-menu.js') }}"></script>
 {% endblock %}

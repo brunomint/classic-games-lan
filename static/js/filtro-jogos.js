@@ -1,4 +1,4 @@
-// Menu inicial: abas de console (Todos, Recentes, SNES, PS1...) e pesquisa por nome.
+// Menu inicial: abas (Todos, Favoritos, Recentes, SNES, PS1...) e pesquisa por nome.
 //   L1 / R1 no controle, [ e ] no teclado → aba anterior / próxima
 //   começar a digitar (ou /) na home      → abre a pesquisa com a letra digitada
 // A pesquisa ignora acento e maiúsculas e vale para todos os consoles; a aba escolhida
@@ -34,7 +34,12 @@
     if (salva && abas.some((b) => b.dataset.aba === salva)) aba = salva;
   } catch (e) { /* sem localStorage: começa em Todos */ }
 
-  const naAba = (t, a) => a === "todos" || (a === "recentes" ? "recente" in t.dataset : t.dataset.console === a);
+  const naAba = (t, a) => {
+    if (a === "todos") return true;
+    if (a === "recentes") return "recente" in t.dataset;
+    if (a === "favoritos") return "favorito" in t.dataset;
+    return t.dataset.console === a;
+  };
   const comTermo = (t) => normalizar(termo).split(" ").every((p) => t.dataset.busca.includes(p));
   const rotuloDaAba = (a) => {
     const b = abas.find((x) => x.dataset.aba === a);
@@ -62,7 +67,9 @@
     semResultado.hidden = !vazio;
     if (vazio) {
       const onde = aba === "todos" ? "" : ` em ${rotuloDaAba(aba)}`;
-      semResultadoTexto.textContent = termo ? `Nenhum jogo com “${termo}”${onde}.` : `Nenhum jogo${onde}.`;
+      semResultadoTexto.textContent = termo ? `Nenhum jogo com “${termo}”${onde}.`
+        : aba === "favoritos" ? "Nenhum favorito ainda. Num jogo, aperte Select (−) ou a estrela ao lado do nome."
+        : `Nenhum jogo${onde}.`;
       limparSemResultado.textContent = termo ? "Limpar pesquisa" : "Ver todos os jogos";
     }
     fileira.scrollLeft = 0;
@@ -95,6 +102,7 @@
   // ---------- abas ----------
   abas.forEach((b) => b.addEventListener("click", () => definirAba(b.dataset.aba, false)));
   document.addEventListener("cg:aba", (e) => trocarAba(e.detail.passo));
+  document.addEventListener("cg:filtro-atualizar", () => aplicar(false));   // favoritos.js mudou um jogo
 
   limparPesquisa.addEventListener("click", () => { definirTermo(""); botaoPesquisa.focus(); });
   limparSemResultado.addEventListener("click", () => {

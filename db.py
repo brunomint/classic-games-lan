@@ -70,6 +70,13 @@ CREATE TABLE IF NOT EXISTS saves (
     automatico  INTEGER NOT NULL DEFAULT 0 -- 1 = save automático (só existe um por jogador e jogo)
 );
 CREATE INDEX IF NOT EXISTS idx_saves ON saves(jogador_id, game_id);
+
+CREATE TABLE IF NOT EXISTS favoritos (
+    jogador_id  TEXT NOT NULL REFERENCES jogadores(id),
+    game_id     INTEGER NOT NULL,
+    criado_em   INTEGER NOT NULL,
+    PRIMARY KEY (jogador_id, game_id)
+);
 """
 
 
@@ -405,6 +412,23 @@ def jogados_recentemente(con, jogador_id, limite=50):
            WHERE pa.jogador_id = ? GROUP BY p.game_id ORDER BY quando DESC LIMIT ?""",
         (jogador_id, limite),
     ).fetchall()}
+
+
+def favoritos(con, jogador_id):
+    """Jogos favoritos do jogador, do mais novo para o mais antigo: [game_id, ...]."""
+    if not jogador_id:
+        return []
+    return [r["game_id"] for r in con.execute(
+        "SELECT game_id FROM favoritos WHERE jogador_id = ? ORDER BY criado_em DESC", (jogador_id,)
+    ).fetchall()]
+
+
+def definir_favorito(con, jogador_id, game_id, favorito):
+    if favorito:
+        con.execute("INSERT OR IGNORE INTO favoritos (jogador_id, game_id, criado_em) VALUES (?, ?, ?)",
+                    (jogador_id, game_id, agora()))
+    else:
+        con.execute("DELETE FROM favoritos WHERE jogador_id = ? AND game_id = ?", (jogador_id, game_id))
 
 
 def perfis(con):

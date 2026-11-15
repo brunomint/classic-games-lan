@@ -13,13 +13,15 @@
     tituloFoco.textContent = tile.dataset.titulo;
     infoFoco.textContent = tile.dataset.info;
     dicaTexto.textContent = "Jogar";
+    document.dispatchEvent(new CustomEvent("cg:jogo-em-foco", { detail: { tile } }));
     // a legenda acompanha a capa selecionada (no celular fica parada)
     if (window.matchMedia("(min-width: 701px)").matches) {
       // posição da capa dentro da área visível da fileira
       const x = tile.getBoundingClientRect().left - fileira.getBoundingClientRect().left
         - parseFloat(getComputedStyle(fileira).paddingLeft);
       // largura do texto (nome + detalhe), para não sair pela direita
-      const texto = tituloFoco.offsetWidth + 12 + infoFoco.offsetWidth;
+      const estrela = document.getElementById("favoritar-foco");
+      const texto = tituloFoco.offsetWidth + 12 + infoFoco.offsetWidth + (estrela ? estrela.offsetWidth + 12 : 0);
       const limite = fileira.clientWidth - texto - 2 * parseFloat(getComputedStyle(legenda).paddingLeft);
       legenda.style.transform = `translateX(${Math.max(0, Math.min(x, limite))}px)`;
     }

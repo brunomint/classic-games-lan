@@ -74,12 +74,14 @@ def index():
     recentes = {}
     with db.ler() as con:
         perfis = db.perfis(con)
+        favoritos = set(db.favoritos(con, session.get("jogador_id")))
         if session.get("jogador_id"):
             recentes = db.jogados_recentemente(con, session["jogador_id"])
     ordem = list(recentes)
     jogos.sort(key=lambda g: (ordem.index(g["game_id"]) if g["game_id"] in recentes else len(ordem)))
     for g in jogos:
         g["jogou_em"] = recentes.get(g["game_id"])
+        g["favorito"] = g["game_id"] in favoritos
     # abas de console acima da fileira: só os consoles que têm jogo, em ordem alfabética
     abas = {}
     for g in jogos:
@@ -87,7 +89,8 @@ def index():
         aba["total"] += 1
     abas = sorted(abas.values(), key=lambda a: a["rotulo"].lower())
     tem_recentes = any(g["jogou_em"] for g in jogos)
-    return render_template("index.html", jogos=jogos, perfis=perfis, abas=abas, tem_recentes=tem_recentes)
+    return render_template("index.html", jogos=jogos, perfis=perfis, abas=abas, tem_recentes=tem_recentes,
+                           total_favoritos=sum(g["favorito"] for g in jogos))
 
 
 @app.get("/jogo/<console>/<slug>")
@@ -99,11 +102,24 @@ def play(console, slug):
     with db.ler() as con:
         perfis = [p for p in db.perfis(con) if p["id"] != session.get("jogador_id")]
         jogou = db.jogados_recentemente(con, session.get("jogador_id"))
+        favorito = game["game_id"] in db.favoritos(con, session.get("jogador_id"))
     # "Trocar de jogo" no menu de pausa: os que a pessoa jogou por último, depois o resto
     ordem = list(jogou)
     outros = [g for g in catalog.scan() if g["game_id"] != game["game_id"]]
     outros.sort(key=lambda g: ordem.index(g["game_id"]) if g["game_id"] in jogou else len(ordem))
-    return render_template("play.html", game=game, perfis=perfis, recentes=outros[:8])
+    return render_template("play.html", game=game, perfis=perfis, recentes=outros[:8], favorito=favorito)
+
+
+@app.post("/api/favoritos/<int:game_id>")
+@login_obrigatorio(api=True)
+def api_favorito(game_id):
+    """Marca ou desmarca um jogo como favorito do jogador logado. Corpo: {"favorito": true|false}."""
+    if not any(g["game_id"] == game_id for g in catalog.scan()):
+        abort(404)
+    favorito = bool((request.get_json(silent=True) or {}).get("favorito"))
+    with db.conectar() as con:
+        db.definir_favorito(con, request.jogador["id"], game_id, favorito)
+    return jsonify(favorito=favorito)
 
 
 @app.get("/controles")

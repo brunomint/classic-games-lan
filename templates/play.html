@@ -76,6 +76,8 @@
       <button type="button" class="item-pausa item-principal" data-botao="B" id="pausa-continuar">Continuar jogando</button>
       <button type="button" class="item-pausa" id="pausa-salvar">Salvar agora <kbd>Select + R1</kbd></button>
       <button type="button" class="item-pausa" id="pausa-carregar">Carregar save <kbd>Select + L1</kbd></button>
+      <button type="button" class="item-pausa item-favorito" id="pausa-favorito" data-game-id="{{ game.game_id }}"
+              aria-pressed="{{ 'true' if favorito else 'false' }}"><span id="pausa-favorito-texto">{{ "Favorito" if favorito else "Favoritar" }}</span></button>
       <button type="button" class="item-pausa" id="pausa-sala" hidden>Criar sala para jogar junto</button>
       <button type="button" class="item-pausa" id="jogar-junto" hidden>Entrar na sala de outro aparelho</button>
       <button type="button" class="item-pausa" id="abrir-local" hidden>Adicionar jogador neste aparelho</button>
@@ -160,6 +162,7 @@
 <script src="{{ url_for('static', filename='js/teclado.js') }}"></script>
 <script src="{{ url_for('static', filename='js/imagem-jogo.js') }}"></script>
 <script src="{{ url_for('static', filename='js/pausa.js') }}"></script>
+<script src="{{ url_for('static', filename='js/favoritos.js') }}"></script>
 <script src="{{ url_for('static', filename='js/atalhos-jogo.js') }}"></script>
 <script src="{{ url_for('static', filename='js/gamepad-menu.js') }}"></script>
 <script src="{{ url_for('static', filename='js/play.js') }}"></script>
