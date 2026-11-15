@@ -66,16 +66,20 @@
   }
 
   // Controles com numeração própria: ajusta os botões de cada jogador no emulador.
-  // Roda uma vez por controle (fica anotado), para não desfazer um remapeamento manual.
+  // O EmulatorJS guarda os controles de cada jogo separados, então o ajuste roda uma vez
+  // por jogo e por controle (fica anotado), para não desfazer um remapeamento manual.
+  // Só depois do jogo iniciar: antes disso o emulador ainda vai carregar a configuração
+  // salva por cima e não deixa gravar a nova.
   function ajustarControles() {
     const emu = window.EJS_emulator;
-    if (!emu || !emu.controls || !emu.gamepadSelection) return;
+    if (!emu || !emu.started || !emu.controls || !emu.gamepadSelection) return;
     const conectados = Array.from(navigator.getGamepads ? navigator.getGamepads() : []).filter(Boolean);
+    const doJogo = typeof emu.getLocalStorageKey === "function" ? emu.getLocalStorageKey() : String(window.EJS_gameID);
     let mudou = false;
     emu.gamepadSelection.forEach((sel, jogador) => {
       const g = conectados.find((c) => `${c.id}_${c.index}` === sel);
       if (!g) return;
-      const chave = `cg-controle-ajustado:${g.id}:${jogador}`;
+      const chave = `cg-controle-ajustado:${doJogo}:${g.id}:${jogador}`;
       try { if (localStorage.getItem(chave)) return; } catch (e) { /* sem localStorage: ajusta sempre */ }
       if (CG.ajustarControlesEmulador(emu.controls[jogador], g)) {
         mudou = true;
