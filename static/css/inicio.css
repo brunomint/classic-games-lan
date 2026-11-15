@@ -137,15 +137,6 @@ body.inicio { height: 100vh; overflow: hidden; }
   50% { outline-color: color-mix(in srgb, var(--foco) 45%, #fff); }
 }
 
-/* cores para jogos sem capa (games.py → "cor") */
-.etiqueta-0 { --etiqueta: #4d3f8c; }
-.etiqueta-1 { --etiqueta: #b8323a; }
-.etiqueta-2 { --etiqueta: #2d5bb4; }
-.etiqueta-3 { --etiqueta: #2b8a4c; }
-.etiqueta-4 { --etiqueta: #c98d12; }
-.etiqueta-5 { --etiqueta: #7a2f6e; }
-.etiqueta-6 { --etiqueta: #1f6f78; }
-
 /* ---------- dock: ícones redondos ---------- */
 
 .dock {
@@ -210,15 +201,6 @@ body.inicio { height: 100vh; overflow: hidden; }
   text-align: center;
   color: var(--x);
   font-weight: 600;
-}
-
-.sr {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
 }
 
 /* ---------- canto: "A Jogar" ---------- */

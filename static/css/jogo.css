@@ -1,49 +1,221 @@
-/* Tela do jogo: a TV na sala. Fundo escuro para o foco ficar no jogo;
-   a barra de cima é o "console" embaixo da TV, com os mesmos botões coloridos. */
+/* Tela do jogo: o jogo ocupa a tela inteira, sem barra fixa.
+   Tudo o que é "de fora" do jogo fica no menu de pausa (Select + Start / Esc / botão redondo)
+   ou aparece como aviso rápido no canto. */
 
 body.jogo {
-  display: flex;
-  flex-direction: column;
-  background: #26232e;
-  background-image: radial-gradient(ellipse at 50% 40%, #34303f, #1e1c25 70%);
+  overflow: hidden;
+  background: #000;
   color: var(--plastico-claro);
 }
 
-.barra {
+.palco { position: fixed; inset: 0; }
+
+#game { width: 100%; height: 100%; background: #000; }
+
+/* a barra do próprio emulador sai: tudo passa pelo nosso menu, que o controle navega */
+#game .ejs_menu_bar,
+#game .ejs_virtualGamepad_open { display: none !important; }   /* o ☰ dele no celular abria essa barra */
+
+/* ---------- botão redondo do menu ---------- */
+
+.botao-menu {
+  position: fixed;
+  top: 14px;
+  left: 14px;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(43, 43, 49, .55);
+  color: #fff;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity .25s ease;
+}
+
+.botao-menu svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; }
+
+/* aparece quando o mouse mexe, no foco do teclado e sempre na tela de toque */
+.mouse-ativo .botao-menu,
+.botao-menu:focus-visible,
+.botao-menu:hover { opacity: 1; }
+.botao-menu:focus-visible { outline: 3px solid var(--foco); outline-offset: 3px; }
+
+@media (hover: none) and (pointer: coarse) {
+  .botao-menu { opacity: .6; }
+}
+
+/* ---------- avisos rápidos ---------- */
+
+.avisos {
+  position: fixed;
+  top: 14px;
+  right: 14px;
+  z-index: 6;
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px 16px;
-  padding: 10px 16px;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  max-width: min(420px, calc(100vw - 80px));
+  pointer-events: none;
+}
+
+.aviso {
+  margin: 0;
+  padding: 9px 16px 9px 14px;
+  border-left: 4px solid var(--grafite-2);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, .94);
+  color: var(--grafite);
+  font-weight: 600;
+  font-size: 15px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, .35);
+  animation: chega .2s ease-out;
+  transition: opacity .3s ease, transform .3s ease;
+}
+
+.aviso-ok { border-left-color: var(--y); }
+.aviso-erro { border-left-color: var(--a); }
+.aviso.saindo { opacity: 0; transform: translateX(12px); }
+
+@keyframes chega { from { opacity: 0; transform: translateX(12px); } }
+
+/* ---------- menu de pausa: tela inteira, no jeito do menu inicial ---------- */
+
+.pausa {
+  width: 100vw;
+  height: 100vh;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
   background: var(--plastico);
   color: var(--grafite);
-  box-shadow: 0 3px 0 var(--plastico-sombra);
 }
 
-.barra h1 {
-  margin: 0;
-  font-size: 19px;
-  font-weight: 750;
-  font-stretch: 112%;
-  line-height: 1.2;
+.pausa[open] {
+  display: grid;
+  grid-template-rows: auto 1fr auto auto;
+  grid-template-columns: minmax(0, 1fr);
 }
 
-.barra h1 small {
-  margin-left: 6px;
-  font-size: 14px;
+.pausa::backdrop { background: rgba(0, 0, 0, .6); }
+
+.pausa-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px clamp(16px, 4vw, 48px) 14px;
+  border-bottom: 1px solid var(--plastico-sombra);
+}
+
+.pausa-titulo h2 { margin: 0; font-size: 26px; font-weight: 700; font-stretch: 110%; line-height: 1.15; }
+.pausa-titulo p { margin: 2px 0 0; color: var(--grafite-2); }
+
+.pausa-corpo {
+  display: grid;
+  grid-template-columns: minmax(260px, 360px) minmax(0, 1fr);
+  gap: clamp(20px, 4vw, 48px);
+  align-items: start;
+  min-height: 0;
+  padding: 20px clamp(16px, 4vw, 48px);
+  overflow-y: auto;
+}
+
+/* lista de opções, como o menu de ajustes de um console */
+.menu-pausa { display: flex; flex-direction: column; gap: 6px; }
+
+.item-pausa {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--grafite);
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.item-pausa:hover { background: rgba(255, 255, 255, .6); }
+.item-pausa:focus-visible,
+.usando-controle .item-pausa:focus { background: var(--plastico-claro); outline: 3px solid var(--foco); outline-offset: 0; }
+.item-pausa[hidden] { display: none; }
+
+.item-principal { background: var(--plastico-claro); box-shadow: 0 2px 6px rgba(0, 0, 0, .1); }
+
+.item-pausa kbd {
+  font: inherit;
+  font-size: 13px;
   font-weight: 500;
   color: var(--grafite-2);
-  font-stretch: 100%;
+  white-space: nowrap;
 }
 
-.jogadores-aparelho {
-  display: flex;
-  flex-wrap: wrap;
+/* tela cheia, filtro da imagem e botões do controle: embaixo da foto */
+.opcoes-tela { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.opcao-tela {
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
-  margin-left: auto;
+  gap: 8px;
+  min-height: 42px;
+  padding: 8px 16px;
+  border: 0;
+  border-radius: 99px;
+  background: var(--plastico-claro);
+  color: var(--grafite);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 0 var(--plastico-sombra);
 }
 
+.opcao-tela:hover,
+.opcao-tela:focus-visible,
+.usando-controle .opcao-tela:focus { outline: 3px solid var(--foco); outline-offset: 2px; }
+.opcao-tela b { color: var(--x); }
+
+/* liga/desliga: uma bolinha que acende */
+.opcao-tela[aria-pressed]::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--plastico-sombra);
+}
+
+.opcao-tela[aria-pressed="true"]::before { background: var(--y); }
+
+.item-sair { color: var(--a); }
+
+/* a foto do momento em que pausou, com quem está jogando embaixo */
+.pausa-quadro { margin: 0; display: grid; gap: 12px; justify-items: start; }
+
+.pausa-quadro img {
+  width: 100%;
+  max-height: 46vh;
+  object-fit: contain;
+  border-radius: 12px;
+  background: #000;
+  image-rendering: pixelated;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .18);
+}
+
+.pausa-gente { display: flex; flex-wrap: wrap; gap: 6px; }
 #chips-locais { display: contents; }
 
 .chip {
@@ -59,6 +231,8 @@ body.jogo {
 }
 
 .chip-eu { background: var(--grafite); color: #fff; box-shadow: none; }
+.chip-sala { background: var(--x); color: #fff; box-shadow: none; }
+.chip[hidden] { display: none; }
 
 .chip button {
   padding: 0 2px;
@@ -71,43 +245,70 @@ body.jogo {
 
 .chip button:hover { color: var(--a); }
 
-.acoes-jogo { display: flex; flex-wrap: wrap; gap: 8px; }
+/* trocar de jogo: fileira de capas pequenas */
+.pausa-recentes { padding: 4px clamp(16px, 4vw, 48px) 0; min-width: 0; }
+.pausa-recentes h3 { margin: 0 0 8px; font-size: 16px; font-weight: 700; color: var(--grafite-2); }
 
-.botao-tela { background: var(--plastico-claro); color: var(--grafite); box-shadow: 0 3px 0 var(--plastico-sombra); }
-
-.dica {
-  flex-basis: 100%;
-  margin: 0;
-  font-size: 14px;
-  color: var(--grafite-2);
+.fileira-recentes {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 6px 4px 8px;
+  scrollbar-width: none;
 }
 
-.dica:empty { display: none; }
-
-/* ---------- a TV ---------- */
-
-.palco {
-  flex: 1;
+.recente {
+  flex: none;
   display: grid;
   place-items: center;
-  padding: 20px 16px;
-}
-
-#game {
-  width: min(100%, 960px);
-  aspect-ratio: 4 / 3;
-  max-height: calc(100vh - 120px);
-  border-radius: 18px;
+  width: 86px;
+  height: 86px;
+  border-radius: 8px;
   overflow: hidden;
-  background: #000;
-  /* moldura da TV */
-  box-shadow: 0 0 0 14px #121117, 0 0 0 16px #3a3644, 0 30px 80px rgba(0, 0, 0, .6);
+  background: var(--etiqueta, var(--roxo));
+  color: #fff;
+  font-weight: 800;
+  font-size: 22px;
+  text-decoration: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .15);
 }
 
-@media (max-width: 700px) {
-  .jogadores-aparelho { margin-left: 0; }
-  .palco { padding: 0; }
-  #game { border-radius: 0; box-shadow: none; max-height: none; }
+.recente img { width: 100%; height: 100%; object-fit: cover; }
+.recente:hover,
+.recente:focus-visible,
+.usando-controle .recente:focus { outline: 4px solid var(--foco); outline-offset: 3px; }
+
+.dicas-pausa {
+  display: flex;
+  justify-content: flex-end;
+  gap: 24px;
+  padding: 12px clamp(16px, 4vw, 48px) 16px;
+  font-weight: 600;
+}
+
+.dicas-pausa span { display: inline-flex; align-items: center; gap: 8px; }
+
+.dicas-pausa i {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--grafite);
+  color: #fff;
+  font-style: normal;
+  font-weight: 800;
+  font-size: 13px;
+}
+
+@media (max-width: 760px) {
+  /* no celular o menu inteiro rola, em vez de só o meio */
+  .pausa[open] { display: block; overflow-y: auto; }
+  .pausa-corpo { grid-template-columns: minmax(0, 1fr); overflow: visible; }
+  .pausa-quadro { order: -1; }
+  .pausa-quadro img { max-height: 28vh; }
+  .pausa-topo .relogio { display: none; }
+  .dicas-pausa { display: none; }
 }
 
 /* ---------- lista de saves (diálogo "Carregar save") ---------- */
@@ -178,13 +379,6 @@ body.jogo {
 
 .apagar-save:hover { background: var(--a); }
 .vazio-saves { color: var(--grafite-2); }
-
-/* ---------- menu de pausa ---------- */
-
-.dialogo-pausa { width: min(380px, calc(100vw - 24px)); }
-.menu-pausa { display: flex; flex-direction: column; gap: 10px; }
-.menu-pausa .botao { justify-content: flex-start; width: 100%; }
-.dialogo .dica-pausa { margin: 16px 0 0; font-size: 14px; }
 
 /* ---------- "+ Jogador": perfis menores dentro do diálogo ---------- */
 

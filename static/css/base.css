@@ -376,6 +376,27 @@ input[type=password] { letter-spacing: .3em; }
   .topo-pagina .relogio { display: none; }
 }
 
+/* ---------- comuns ---------- */
+
+/* cores para jogos sem capa (games.py → "cor") */
+.etiqueta-0 { --etiqueta: #4d3f8c; }
+.etiqueta-1 { --etiqueta: #b8323a; }
+.etiqueta-2 { --etiqueta: #2d5bb4; }
+.etiqueta-3 { --etiqueta: #2b8a4c; }
+.etiqueta-4 { --etiqueta: #c98d12; }
+.etiqueta-5 { --etiqueta: #7a2f6e; }
+.etiqueta-6 { --etiqueta: #1f6f78; }
+
+/* só para leitores de tela */
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; }
 }

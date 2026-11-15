@@ -5,25 +5,14 @@
 {% from "_teclado.html" import teclado %}
 
 {% block content %}
-<header class="barra">
-  <a class="botao botao-peq" data-botao="B" href="/">Sair do jogo</a>
-  <h1>{{ game.title }} <small>{{ game.console_label }}</small></h1>
+<!-- Sem barra fixa: o jogo ocupa a tela. O menu abre com Select + Start, Esc
+     ou este botão (aparece no toque e quando o mouse mexe). -->
+<button type="button" class="botao-menu" id="abrir-pausa" aria-label="Abrir o menu (Select + Start ou Esc)">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h14"/></svg>
+</button>
 
-  <div class="jogadores-aparelho" aria-label="Quem está jogando neste aparelho">
-    <span class="chip chip-eu">{{ jogador.nome }}</span>
-    <span id="chips-locais"></span>
-    <button type="button" class="botao botao-peq" data-botao="Y" id="abrir-local" hidden
-            title="Outra pessoa jogando neste mesmo aparelho, com o 2º controle">Jogador</button>
-  </div>
-
-  <div class="acoes-jogo">
-    <button type="button" class="botao botao-peq botao-tela" id="abrir-pausa" title="Select + Start no controle">Menu</button>
-    <button type="button" class="botao botao-peq" data-botao="X" id="jogar-junto" hidden
-            title="Criar uma sala para os outros aparelhos entrarem">Jogar junto</button>
-    <button type="button" class="botao botao-peq botao-tela" id="abrir-resultado" hidden>Anotar resultado</button>
-  </div>
-  <p class="dica" id="dica" aria-live="polite"></p>
-</header>
+<!-- avisos rápidos que somem sozinhos (salvo, entrou na sala, controle conectado...) -->
+<div class="avisos" id="avisos" role="status" aria-live="polite"></div>
 
 <div class="palco">
   <div id="game"
@@ -72,19 +61,71 @@
   </form>
 </dialog>
 
-<!-- Menu de pausa: Select + Start no controle, ou o botão Menu -->
-<dialog id="dialogo-pausa" class="dialogo dialogo-pausa">
-  <h2>Jogo pausado</h2>
-  <div class="menu-pausa">
-    <button type="button" class="botao" data-botao="B" id="pausa-continuar">Continuar jogando</button>
-    <button type="button" class="botao botao-claro" id="pausa-salvar">Salvar agora</button>
-    <button type="button" class="botao botao-claro" id="pausa-carregar">Carregar save</button>
-    <button type="button" class="botao botao-claro" data-botao="X" id="pausa-sala">Criar sala para jogar junto</button>
-    <button type="button" class="botao botao-claro" data-botao="Y" id="pausa-jogador">Adicionar jogador</button>
-    <button type="button" class="botao botao-claro" id="pausa-resultado">Anotar resultado</button>
-    <a class="botao botao-claro" href="/" id="pausa-sair">Sair do jogo</a>
+<!-- Menu de pausa: tela inteira, no jeito do menu inicial -->
+<dialog id="dialogo-pausa" class="pausa">
+  <header class="pausa-topo">
+    <div class="pausa-titulo">
+      <h2>{{ game.title }}</h2>
+      <p>{{ game.console_label }}</p>
+    </div>
+    <time class="relogio" data-relogio></time>
+  </header>
+
+  <div class="pausa-corpo">
+    <nav class="menu-pausa" aria-label="Menu do jogo">
+      <button type="button" class="item-pausa item-principal" data-botao="B" id="pausa-continuar">Continuar jogando</button>
+      <button type="button" class="item-pausa" id="pausa-salvar">Salvar agora <kbd>Select + R1</kbd></button>
+      <button type="button" class="item-pausa" id="pausa-carregar">Carregar save <kbd>Select + L1</kbd></button>
+      <button type="button" class="item-pausa" id="pausa-sala" hidden>Criar sala para jogar junto</button>
+      <button type="button" class="item-pausa" id="jogar-junto" hidden>Entrar na sala de outro aparelho</button>
+      <button type="button" class="item-pausa" id="abrir-local" hidden>Adicionar jogador neste aparelho</button>
+      <button type="button" class="item-pausa" id="abrir-resultado" hidden>Anotar resultado</button>
+      <a class="item-pausa item-sair" href="/" id="pausa-sair">Sair do jogo</a>
+    </nav>
+
+    <figure class="pausa-quadro">
+      <img id="pausa-foto" alt="A tela do jogo no momento em que pausou" hidden>
+      <figcaption class="pausa-gente">
+        <span class="chip chip-eu">{{ jogador.nome }}</span>
+        <span id="chips-locais"></span>
+        <span class="chip chip-sala" id="chip-sala" hidden></span>
+      </figcaption>
+      <div class="opcoes-tela" role="group" aria-label="Tela e controle">
+        <button type="button" class="opcao-tela" id="imagem-tela-cheia" aria-pressed="false">Tela cheia</button>
+        <button type="button" class="opcao-tela" id="imagem-filtro">Imagem: <b id="nome-filtro">Original</b></button>
+        <button type="button" class="opcao-tela" id="pausa-controles">Botões do controle</button>
+      </div>
+    </figure>
   </div>
-  <p class="texto-apoio dica-pausa">No controle: Select + Start abre este menu. B continua o jogo.</p>
+
+  {% if recentes %}
+  <section class="pausa-recentes" aria-labelledby="titulo-recentes">
+    <h3 id="titulo-recentes">Trocar de jogo</h3>
+    <div class="fileira-recentes">
+      {% for g in recentes %}
+      <a class="recente etiqueta-{{ g.cor }}" href="/jogo/{{ g.console }}/{{ g.slug }}" data-trocar-jogo
+         title="{{ g.title }}">
+        {% if g.cover %}<img src="/covers/{{ g.cover }}" alt="" loading="lazy">{% else %}<span>{{ g.initials }}</span>{% endif %}
+        <span class="sr">{{ g.title }}</span>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <footer class="dicas-pausa">
+    <span><i>B</i> Continuar</span>
+    <span><i>A</i> OK</span>
+  </footer>
+</dialog>
+
+<!-- O controle caiu: o jogo espera ele voltar -->
+<dialog id="dialogo-controle" class="dialogo">
+  <h2>Controle desconectado</h2>
+  <p class="texto-apoio">O jogo está pausado. Reconecte o controle e ele continua sozinho.</p>
+  <div class="acoes">
+    <button type="button" class="botao botao-claro" data-botao="B" id="continuar-sem-controle">Continuar sem controle</button>
+  </div>
 </dialog>
 
 <!-- Continuar do save automático -->
@@ -100,7 +141,7 @@
 <!-- Saves no servidor -->
 <dialog id="dialogo-saves" class="dialogo">
   <h2>Carregar save</h2>
-  <p class="vazio-saves" id="sem-saves" hidden>Nenhum save seu neste jogo ainda. Use o botão de salvar estado do emulador.</p>
+  <p class="vazio-saves" id="sem-saves" hidden>Nenhum save seu neste jogo ainda. Use Salvar agora no menu (ou Select + R1).</p>
   <ul class="lista-saves" id="lista-saves"></ul>
   <div class="acoes">
     <button type="button" class="botao botao-claro" data-botao="B" id="fechar-saves">Fechar</button>
@@ -109,6 +150,7 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="{{ url_for('static', filename='js/avisos.js') }}"></script>
 <script src="{{ url_for('static', filename='js/jogador.js') }}"></script>
 <script src="{{ url_for('static', filename='js/resultado.js') }}"></script>
 <script src="{{ url_for('static', filename='js/registro.js') }}"></script>
@@ -116,7 +158,9 @@
 <script src="{{ url_for('static', filename='js/saves.js') }}"></script>
 <script src="{{ url_for('static', filename='js/autosave.js') }}"></script>
 <script src="{{ url_for('static', filename='js/teclado.js') }}"></script>
+<script src="{{ url_for('static', filename='js/imagem-jogo.js') }}"></script>
 <script src="{{ url_for('static', filename='js/pausa.js') }}"></script>
+<script src="{{ url_for('static', filename='js/atalhos-jogo.js') }}"></script>
 <script src="{{ url_for('static', filename='js/gamepad-menu.js') }}"></script>
 <script src="{{ url_for('static', filename='js/play.js') }}"></script>
 {% endblock %}

@@ -91,7 +91,12 @@ def play(console, slug):
         abort(404)
     with db.ler() as con:
         perfis = [p for p in db.perfis(con) if p["id"] != session.get("jogador_id")]
-    return render_template("play.html", game=game, perfis=perfis)
+        jogou = db.jogados_recentemente(con, session.get("jogador_id"))
+    # "Trocar de jogo" no menu de pausa: os que a pessoa jogou por último, depois o resto
+    ordem = list(jogou)
+    outros = [g for g in catalog.scan() if g["game_id"] != game["game_id"]]
+    outros.sort(key=lambda g: ordem.index(g["game_id"]) if g["game_id"] in jogou else len(ordem))
+    return render_template("play.html", game=game, perfis=perfis, recentes=outros[:8])
 
 
 @app.get("/controles")

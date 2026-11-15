@@ -43,13 +43,12 @@
   };
 
   function entrarNaSala(netplay, sessionId) {
-    const dica = document.getElementById("dica");
     fetch(`/list?game_id=${encodeURIComponent(d.gameId)}`)
       .then((r) => r.json())
       .then((salas) => {
         const sala = salas[sessionId];
         if (!sala) {
-          dica.textContent = "Essa sala já fechou. Crie outra em Jogar junto.";
+          CG.aviso("Essa sala já fechou. Abra o menu e crie outra.", "erro");
           return;
         }
         if (!netplay.name) netplay.name = "Jogador";
@@ -60,9 +59,9 @@
         } else {
           netplay.joinRoom(sessionId, sala.room_name, sala.max, null);
         }
-        dica.textContent = `Você está na sala de ${sala.player_name}`;
+        CG.aviso(`Você está na sala de ${sala.player_name}`, "ok");
       })
-      .catch(() => { dica.textContent = "Não deu para entrar na sala. Tente de novo em Jogar junto."; });
+      .catch(() => CG.aviso("Não deu para entrar na sala. Tente de novo pelo menu.", "erro"));
   }
 
   // Controles com numeração própria: ajusta os botões de cada jogador no emulador.

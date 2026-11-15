@@ -90,7 +90,7 @@
   botaoResultado.addEventListener("click", () => {
     if (!estado.partidaId) return;
     CG.abrirResultado(estado.partidaId, () => {
-      document.getElementById("dica").textContent = "Resultado salvo no histórico ✓";
+      CG.aviso("Resultado salvo no placar ✓", "ok");
     });
   });
 

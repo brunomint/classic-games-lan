@@ -5,7 +5,10 @@
 //   X, Y                → atalhos marcados com data-atalho="x" / "y"
 //
 // Na tela do jogo (body.jogo) o controle é do jogo: aqui só vale dentro dos nossos
-// diálogos (menu de pausa, resultado...) e para abrir o menu de pausa (Select + Start).
+// diálogos (menu de pausa, resultado...) e para os atalhos com Select:
+//   Select + Start → menu de pausa (no teclado: Esc)
+//   Select + R1    → salvar agora
+//   Select + L1    → carregar o último save
 // Os controles com numeração própria são traduzidos por perfis-controle.js.
 (function () {
   const SELETOR = [
@@ -84,7 +87,13 @@
 
   document.addEventListener("keydown", (e) => {
     const campo = ["INPUT", "SELECT", "TEXTAREA"].includes(e.target.tagName);
-    if (naTelaDoJogo() && !dialogoAberto()) return;
+    if (naTelaDoJogo() && !dialogoAberto()) {
+      if (e.key === "Escape" && !e.repeat) {
+        e.preventDefault();
+        document.dispatchEvent(new CustomEvent("cg:menu-pausa"));
+      }
+      return;
+    }
     const mapa = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
     if (mapa[e.key] && !(campo && (e.key === "ArrowLeft" || e.key === "ArrowRight"))) {
       e.preventDefault();
@@ -112,12 +121,17 @@
       const apertou = (k) => agora[k] && !antes[k];
       anterior[gp.index] = agora;
 
-      // Select + Start: menu de pausa (só na tela do jogo)
-      if (naTelaDoJogo() && agora.select && agora.start && !(antes.select && antes.start)) {
-        document.dispatchEvent(new CustomEvent("cg:menu-pausa"));
+      // atalhos com Select (só na tela do jogo); "combo" = os dois apertados agora, e não antes
+      const combo = (k) => agora.select && agora[k] && !(antes.select && antes[k]);
+      if (naTelaDoJogo() && combo("start")) {
+        document.dispatchEvent(new CustomEvent("cg:menu-pausa"));   // abre ou fecha o menu
         continue;
       }
-      if (naTelaDoJogo() && !dialogoAberto()) continue;   // o controle é do jogo
+      if (naTelaDoJogo() && !dialogoAberto()) {
+        if (combo("r1")) document.dispatchEvent(new CustomEvent("cg:salvar-rapido"));
+        if (combo("l1")) document.dispatchEvent(new CustomEvent("cg:carregar-rapido"));
+        continue;   // o resto do controle é do jogo
+      }
 
       const algum = ["esq", "dir", "cima", "baixo", "a", "b", "x", "y"].some(apertou);
       if (algum) document.body.classList.add("usando-controle");

@@ -7,10 +7,7 @@
   const lista = document.getElementById("lista-saves");
   const vazio = document.getElementById("sem-saves");
 
-  function aviso(texto, tipo) {
-    const emu = window.EJS_emulator;
-    if (emu && emu.frontend) emu.frontend.displayMessage(texto, 2500, undefined, tipo);
-  }
+  const aviso = (texto, tipo) => CG.aviso(texto, tipo === "success" ? "ok" : tipo === "error" ? "erro" : undefined);
 
   // Chamado pelo EmulatorJS ao clicar em "salvar estado"
   window.EJS_onSaveState = function ({ state, screenshot, format }) {
@@ -74,16 +71,44 @@
     dialogo.showModal();
   }
 
-  function carregarSave(id) {
-    fetch(`/saves/${id}/estado`)
+  function carregarSave(id, quando) {
+    return fetch(`/saves/${id}/estado`)
       .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject()))
       .then((buf) => {
         window.EJS_emulator.gameManager.loadState(new Uint8Array(buf));
-        dialogo.close();
-        aviso("Save carregado ✓", "success");
+        if (dialogo.open) dialogo.close();
+        aviso(quando ? `Save de ${quando} carregado ✓` : "Save carregado ✓", "success");
       })
       .catch(() => aviso("Não consegui carregar o save", "error"));
   }
+
+  // ---------- atalhos rápidos (Select + R1 / Select + L1) ----------
+
+  /** Salva o estado agora, pelo mesmo caminho do botão do emulador (com a foto da tela). */
+  CG.salvarRapido = function () {
+    const emu = window.EJS_emulator;
+    if (!emu || !emu.started) return;
+    if (emu.isNetplay && !(emu.netplay && emu.netplay.owner)) {
+      aviso("Na sala de outro aparelho, quem salva é o dono da sala.", "error");
+      return;
+    }
+    aviso("Salvando…");
+    emu.elements.bottomBar.saveState[0].click();
+  };
+
+  /** Carrega o último save feito à mão (ou o automático, se não houver nenhum). */
+  CG.carregarUltimo = function () {
+    const emu = window.EJS_emulator;
+    if (!emu || !emu.started) return;
+    fetch(`/api/saves?game_id=${encodeURIComponent(gameId)}`)
+      .then((r) => r.json())
+      .then((saves) => {
+        const escolhido = saves.find((s) => !s.automatico) || saves[0];
+        if (!escolhido) { aviso("Nenhum save seu neste jogo ainda.", "error"); return; }
+        carregarSave(escolhido.id, escolhido.quando);
+      })
+      .catch(() => aviso("Não consegui buscar os saves", "error"));
+  };
 
   function apagarSave(id, li) {
     fetch(`/api/saves/${id}`, { method: "DELETE" })

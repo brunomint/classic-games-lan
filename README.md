@@ -125,11 +125,30 @@ própria (adaptadores genéricos) são ajustados por `static/js/perfis-controle.
 - Outros fora do padrão: perfil genérico (direcional nos dois últimos eixos).
 
 O perfil vale para o menu e para o jogo (ajusta os botões do emulador uma vez
-por controle; remapeamentos feitos no menu de controles do jogo são mantidos).
+por jogo e por controle; remapeamentos feitos em "Botões do controle" são mantidos).
 **Tudo pelo controle, como num console:** direcional escolhe, A confirma, B volta
 ou fecha a janela aberta. Na entrada e no "+ Jogador", o PIN é digitado num
-teclado na tela. No jogo, **Select + Start** pausa e abre o menu (continuar,
-salvar, carregar, criar sala, adicionar jogador, anotar resultado, sair).
+teclado na tela.
+
+## Tela do jogo
+
+O jogo ocupa a tela inteira, sem barras (nem a do EmulatorJS). Atalhos:
+
+| Controle | Teclado | O que faz |
+|---|---|---|
+| Select + Start | Esc | abre/fecha o menu (o jogo pausa) |
+| Select + R1 | | salva agora (no servidor, com foto da tela) |
+| Select + L1 | | carrega o último save feito à mão |
+
+No celular, um botão redondo no canto abre o menu (no PC ele aparece quando o mouse mexe).
+O menu mostra a foto do momento em que pausou, quem está jogando e a sala; tem salvar,
+carregar, criar/entrar em sala, adicionar jogador, anotar resultado, tela cheia, filtro
+da imagem (Original, TV antiga, Suave: lembrado no aparelho), botões do controle e
+"Trocar de jogo" (os jogados por último; salva automaticamente antes de trocar).
+
+O que acontece por fora do jogo vira aviso rápido no canto (salvo, controle conectado,
+fulano entrou na sala...). Se o controle desconecta, o jogo pausa e continua sozinho
+quando ele volta (em sala de netplay só avisa, para não travar os outros).
 
 Para ver o que um controle manda, abra **/controles** ("Testar controles").
 Para incluir um controle novo, acrescente um item em `PERFIS`.
