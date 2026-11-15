@@ -7,6 +7,7 @@
   <a class="voltar" href="/">← Jogos</a>
   <h1>{{ game.title }} <small>{{ game.console_label }}</small></h1>
   <p class="dica" id="dica">Para jogar junto: menu do jogo ▸ <b>Netplay</b> ▸ <b>Criar sala</b></p>
+  <button type="button" class="botao botao-sec botao-peq" id="abrir-resultado" hidden>Registrar resultado</button>
 </header>
 
 <div class="palco">
@@ -17,9 +18,24 @@
        data-title="{{ game.title }}"
        data-game-id="{{ game.game_id }}"></div>
 </div>
+
+{% include "_dialogo_resultado.html" %}
+
+<!-- Saves no servidor -->
+<dialog id="dialogo-saves" class="dialogo">
+  <h2>Carregar save</h2>
+  <p class="vazio-saves" id="sem-saves" hidden>Nenhum save seu neste jogo ainda. Use o botão de salvar estado do emulador.</p>
+  <ul class="lista-saves" id="lista-saves"></ul>
+  <div class="acoes">
+    <button type="button" class="botao botao-sec" id="fechar-saves">Fechar</button>
+  </div>
+</dialog>
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/nome.js') }}"></script>
+<script src="{{ url_for('static', filename='js/jogador.js') }}"></script>
+<script src="{{ url_for('static', filename='js/resultado.js') }}"></script>
+<script src="{{ url_for('static', filename='js/registro.js') }}"></script>
+<script src="{{ url_for('static', filename='js/saves.js') }}"></script>
 <script src="{{ url_for('static', filename='js/play.js') }}"></script>
 {% endblock %}

@@ -12,6 +12,7 @@ from flask_socketio import SocketIO
 
 from games import Catalog
 from netplay import list_rooms, register_netplay
+from registro import register_registro
 from uploads import register_uploads
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -22,6 +23,7 @@ socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading")
 catalog = Catalog(BASE_DIR)
 register_netplay(app, socketio)
 register_uploads(app, catalog)
+register_registro(app, catalog)
 
 ONE_WEEK = 7 * 24 * 3600
 

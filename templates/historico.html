@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}Histórico · Classic Games{% endblock %}
+{% block body_class %}historico{% endblock %}
+
+{% block content %}
+<header class="barra">
+  <a class="voltar" href="/">← Jogos</a>
+  <h1>Histórico</h1>
+</header>
+
+<main>
+  {% if not partidas %}
+  <p class="vazio">Nenhuma partida ainda. Abra um jogo e jogue um pouco!</p>
+  {% else %}
+
+  <div class="paineis">
+    <section class="painel">
+      <h2>Jogadores</h2>
+      <table class="tabela">
+        <thead><tr><th>Nome</th><th>Partidas</th><th>Tempo</th><th>Vitórias</th></tr></thead>
+        <tbody>
+          {% for j in stats.jogadores if j.partidas %}
+          <tr>
+            <td>{{ j.nome }}</td>
+            <td class="num">{{ j.partidas }}</td>
+            <td class="num">{{ j.segundos|duracao }}</td>
+            <td class="num">{{ j.vitorias or "–" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+
+    <section class="painel">
+      <h2>Jogos mais jogados</h2>
+      <table class="tabela">
+        <thead><tr><th>Jogo</th><th>Partidas</th><th>Tempo</th></tr></thead>
+        <tbody>
+          {% for g in stats.jogos %}
+          <tr>
+            <td>{{ g.jogo }} <small>{{ g.console }}</small></td>
+            <td class="num">{{ g.partidas }}{% if g.em_grupo %} <small>({{ g.em_grupo }} em grupo)</small>{% endif %}</td>
+            <td class="num">{{ g.segundos|duracao }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+
+    {% if stats.duplas %}
+    <section class="painel">
+      <h2>Quem joga com quem</h2>
+      <table class="tabela">
+        <tbody>
+          {% for d in stats.duplas %}
+          <tr><td>{{ d.jogador1 }} &amp; {{ d.jogador2 }}</td><td class="num">{{ d.partidas }} partida{{ "s" if d.partidas > 1 }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+    {% endif %}
+  </div>
+
+  <section>
+    <h2>Partidas recentes</h2>
+    <ul class="partidas">
+      {% for p in partidas %}
+      <li class="partida{% if p.ativa %} ao-vivo{% endif %}">
+        <div class="partida-jogo">
+          <strong>{{ p.jogo }}</strong>
+          <small>{{ p.console }} · {{ p.inicio|data_hora }} · {{ (p.fim - p.inicio)|duracao }}</small>
+        </div>
+        <div class="partida-quem">
+          {% if p.tipo == "netplay" %}<span class="selo">em grupo</span>{% endif %}
+          {% if p.ativa %}<span class="selo selo-vivo">jogando agora</span>{% endif %}
+          {{ (p.nomes or "").replace(",", ", ") }}
+        </div>
+        <div class="partida-resultado">
+          {% if p.empate %}Empate{% elif p.vencedor %}🏆 {{ p.vencedor }}{% endif %}
+          {% if p.placar %}<span class="placar">{{ p.placar }}</span>{% endif %}
+          <button type="button" class="link-botao" data-partida="{{ p.id }}">
+            {{ "Editar" if (p.placar or p.vencedor or p.empate) else "Anotar resultado" }}
+          </button>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+</main>
+
+{% include "_dialogo_resultado.html" %}
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/jogador.js') }}"></script>
+<script src="{{ url_for('static', filename='js/resultado.js') }}"></script>
+<script src="{{ url_for('static', filename='js/historico.js') }}"></script>
+{% endblock %}

@@ -3,6 +3,9 @@ roms/*/*
 bios/*
 covers/*/*
 
+# banco de dados e saves dos jogadores
+dados/
+
 # EmulatorJS: vai junto, mas só com os núcleos dos consoles usados
 # (para um console novo, adicione o núcleo aqui)
 emulatorjs/cores/*

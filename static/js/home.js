@@ -14,6 +14,24 @@
   nomeInput.value = CG.getNome();
   nomeInput.addEventListener("input", () => CG.setNome(nomeInput.value.trim()));
 
+  // "Quem é você": usar um jogador já existente neste aparelho (para ver os seus saves)
+  const trocar = document.getElementById("trocar-jogador");
+  fetch("/api/jogadores")
+    .then((r) => r.json())
+    .then((jogadores) => {
+      const outros = jogadores.filter((j) => j.id !== CG.getJogadorId());
+      if (!outros.length) return;
+      outros.forEach((j) => trocar.add(new Option(j.nome, j.id)));
+      trocar.hidden = false;
+    })
+    .catch(() => {});
+  trocar.addEventListener("change", () => {
+    const opcao = trocar.selectedOptions[0];
+    if (!opcao.value) return;
+    CG.usarJogador(opcao.value, opcao.textContent);
+    location.reload();
+  });
+
   // Salas abertas (atualiza a cada 3 s)
   const secao = document.getElementById("salas");
   const lista = document.getElementById("lista-salas");

@@ -30,6 +30,24 @@ Nos outros aparelhos, escaneie o QR code da página inicial.
 
 Quem cria a sala roda o emulador. Use o aparelho mais forte (de preferência o PC).
 
+## Histórico, resultados e saves
+
+Tudo fica num banco SQLite em `dados/classic-games.db` (fora do git), criado sozinho.
+
+- **Jogadores:** cada aparelho ganha um ID na primeira visita; o nome vem do campo
+  "Seu nome". Em outro aparelho, escolha "Já jogou? Escolha quem é você" para
+  continuar como o mesmo jogador.
+- **Partidas:** registradas automaticamente: solo ou em grupo (netplay), quem
+  jogou, quem criou a sala, início e duração. Abrir e fechar um jogo em menos de
+  20 s não conta.
+- **Resultado:** botão **Registrar resultado** na tela do jogo (vencedor, empate,
+  placar). Também dá para anotar ou corrigir depois na página **Histórico**.
+- **Saves:** os botões de salvar/carregar estado do emulador guardam no servidor
+  (`dados/saves/`), por jogador e jogo, com a captura de tela do momento.
+
+A página **/historico** mostra tempo e vitórias por jogador, jogos mais jogados,
+quem joga com quem e as partidas recentes.
+
 ## Adicionar jogos
 
 - Pela página **＋ Enviar ROMs**, de qualquer aparelho da rede; ou
@@ -56,10 +74,13 @@ app.py          rotas e arquivos estáticos
 games.py        catálogo automático (lê roms/)
 netplay.py      servidor de salas (substitui o servidor oficial do EmulatorJS)
 uploads.py      envio de ROMs pelo navegador
+db.py           banco SQLite (jogadores, partidas, participações, saves)
+registro.py     API de partidas/resultados/saves e página de histórico
 templates/      páginas
 static/         css, js e qrcode.js
 emulatorjs/     EmulatorJS 4.3.0-pre (pasta data/ do release, só com os núcleos usados)
 roms/ bios/ covers/   seus arquivos (fora do git)
+dados/          banco e saves (fora do git)
 ```
 
 ## EmulatorJS

@@ -406,6 +406,209 @@ body.jogo {
 
 .nota { color: var(--texto-2); font-size: 13px; margin-top: 24px; }
 
+.botao-peq { padding: 6px 12px; font-size: 13px; }
+
+.atalhos { display: flex; gap: 8px; }
+
+.nome select {
+  padding: 6px 8px;
+  border: 1px solid var(--linha);
+  border-radius: 6px;
+  background: var(--fundo-2);
+  color: var(--texto-2);
+  font: inherit;
+  font-size: 12px;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+/* ---------- diálogos (resultado, saves) ---------- */
+
+.dialogo {
+  width: min(440px, calc(100vw - 32px));
+  padding: 20px;
+  border: 1px solid var(--linha);
+  border-radius: var(--raio);
+  background: var(--fundo-2);
+  color: var(--texto);
+}
+
+.dialogo::backdrop { background: rgba(0, 0, 0, .65); }
+
+.dialogo h2 {
+  margin: 0 0 16px;
+  font-size: 18px;
+}
+
+.dialogo form { display: flex; flex-direction: column; gap: 16px; }
+
+.dialogo input[type=text] {
+  padding: 10px;
+  border: 1px solid var(--linha);
+  border-radius: 8px;
+  background: var(--fundo);
+  color: var(--texto);
+  font: inherit;
+}
+
+.opcoes {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.opcoes legend { margin-bottom: 6px; font-size: 13px; color: var(--texto-2); }
+
+.opcoes label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--linha);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.opcoes label:has(input:checked) { border-color: var(--destaque); background: color-mix(in srgb, var(--destaque) 12%, transparent); }
+.opcoes input { accent-color: var(--destaque); }
+
+.acoes { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
+.erro-form { margin: 0; color: #ff7b6b; font-size: 14px; }
+
+.lista-saves {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.lista-saves li { position: relative; }
+
+.save {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px;
+  border: 1px solid var(--linha);
+  border-radius: 8px;
+  background: var(--fundo);
+  color: var(--texto);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.save img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 4px; image-rendering: pixelated; }
+.save:hover, .save:focus-visible { border-color: var(--foco); outline: none; }
+
+.apagar-save {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, .7);
+  color: var(--texto);
+  cursor: pointer;
+}
+
+.apagar-save:hover { background: #b3261e; }
+.vazio-saves { color: var(--texto-2); font-size: 14px; }
+
+/* ---------- histórico ---------- */
+
+.paineis {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  margin-top: 8px;
+}
+
+.painel {
+  padding: 4px 16px 12px;
+  border: 1px solid var(--linha);
+  border-radius: var(--raio);
+  background: var(--fundo-2);
+}
+
+.painel h2 { margin-top: 14px; }
+
+.tabela { width: 100%; border-collapse: collapse; font-size: 14px; }
+.tabela th { text-align: left; font-weight: 500; font-size: 12px; color: var(--texto-2); padding: 0 0 6px; }
+.tabela td { padding: 7px 0; border-top: 1px solid var(--linha); }
+.tabela .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; padding-left: 12px; }
+.tabela th:not(:first-child) { text-align: right; padding-left: 12px; }
+.tabela small { color: var(--texto-2); }
+
+.partidas { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+
+.partida {
+  display: grid;
+  grid-template-columns: minmax(180px, 1.2fr) 1fr auto;
+  align-items: center;
+  gap: 6px 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--linha);
+  border-radius: var(--raio);
+  background: var(--fundo-2);
+  font-size: 14px;
+}
+
+.partida.ao-vivo { border-color: #5fd38d; }
+.partida-jogo { display: flex; flex-direction: column; }
+.partida-jogo small { color: var(--texto-2); font-size: 12px; }
+.partida-quem { color: var(--texto-2); }
+.partida-resultado { display: flex; align-items: center; gap: 10px; justify-content: flex-end; white-space: nowrap; }
+
+.selo {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 1px 7px;
+  border-radius: 99px;
+  background: color-mix(in srgb, var(--destaque) 20%, transparent);
+  color: var(--texto);
+  font-size: 11px;
+}
+
+.selo-vivo { background: color-mix(in srgb, #5fd38d 25%, transparent); }
+
+.placar {
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--fundo);
+  font-family: var(--mono);
+  font-weight: 700;
+}
+
+.link-botao {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--destaque);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.link-botao:hover, .link-botao:focus-visible { text-decoration: underline; }
+
+@media (max-width: 600px) {
+  .partida { grid-template-columns: 1fr; }
+  .partida-resultado { justify-content: flex-start; }
+  .atalhos { width: 100%; }
+  .atalhos .botao { flex: 1; text-align: center; }
+}
+
 @media (max-width: 600px) {
   .entrar { width: 100%; }
   .nome, .nome input { width: 100%; }

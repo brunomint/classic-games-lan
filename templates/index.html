@@ -8,12 +8,18 @@
     <p class="assinatura">por Bruno Fragoso</p>
   </div>
 
-  <a class="botao botao-sec" href="/enviar">＋ Enviar ROMs</a>
+  <nav class="atalhos">
+    <a class="botao botao-sec" href="/historico">Histórico</a>
+    <a class="botao botao-sec" href="/enviar">＋ Enviar ROMs</a>
+  </nav>
 
-  <label class="nome">
-    <span>Seu nome</span>
+  <div class="nome">
+    <label for="nome-jogador">Seu nome</label>
     <input id="nome-jogador" type="text" maxlength="20" placeholder="Jogador" autocomplete="off">
-  </label>
+    <select id="trocar-jogador" hidden aria-label="Já jogou em outro aparelho? Escolha quem você é">
+      <option value="">Já jogou? Escolha quem é você…</option>
+    </select>
+  </div>
 
   <div class="entrar" title="Aponte a câmera do celular">
     <div id="qr" data-url="{{ lan_url }}"></div>
@@ -56,7 +62,7 @@
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='vendor/qrcode.js') }}"></script>
-<script src="{{ url_for('static', filename='js/nome.js') }}"></script>
+<script src="{{ url_for('static', filename='js/jogador.js') }}"></script>
 <script src="{{ url_for('static', filename='js/home.js') }}"></script>
 <script src="{{ url_for('static', filename='js/gamepad-menu.js') }}"></script>
 {% endblock %}

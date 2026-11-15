@@ -22,6 +22,8 @@
   window.EJS_netplayICEServers = [];
 
   window.EJS_onGameStart = function () {
+    document.dispatchEvent(new CustomEvent("cg:jogo-iniciado"));   // registro.js abre a sessão
+
     const emu = window.EJS_emulator;
     const netplay = emu && emu.netplay;
     if (!netplay) return;
