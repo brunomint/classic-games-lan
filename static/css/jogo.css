@@ -178,7 +178,6 @@ body.jogo {
 
 .apagar-save:hover { background: var(--a); }
 .vazio-saves { color: var(--grafite-2); }
-.dialogo .texto-apoio { margin-top: -6px; color: var(--grafite-2); }
 
 /* ---------- menu de pausa ---------- */
 

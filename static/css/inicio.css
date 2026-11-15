@@ -190,6 +190,7 @@ body.inicio { height: 100vh; overflow: hidden; }
 .dock-btn.cor-b { --cor: #b8860b; }
 .dock-btn.cor-x { --cor: var(--x); }
 .dock-btn.cor-y { --cor: var(--y); }
+.dock-btn.cor-ajustes { --cor: var(--grafite-2); }
 
 .dock-btn:focus-visible,
 .dock-btn:hover { outline: 4px solid var(--foco); outline-offset: 3px; }

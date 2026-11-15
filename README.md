@@ -61,6 +61,16 @@ Tudo fica num banco SQLite em `dados/classic-games.db` (fora do git), criado soz
 A página **/historico** mostra tempo e vitórias por jogador, jogos mais jogados,
 quem joga com quem e as partidas recentes.
 
+## Ajustes (ícone de engrenagem)
+
+- **Excluir jogo:** apaga os arquivos do jogo (todas as faixas, no caso de CD) e a
+  capa. O histórico e os saves ficam: enviando o jogo de novo, voltam a valer.
+- **Porta do servidor:** salva em `dados/config.json` e reinicia o servidor na
+  porta nova (a página abre o endereço novo sozinha). `python app.py 8080`
+  continua forçando uma porta.
+
+É preciso estar logado para usar os dois.
+
 ## Adicionar jogos
 
 - Pela página **＋ Enviar ROMs**, de qualquer aparelho da rede; ou

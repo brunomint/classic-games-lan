@@ -1,7 +1,7 @@
 """Classic Games LAN: jogos antigos no navegador, com multiplayer pela rede local.
 
-Rodar:  python app.py          (porta 5000)
-        python app.py 8080     (outra porta)
+Rodar:  python app.py          (porta escolhida em Ajustes; 5000 se nunca mudou)
+        python app.py 8080     (força outra porta)
 """
 import os
 import socket
@@ -12,6 +12,8 @@ from datetime import datetime
 from flask import Flask, abort, jsonify, render_template, request, send_from_directory, session
 from flask_socketio import SocketIO
 
+import config
+from ajustes import register_ajustes
 from auth import login_obrigatorio, register_auth
 import db
 import capas
@@ -30,6 +32,10 @@ register_auth(app)
 register_netplay(app, socketio)
 register_uploads(app, catalog)
 register_registro(app, catalog)
+
+# porta em que este processo está rodando (definida ao iniciar)
+_porta = {"atual": None}
+register_ajustes(app, catalog, lambda: _porta["atual"])
 
 ONE_WEEK = 7 * 24 * 3600
 
@@ -152,7 +158,9 @@ def emulatorjs(filename):
 
 
 if __name__ == "__main__":
-    port = int(sys.argv[1]) if len(sys.argv) > 1 else 5000
+    # porta: a da linha de comando, senão a escolhida em Ajustes, senão 5000
+    port = int(sys.argv[1]) if len(sys.argv) > 1 else config.porta()
+    _porta["atual"] = port
     print(f"\n  Classic Games LAN  →  http://{lan_ip()}:{port}\n")
     # capas que faltam: baixa da internet em segundo plano (sem internet, só pula)
     capas.em_segundo_plano(capas.baixar_faltantes, BASE_DIR)

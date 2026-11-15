@@ -67,7 +67,7 @@ class Catalog:
 
     @staticmethod
     def _arquivos_de_jogo(folder, exts):
-        """Um item por jogo: (arquivo que o emulador abre, título, tamanho total).
+        """Um item por jogo: (arquivo que o emulador abre, título, tamanho total, todos os arquivos).
 
         Jogos de CD vêm em vários arquivos:
           - "Jogo (Track 01).bin", "(Track 02).bin"...: viram um jogo só, aberto
@@ -91,7 +91,7 @@ class Catalog:
             if not citados or not all(os.path.isfile(caminho(c)) for c in citados):
                 continue                       # incompleto: falta .bin
             usados.update(citados)
-            jogos.append((citados[0], clean_title(cue), sum(os.path.getsize(caminho(c)) for c in citados)))
+            jogos.append((citados[0], clean_title(cue), sum(os.path.getsize(caminho(c)) for c in citados), [cue] + citados))
 
         faixas = {}
         for n in nomes:
@@ -101,11 +101,11 @@ class Catalog:
         for base, lista in faixas.items():
             lista.sort()
             usados.update(n for _, n in lista)
-            jogos.append((lista[0][1], clean_title(base + ".bin"), sum(os.path.getsize(caminho(n)) for _, n in lista)))
+            jogos.append((lista[0][1], clean_title(base + ".bin"), sum(os.path.getsize(caminho(n)) for _, n in lista), [n for _, n in lista]))
 
         for n in nomes:
             if n not in usados:
-                jogos.append((n, clean_title(n), os.path.getsize(caminho(n))))
+                jogos.append((n, clean_title(n), os.path.getsize(caminho(n)), [n]))
         return sorted(jogos, key=lambda j: j[1].lower())
 
     def scan(self):
@@ -115,7 +115,7 @@ class Catalog:
             folder = os.path.join(self.roms_dir, console)
             if not os.path.isdir(folder):
                 continue
-            for filename, title, size in self._arquivos_de_jogo(folder, exts):
+            for filename, title, size, arquivos in self._arquivos_de_jogo(folder, exts):
                 slug = slugify(title)
                 bios = BIOS.get(console)
                 games.append({
@@ -126,6 +126,7 @@ class Catalog:
                     "initials": initials(title),
                     "slug": slug,
                     "rom": f"{console}/{filename}",
+                    "arquivos": [f"{console}/{a}" for a in arquivos],   # tudo que compõe o jogo
                     "size_mb": round(size / 1e6, 1),
                     # número estável: o netplay usa para separar as salas por jogo
                     "game_id": zlib.crc32(f"{console}/{slug}".encode()) & 0x7FFFFFFF,

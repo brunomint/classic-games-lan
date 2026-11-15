@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% from "_teclado.html" import teclado %}
+{% block title %}Ajustes · Classic Games{% endblock %}
+{% block css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/paginas.css') }}">{% endblock %}
+{% block body_class %}ajustes{% endblock %}
+
+{% block content %}
+<header class="topo-pagina">
+  <h1>Ajustes</h1>
+</header>
+
+<main class="ajustes-main">
+  <section class="bloco-ajuste">
+    <h2>Jogos</h2>
+    {% if jogos %}
+    <ul class="lista-jogos" id="lista-jogos">
+      {% for g in jogos %}
+      <li class="jogo-item" data-titulo="{{ g.title }}">
+        <span class="miniatura etiqueta-{{ g.cor }}">
+          {% if g.cover %}<img src="/covers/{{ g.cover }}" alt="" loading="lazy">{% else %}{{ g.initials }}{% endif %}
+        </span>
+        <span class="jogo-texto">
+          <strong>{{ g.title }}</strong>
+          <span>{{ g.console_label }}, {{ g.size_mb|round(1) }} MB{% if g.arquivos|length > 1 %}, {{ g.arquivos|length }} arquivos{% endif %}</span>
+        </span>
+        <button type="button" class="botao botao-peq botao-claro" data-nav
+                data-excluir="/api/jogos/{{ g.console }}/{{ g.slug }}">Excluir</button>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="texto-apoio">Nenhum jogo no servidor.</p>
+    {% endif %}
+  </section>
+
+  <section class="bloco-ajuste">
+    <h2>Porta do servidor</h2>
+    <p class="texto-apoio">Hoje o endereço é <strong>{{ lan_url }}</strong>. Ao mudar a porta, o servidor
+      reinicia e todos os aparelhos precisam abrir o endereço novo.</p>
+    <form id="form-porta" class="form-porta">
+      <label class="campo campo-pin">
+        <span>Nova porta (1024 a 65535)</span>
+        <input type="text" name="porta" id="porta" inputmode="numeric" pattern="[0-9]{4,5}" maxlength="5"
+               value="{{ porta }}" required autocomplete="off">
+      </label>
+      {{ teclado("#porta", id="teclado-porta", ok="Salvar e reiniciar") }}
+      <p class="erro-form" id="erro-porta" hidden></p>
+      <button type="submit" class="botao" data-botao="A" data-nav id="salvar-porta">Salvar e reiniciar</button>
+    </form>
+  </section>
+</main>
+
+<dialog id="dialogo-excluir" class="dialogo">
+  <h2>Excluir <span id="excluir-nome"></span>?</h2>
+  <p class="texto-apoio">Apaga o arquivo do jogo e a capa do servidor. O histórico e os saves continuam
+    guardados: se você enviar o jogo de novo, eles voltam a valer.</p>
+  <p class="erro-form" id="erro-excluir" hidden></p>
+  <div class="acoes">
+    <button type="button" class="botao botao-claro" data-botao="B" id="cancelar-excluir">Cancelar</button>
+    <button type="button" class="botao" data-botao="A" id="confirmar-excluir">Excluir</button>
+  </div>
+</dialog>
+
+<nav class="dicas" aria-label="Atalhos">
+  <a href="/" data-atalho="b"><i class="b">B</i> Voltar ao menu</a>
+</nav>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/teclado.js') }}"></script>
+<script src="{{ url_for('static', filename='js/ajustes.js') }}"></script>
+<script src="{{ url_for('static', filename='js/gamepad-menu.js') }}"></script>
+{% endblock %}
