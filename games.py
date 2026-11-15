@@ -8,7 +8,7 @@ import zlib
 
 # pasta em roms/  ->  (nome exibido, core do EmulatorJS, extensões aceitas)
 CONSOLES = {
-    "snes":      ("Super Nintendo", "snes",   {".sfc", ".smc"}),
+    "snes":      ("Super Nintendo", "snes",   {".sfc", ".smc", ".zip"}),
     "nes":       ("Nintendinho",    "nes",    {".nes"}),
     "n64":       ("Nintendo 64",    "n64",    {".z64", ".n64", ".v64"}),
     "gba":       ("Game Boy Advance", "gba",  {".gba"}),
@@ -28,11 +28,13 @@ COVER_EXTS = (".jpg", ".jpeg", ".png", ".webp")
 def clean_title(filename):
     """'Mask, The (USA).sfc' -> 'The Mask'."""
     name = os.path.splitext(filename)[0]
+    # tradução para português: fica no nome, para não se confundir com a versão original
+    traduzido = re.search(r"[\(\[](?:PT-?BR|BR)[\)\]]", name, re.I)
     name = re.sub(r"\s*[\(\[].*?[\)\]]", "", name).strip()
     m = re.match(r"^(.*), (The|A|O|Os|As)$", name)
     if m:
         name = f"{m.group(2)} {m.group(1)}"
-    return name
+    return f"{name} (PT-BR)" if traduzido else name
 
 
 def initials(title):
