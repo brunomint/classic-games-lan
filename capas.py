@@ -1,5 +1,9 @@
 """Baixa as capas dos jogos do libretro-thumbnails (o mesmo acervo do RetroArch).
 
+Primeiro pelo repositório no GitHub (github.com/libretro-thumbnails): um clone "vazio"
+traz só a lista de arquivos e depois o git baixa, de uma vez, apenas as capas que faltam.
+O que não sair por ali (ou se não houver git) vai uma a uma pelo thumbnails.libretro.com.
+
 Uso automático: o servidor chama baixar_faltantes() ao ligar e baixar_para() após
 cada envio de ROM, em segundo plano. Sem internet, simplesmente não baixa nada.
 
@@ -12,6 +16,8 @@ import difflib
 import json
 import os
 import re
+import shutil
+import subprocess
 import sys
 import threading
 import time
@@ -22,6 +28,7 @@ import urllib.request
 from games import Catalog, clean_title
 
 BASE_URL = "https://thumbnails.libretro.com"
+REPOSITORIO = "https://github.com/libretro-thumbnails/{}.git"   # "Sony - PlayStation" → Sony_-_PlayStation
 SISTEMAS = {
     "snes": ["Nintendo - Super Nintendo Entertainment System"],
     "nes": ["Nintendo - Nintendo Entertainment System"],
@@ -98,23 +105,29 @@ def _lista(sistema):
 
 
 def _normalizar(titulo):
-    return re.sub(r"[^a-z0-9]", "", titulo.lower())
+    t = re.sub(r"^the\s+|,\s*the\b", "", titulo.lower().replace("_", "'"))   # "7th Saga, The" = "7th Saga"
+    return re.sub(r"[^a-z0-9]", "", t)
 
 
 def _melhor_candidato(titulo, nomes):
     """Escolhe a capa cujo título bate com o do jogo, preferindo a região dos EUA."""
+    titulo = re.sub(r"\s*\(PT-BR\)$", "", titulo)   # tradução usa a capa do original
+    titulo = re.sub(r"\s+v\d+(\.\d+)*$", "", titulo)    # "Breath of Fire v1.10" (versão da tradução)
     alvo = _normalizar(titulo)
-    validos = [n for n in nomes if not DESCARTAR.search(n)]
-    por_titulo = {}
-    for n in validos:
-        por_titulo.setdefault(_normalizar(clean_title(n + ".x")), []).append(n)
-
-    iguais = por_titulo.get(alvo)
+    iguais = None
+    # primeiro só versões lançadas; protótipo/demo só se não houver outra
+    for grupo in ([n for n in nomes if not DESCARTAR.search(n)], list(nomes)):
+        por_titulo = {}
+        for n in grupo:
+            por_titulo.setdefault(_normalizar(clean_title(n + ".x")), []).append(n)
+        iguais = por_titulo.get(alvo)
+        if not iguais:
+            parecidos = difflib.get_close_matches(alvo, por_titulo.keys(), n=1, cutoff=0.88)
+            iguais = por_titulo[parecidos[0]] if parecidos else None
+        if iguais:
+            break
     if not iguais:
-        parecidos = difflib.get_close_matches(alvo, por_titulo.keys(), n=1, cutoff=0.88)
-        if not parecidos:
-            return None
-        iguais = por_titulo[parecidos[0]]
+        return None
 
     def peso(n):
         for i, regiao in enumerate(REGIOES):
@@ -160,18 +173,122 @@ def baixar_para(jogo, covers_dir, falhas=None):
     return False
 
 
+def _git(pasta, *args, entrada=None):
+    return subprocess.run(["git", "-C", pasta, *args], input=entrada, capture_output=True,
+                          text=True, timeout=1800, check=True).stdout
+
+
+def _repositorio(sistema):
+    """Clone sem arquivos (só a lista) do repositório de capas, guardado em dados/."""
+    pasta = os.path.join(os.path.dirname(_arquivo_falhas()), "capas-repositorio", sistema.replace(" ", "_"))
+    if os.path.isdir(os.path.join(pasta, ".git")):
+        try:
+            _git(pasta, "fetch", "-q", "--depth", "1", "origin", "HEAD")
+            _git(pasta, "update-ref", "HEAD", "FETCH_HEAD")
+        except (subprocess.SubprocessError, OSError):
+            pass   # sem internet: usa a lista que já tem
+    else:
+        shutil.rmtree(pasta, ignore_errors=True)
+        os.makedirs(os.path.dirname(pasta), exist_ok=True)
+        subprocess.run(["git", "clone", "-q", "--filter=blob:none", "--no-checkout", "--depth", "1",
+                        REPOSITORIO.format(sistema.replace(" ", "_")), pasta],
+                       capture_output=True, timeout=600, check=True)
+    return pasta
+
+
+def baixar_do_repositorio(jogos, covers_dir, falhas=None, avisar=print):
+    """Capas de vários jogos pelo GitHub, num lote só. Devolve os jogos que ganharam capa."""
+    if not shutil.which("git"):
+        return []
+    feitos = []
+    for console in sorted({j["console"] for j in jogos}):
+        for sistema in SISTEMAS.get(console, []):
+            faltam = [j for j in jogos if j["console"] == console and j not in feitos]
+            if not faltam:
+                break
+            try:
+                pasta = _repositorio(sistema)
+                arvore = {}   # caminho → (modo, sha)
+                for linha in _git(pasta, "ls-tree", "-r", "HEAD", "Named_Boxarts/").splitlines():
+                    info, caminho = linha.split("\t", 1)
+                    if caminho.endswith(".png"):
+                        modo, _, sha = info.split()
+                        arvore[caminho] = (modo, sha)
+            except (subprocess.SubprocessError, OSError, ValueError):
+                avisar(f"  repositório de capas indisponível: {sistema}")
+                continue
+            nomes = {a[len("Named_Boxarts/"):-4] for a in arvore}
+            escolha = {}
+            for j in faltam:
+                exato = _nome_libretro(os.path.splitext(os.path.basename(j["rom"]))[0])
+                nome = exato if exato in nomes else _melhor_candidato(j["title"], nomes)
+                if nome:
+                    escolha[j["rom"]] = f"Named_Boxarts/{nome}.png"
+            if not escolha:
+                continue
+            # várias versões (ex.: "(Rev 1)") são atalhos para a capa principal: segue o atalho
+            atalhos = sorted({c for c in escolha.values() if arvore[c][0] == "120000"})
+            if atalhos:
+                try:
+                    saida = _git(pasta, "cat-file", "--batch", entrada="".join(arvore[c][1] + "\n" for c in atalhos))
+                    alvos = re.findall(r"^\S+ blob \d+\n(.*)$", saida, re.M)
+                    for c, alvo in zip(atalhos, alvos):
+                        real = os.path.normpath(os.path.join(os.path.dirname(c), alvo.strip()))
+                        for rom, cam in escolha.items():
+                            if cam == c and real in arvore:
+                                escolha[rom] = real
+                except (subprocess.SubprocessError, OSError):
+                    pass
+            avisar(f"  baixando {len(set(escolha.values()))} capa(s) de {sistema} pelo GitHub...")
+            try:
+                # só os arquivos escolhidos: o git busca todos numa conexão
+                _git(pasta, "sparse-checkout", "set", "--no-cone", "--stdin",
+                     entrada="".join("/" + re.sub(r"([*?\[\\!#])", r"\\\1", c) + "\n" for c in set(escolha.values())))
+                _git(pasta, "checkout", "-q", "HEAD")
+            except (subprocess.SubprocessError, OSError):
+                avisar(f"  não deu para baixar as capas de {sistema}")
+                continue
+            for j in faltam:
+                origem = os.path.join(pasta, escolha.get(j["rom"], "-"))
+                if not os.path.isfile(origem):
+                    continue
+                with open(origem, "rb") as f:
+                    if f.read(8) != b"\x89PNG\r\n\x1a\n":
+                        continue   # ponteiro do git-lfs ou arquivo estragado
+                destino = os.path.join(covers_dir, console, f"{j['slug']}.png")
+                os.makedirs(os.path.dirname(destino), exist_ok=True)
+                shutil.copyfile(origem, destino + ".tmp")
+                os.replace(destino + ".tmp", destino)
+                if falhas is not None:
+                    falhas.pop(j["rom"], None)
+                feitos.append(j)
+            # as imagens já foram copiadas: o clone volta a guardar só a lista
+            try:
+                _git(pasta, "sparse-checkout", "set", "--no-cone", "/.nada")
+            except (subprocess.SubprocessError, OSError):
+                pass
+    return feitos
+
+
 def baixar_faltantes(base_dir=None, de_novo=False, avisar=print, roms=None):
     """Baixa as capas dos jogos que ainda não têm (ou só das ROMs indicadas)."""
     catalogo = Catalog(base_dir or _base_dir())
     with _lock_falhas:
         falhas = _ler_falhas()
     agora = time.time()
-    baixadas = 0
+    pendentes = []
     for jogo in catalogo.scan():
         if jogo["cover"] or (roms is not None and jogo["rom"] not in roms):
             continue
         ultima = falhas.get(jogo["rom"])
         if ultima and not de_novo and agora - ultima < TENTAR_DE_NOVO_SEG:
+            continue
+        pendentes.append(jogo)
+
+    feitos = baixar_do_repositorio(pendentes, catalogo.covers_dir, falhas, avisar) if pendentes else []
+    baixadas = len(feitos)
+    for jogo in pendentes:
+        if jogo in feitos:
             continue
         if baixar_para(jogo, catalogo.covers_dir, falhas):
             baixadas += 1

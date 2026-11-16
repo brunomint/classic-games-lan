@@ -105,8 +105,10 @@ quem joga com quem e as partidas recentes.
 | `roms/psx` | PlayStation | .bin .cue .chd .pbp .iso |
 
 **Capas:** baixadas sozinhas do [libretro-thumbnails](https://github.com/libretro-thumbnails)
-(o acervo do RetroArch) quando o servidor liga e a cada ROM enviada; sem internet,
-o cartucho mostra a sigla. Para buscar na mão: `python capas.py` (ou `--de-novo`
+(o acervo do RetroArch) quando o servidor liga e a cada ROM enviada. Com `git` instalado,
+vêm do repositório no GitHub num lote só (um clone sem arquivos em `dados/capas-repositorio/`
+traz a lista; o git baixa só as capas que faltam); o que não sair por ali vai uma a uma
+pelo thumbnails.libretro.com. Sem internet, o cartucho mostra a sigla. Para buscar na mão: `python capas.py` (ou `--de-novo`
 para tentar de novo as que não foram achadas). Também dá para pôr a sua:
 `covers/<console>/<slug>.png` (o slug é o final do link do jogo).
 BIOS do PS1: `bios/scph5501.bin`.
