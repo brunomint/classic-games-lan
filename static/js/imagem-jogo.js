@@ -61,8 +61,7 @@ window.CG = window.CG || {};
 
   // tela cheia automática: tenta já ao abrir; se o navegador recusar, entra no primeiro
   // toque, clique ou tecla (o Esc não conta: ele abre o menu)
-  if (telaCheiaAuto) {
-    entrarTelaCheia();
+  function voltarNoProximoGesto() {
     const primeiroGesto = (e) => {
       if (e.type === "keydown" && e.key === "Escape") return;
       ["pointerdown", "keydown"].forEach((t) => document.removeEventListener(t, primeiroGesto, true));
@@ -70,6 +69,17 @@ window.CG = window.CG || {};
     };
     ["pointerdown", "keydown"].forEach((t) => document.addEventListener(t, primeiroGesto, true));
   }
+  if (telaCheiaAuto) {
+    entrarTelaCheia();
+    voltarNoProximoGesto();
+  }
+
+  // Segurar o Esc (keyboard.lock) só existe em endereço seguro (https ou localhost); em
+  // http://192.168.x.x o Esc tira da tela cheia antes de abrir o menu. Nesse caso ela
+  // volta na próxima tecla ou toque. Para o Esc nem sair: ver "Esc e tela cheia" no README.
+  document.addEventListener("fullscreenchange", () => {
+    if (!emTelaCheia() && telaCheiaAuto) voltarNoProximoGesto();
+  });
 
   // ---------- formato: tela toda (esticada) ou original ----------
   // O emulador desenha a imagem no formato do console (4:3) e completa o resto com preto.

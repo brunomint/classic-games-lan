@@ -190,6 +190,13 @@ tela cheia, num perfil só dele (entre com o jogador uma vez), sem barra em nenh
 som liberado sem precisar de clique. F11 sai da tela cheia e Alt+F4 fecha. Para outro computador da
 casa: `./abrir-tela-cheia.sh http://192.168.0.7:5000/`.
 
+**Esc e tela cheia:** no jogo, um toque no Esc abre o menu sem sair da tela cheia (segurar o Esc
+sai). Mas o Chrome só deixa a página segurar o Esc em endereço seguro (https ou localhost), e
+`http://192.168.0.7:5000` não é: ali o Esc tira da tela cheia e ela volta na próxima tecla ou toque.
+Para ficar como deveria, uma vez em cada aparelho: abra `chrome://flags/#unrestricted-insecure-origins-treated-as-secure`,
+coloque `http://192.168.0.7:5000`, escolha **Enabled** e reinicie o Chrome. O atalho "Classic Games"
+já faz isso sozinho.
+
 O que acontece por fora do jogo vira aviso rápido no canto (salvo, controle conectado,
 fulano entrou na sala...). Se o controle desconecta, o jogo pausa e continua sozinho
 quando ele volta (em sala de netplay só avisa, para não travar os outros).
