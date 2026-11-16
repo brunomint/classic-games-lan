@@ -182,6 +182,14 @@ com controle vale apertar **F11** uma vez, que fica valendo para todas as págin
 **formato "Tela toda"** estica a imagem até as bordas, sem faixas pretas (só com a tela deitada).
 Os dois se desligam no menu de pausa e ficam lembrados no aparelho.
 
+Nos **menus**, o botão **Tela cheia** (no rodapé do menu inicial) esconde a barra do navegador.
+Ao trocar de página o navegador sai da tela cheia, e ela volta no primeiro toque, clique ou tecla.
+Só com o controle isso não funciona (o navegador não aceita). Para usar só com o controle, abra pelo
+**atalho "Classic Games"** do menu de aplicativos, que roda `abrir-tela-cheia.sh`: o Chrome abre em
+tela cheia, num perfil só dele (entre com o jogador uma vez), sem barra em nenhuma página e com o
+som liberado sem precisar de clique. F11 sai da tela cheia e Alt+F4 fecha. Para outro computador da
+casa: `./abrir-tela-cheia.sh http://192.168.0.7:5000/`.
+
 O que acontece por fora do jogo vira aviso rápido no canto (salvo, controle conectado,
 fulano entrou na sala...). Se o controle desconecta, o jogo pausa e continua sozinho
 quando ele volta (em sala de netplay só avisa, para não travar os outros).
