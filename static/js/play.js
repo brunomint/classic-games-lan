@@ -97,7 +97,15 @@
   Object.defineProperty(window, "EJS_emulator", {
     configurable: true,
     get: () => emulador,
-    set: (v) => { emulador = v; if (v) v.rewindEnabled = voltarNoTempo; },
+    set: (v) => {
+      emulador = v;
+      if (!v) return;
+      v.rewindEnabled = voltarNoTempo;
+      // N64: o núcleo precisa de WebGL2 (no modo antigo fica a ~1 quadro por segundo, tela preta).
+      // O EmulatorJS 4.3.0-pre deveria ligar sozinho pelo cores/reports/*.json, mas não lê
+      // o arquivo direito (e ignora EJS_defaultOptions quando o jogo já tem ajustes salvos).
+      if (d.core === "n64" && v.supportsWebgl2 && v.webgl2Enabled !== false) v.webgl2Enabled = true;
+    },
   });
 
   const loader = document.createElement("script");
