@@ -193,7 +193,7 @@ casa: `./abrir-tela-cheia.sh http://192.168.0.7:5000/`.
 **Esc e tela cheia:** no jogo, um toque no Esc abre o menu sem sair da tela cheia (segurar o Esc
 sai). Mas o Chrome só deixa a página segurar o Esc em endereço seguro (https ou localhost), e
 `http://192.168.0.7:5000` não é: ali o Esc tira da tela cheia e ela volta na próxima tecla ou toque.
-Para ficar como deveria, uma vez em cada aparelho: abra `chrome://flags/#unrestricted-insecure-origins-treated-as-secure`,
+Para ficar como deveria, uma vez em cada aparelho: abra `chrome://flags/#unsafely-treat-insecure-origin-as-secure`,
 coloque `http://192.168.0.7:5000`, escolha **Enabled** e reinicie o Chrome. O atalho "Classic Games"
 já faz isso sozinho.
 
