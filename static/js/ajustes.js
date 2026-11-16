@@ -28,6 +28,7 @@
         const proximo = alvo.item.nextElementSibling || alvo.item.previousElementSibling;
         alvo.item.remove();
         dialogo.close();
+        if (pesquisa) filtrar();
         const botao = proximo && proximo.querySelector("[data-excluir]");
         if (botao) botao.focus();
       })
@@ -36,6 +37,55 @@
         erroExcluir.hidden = false;
       });
   });
+
+  // ---------- pesquisa na lista de jogos ----------
+  // ignora acento e maiúsculas; vale para o nome e para o console ("snes", "ps1")
+  const pesquisa = document.getElementById("pesquisa-jogos");
+  const contagem = document.getElementById("contagem-jogos");
+  const nenhum = document.getElementById("nenhum-jogo");
+  const normalizar = (t) => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  // apelidos dos consoles, para achar por "ps1", "genesis"...
+  const APELIDOS = { psx: "ps1 ps psone", megadrive: "genesis md", gb: "gbc", nes: "famicom", snes: "super famicom sfc" };
+  const total = (n) => (n === 1 ? "1 jogo" : `${n.toLocaleString("pt-BR")} jogos`);
+
+  function filtrar() {
+    const itens = Array.from(document.querySelectorAll(".jogo-item"));
+    const partes = normalizar(pesquisa.value).split(" ").filter(Boolean);
+    let visiveis = 0;
+    itens.forEach((item) => {
+      if (!item.dataset.busca) {
+        const chave = item.dataset.console.split(" ")[0];
+        item.dataset.busca = normalizar(`${item.dataset.titulo} ${item.dataset.console} ${APELIDOS[chave] || ""}`);
+      }
+      const mostra = partes.every((p) => item.dataset.busca.includes(p));
+      item.hidden = !mostra;
+      if (mostra) visiveis += 1;
+    });
+    contagem.textContent = partes.length ? `${total(visiveis)} de ${itens.length.toLocaleString("pt-BR")}` : total(itens.length);
+    nenhum.hidden = visiveis > 0;
+  }
+
+  if (pesquisa) {
+    filtrar();   // contagem com ponto de milhar (e a pesquisa que o navegador lembrou)
+    pesquisa.addEventListener("input", filtrar);
+    // Enter leva ao primeiro jogo achado
+    pesquisa.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter") return;
+      e.preventDefault();
+      const primeiro = document.querySelector(".jogo-item:not([hidden]) [data-excluir]");
+      if (primeiro) primeiro.focus();
+    });
+    // começar a digitar em qualquer lugar da página vai para a pesquisa
+    document.addEventListener("keydown", (e) => {
+      if (e.ctrlKey || e.metaKey || e.altKey || document.querySelector("dialog[open]")) return;
+      if (["INPUT", "SELECT", "TEXTAREA"].includes(e.target.tagName)) return;
+      if (e.key === "/" || /^[\p{L}]$/u.test(e.key)) {
+        pesquisa.focus();
+        if (e.key === "/") e.preventDefault();
+      }
+    });
+  }
 
   // ---------- porta ----------
   const form = document.getElementById("form-porta");

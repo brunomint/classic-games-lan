@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% from "_topo.html" import topo %}
 {% from "_teclado.html" import teclado %}
+{% from "_icones.html" import icone %}
 {% block title %}Ajustes · Classic Games{% endblock %}
 {% block css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/paginas.css') }}">{% endblock %}
 {% block body_class %}ajustes{% endblock %}
@@ -12,9 +13,16 @@
   <section class="bloco-ajuste">
     <h2>Jogos</h2>
     {% if jogos %}
+    <label class="pesquisa-ajustes">
+      {{ icone("lupa") }}
+      <input type="search" id="pesquisa-jogos" data-nav placeholder="Pesquisar jogo ou console"
+             aria-label="Pesquisar jogo ou console" autocomplete="off" spellcheck="false">
+    </label>
+    <p class="contagem-jogos" id="contagem-jogos" aria-live="polite">{{ jogos|length }} jogos</p>
+    <p class="texto-apoio" id="nenhum-jogo" hidden>Nenhum jogo com esse nome.</p>
     <ul class="lista-jogos" id="lista-jogos">
       {% for g in jogos %}
-      <li class="jogo-item" data-titulo="{{ g.title }}">
+      <li class="jogo-item" data-titulo="{{ g.title }}" data-console="{{ g.console }} {{ g.console_label }}">
         <span class="miniatura etiqueta-{{ g.cor }}">
           {% if g.cover %}<img src="/covers/{{ g.cover }}" alt="" loading="lazy">{% else %}{{ g.initials }}{% endif %}
         </span>
