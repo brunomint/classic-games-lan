@@ -295,6 +295,18 @@
 .jogo-texto strong { display: block; overflow-wrap: anywhere; }
 .jogo-texto span { color: var(--grafite-2); font-size: 14px; }
 
+.acoes-conta { display: flex; flex-wrap: wrap; gap: 10px; }
+
+.lista-jogadores { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.jogador-item { display: flex; align-items: center; gap: 12px; padding: 8px 8px 8px 10px; border-radius: 10px; background: var(--plastico); }
+.jogador-item .avatar { width: 40px; height: 40px; flex: none; font-size: 18px; }
+.jogador-item strong { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.pin-liberado { padding: 0 10px; color: var(--grafite-2); font-size: 14px; font-weight: 600; }
+
+.dialogo-pin { width: min(420px, calc(100vw - 24px)); }
+.dialogo-pin form { display: flex; flex-direction: column; gap: 12px; }
+.dialogo-pin h2, .dialogo-pin .texto-apoio { margin: 0; }
+
 .form-porta { display: flex; flex-direction: column; gap: 14px; max-width: 320px; }
 .form-porta .botao { align-self: flex-start; }
 

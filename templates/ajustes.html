@@ -11,6 +11,36 @@
 
 <main class="ajustes-main">
   <section class="bloco-ajuste">
+    <h2>Meu jogador</h2>
+    <p class="texto-apoio">Você está como <strong>{{ jogador.nome }}</strong>.</p>
+    <div class="acoes-conta">
+      <button type="button" class="botao" data-nav id="trocar-pin">Trocar PIN</button>
+      <button type="button" class="botao botao-claro" data-nav id="excluir-conta">Excluir meu jogador</button>
+    </div>
+  </section>
+
+  {% if outros %}
+  <section class="bloco-ajuste">
+    <h2>Outros jogadores</h2>
+    <p class="texto-apoio">Alguém esqueceu o PIN? Libere o PIN e o próximo que a pessoa usar ao entrar passa a ser o dela.</p>
+    <ul class="lista-jogadores">
+      {% for j in outros %}
+      <li class="jogador-item">
+        <span class="avatar avatar-{{ loop.index0 % 5 }}" aria-hidden="true">{{ j.nome[:1]|upper }}</span>
+        <strong>{{ j.nome }}</strong>
+        {% if j.tem_pin %}
+        <button type="button" class="botao botao-peq botao-claro" data-nav
+                data-liberar="{{ j.id }}" data-nome="{{ j.nome }}">Liberar PIN</button>
+        {% else %}
+        <span class="pin-liberado">PIN liberado</span>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  <section class="bloco-ajuste">
     <h2>Jogos</h2>
     {% if jogos %}
     <label class="pesquisa-ajustes">
@@ -68,6 +98,36 @@
   </div>
 </dialog>
 
+<dialog id="dialogo-pin" class="dialogo dialogo-pin">
+  <form id="form-pin-passo">
+    <h2 id="pin-titulo"></h2>
+    <p class="texto-apoio" id="pin-texto"></p>
+    <label class="campo campo-pin">
+      <span id="pin-rotulo">PIN</span>
+      <input type="password" id="pin-passo" inputmode="numeric" maxlength="8" autocomplete="off">
+    </label>
+    {{ teclado("#pin-passo", id="teclado-pin-passo", ok="Continuar") }}
+    <p class="erro-form" id="erro-pin-passo" hidden></p>
+    <div class="acoes">
+      <button type="button" class="botao botao-claro" data-botao="B" id="cancelar-pin">Cancelar</button>
+      <button type="submit" class="botao" data-botao="A" id="continuar-pin">Continuar</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="dialogo-liberar" class="dialogo">
+  <h2>Liberar o PIN de <span id="liberar-nome"></span>?</h2>
+  <p class="texto-apoio">O PIN atual deixa de valer. Na próxima vez que escolher o nome, a pessoa digita um PIN
+    novo e ele passa a ser o dela. Até lá, quem escolher esse nome entra como ela.</p>
+  <p class="erro-form" id="erro-liberar" hidden></p>
+  <div class="acoes">
+    <button type="button" class="botao botao-claro" data-botao="B" id="cancelar-liberar">Cancelar</button>
+    <button type="button" class="botao" data-botao="A" id="confirmar-liberar">Liberar PIN</button>
+  </div>
+</dialog>
+
+<div class="avisos" id="avisos" aria-live="polite"></div>
+
 <nav class="dicas" aria-label="Atalhos">
   <a href="/" data-atalho="b"><i class="b">B</i> Voltar ao menu</a>
   <span><i class="a">A</i> OK</span>
@@ -77,5 +137,7 @@
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/teclado.js') }}"></script>
 <script src="{{ url_for('static', filename='js/ajustes.js') }}"></script>
+<script src="{{ url_for('static', filename='js/avisos.js') }}"></script>
+<script src="{{ url_for('static', filename='js/conta.js') }}"></script>
 <script src="{{ url_for('static', filename='js/gamepad-menu.js') }}"></script>
 {% endblock %}

@@ -26,7 +26,9 @@ CREATE TABLE IF NOT EXISTS jogadores (
     nome        TEXT NOT NULL,
     pin_hash    TEXT,                      -- PIN do login (com hash); vazio = jogador antigo sem PIN
     criado_em   INTEGER NOT NULL,
-    visto_em    INTEGER NOT NULL
+    visto_em    INTEGER NOT NULL,
+    excluido_em INTEGER,                   -- excluído: some do login, as partidas ficam
+    nome_antigo TEXT                       -- nome de antes de excluir (ele pode voltar)
 );
 
 CREATE TABLE IF NOT EXISTS partidas (
@@ -146,6 +148,10 @@ def iniciar_banco():
     colunas = {r[1] for r in con.execute("PRAGMA table_info(saves)")}
     if "automatico" not in colunas:
         con.execute("ALTER TABLE saves ADD COLUMN automatico INTEGER NOT NULL DEFAULT 0")
+    colunas = {r[1] for r in con.execute("PRAGMA table_info(jogadores)")}
+    if "excluido_em" not in colunas:
+        con.execute("ALTER TABLE jogadores ADD COLUMN excluido_em INTEGER")
+        con.execute("ALTER TABLE jogadores ADD COLUMN nome_antigo TEXT")
     con.execute("CREATE INDEX IF NOT EXISTS idx_jogadores_nome ON jogadores(nome COLLATE NOCASE)")
     con.commit()
     con.close()
@@ -156,14 +162,50 @@ def iniciar_banco():
 def buscar_por_nome(con, nome):
     """Nome não diferencia maiúsculas; se houver repetidos (antigos), pega o mais usado por último."""
     row = con.execute(
-        "SELECT * FROM jogadores WHERE nome = ? COLLATE NOCASE ORDER BY visto_em DESC LIMIT 1", (nome,)
+        "SELECT * FROM jogadores WHERE nome = ? COLLATE NOCASE AND excluido_em IS NULL "
+        "ORDER BY visto_em DESC LIMIT 1", (nome,)
     ).fetchone()
     return dict(row) if row else None
 
 
 def buscar_jogador(con, jogador_id):
-    row = con.execute("SELECT id, nome FROM jogadores WHERE id = ?", (jogador_id,)).fetchone()
+    row = con.execute("SELECT id, nome FROM jogadores WHERE id = ? AND excluido_em IS NULL", (jogador_id,)).fetchone()
     return dict(row) if row else None
+
+
+def conferir_pin(con, jogador_id):
+    row = con.execute("SELECT pin_hash FROM jogadores WHERE id = ? AND excluido_em IS NULL", (jogador_id,)).fetchone()
+    return row["pin_hash"] if row else None
+
+
+NOME_EXCLUIDO = "Jogador excluído"
+
+
+def excluir_jogador(con, jogador_id):
+    """Some do login e dos perfis; nas partidas aparece como "Jogador excluído".
+    Partidas, saves e favoritos ficam: se ele voltar com o mesmo nome, vale tudo de novo."""
+    con.execute(
+        "UPDATE jogadores SET nome_antigo = nome, nome = ?, pin_hash = NULL, excluido_em = ? "
+        "WHERE id = ? AND excluido_em IS NULL", (NOME_EXCLUIDO, agora(), jogador_id))
+
+
+def buscar_excluido(con, nome):
+    row = con.execute(
+        "SELECT id FROM jogadores WHERE excluido_em IS NOT NULL AND nome_antigo = ? COLLATE NOCASE "
+        "ORDER BY excluido_em DESC LIMIT 1", (nome,)).fetchone()
+    return row["id"] if row else None
+
+
+def reativar_jogador(con, jogador_id, nome, pin_hash):
+    con.execute(
+        "UPDATE jogadores SET nome = ?, pin_hash = ?, excluido_em = NULL, nome_antigo = NULL, visto_em = ? "
+        "WHERE id = ?", (nome, pin_hash, agora(), jogador_id))
+
+
+def jogadores_ativos(con):
+    return [dict(r) for r in con.execute(
+        "SELECT id, nome, pin_hash IS NOT NULL AS tem_pin FROM jogadores WHERE excluido_em IS NULL "
+        "ORDER BY nome COLLATE NOCASE")]
 
 
 def criar_jogador(con, jogador_id, nome, pin_hash):
@@ -462,7 +504,8 @@ def apagar_codigo(con, game_id, codigo_id):
 def perfis(con):
     """Jogadores com login (para a tela 'Quem está jogando?'), os mais recentes primeiro."""
     return [dict(r) for r in con.execute(
-        "SELECT id, nome FROM jogadores WHERE pin_hash IS NOT NULL ORDER BY visto_em DESC LIMIT 12"
+        # sem PIN = alguém liberou o PIN dele ("Esqueci o PIN"): aparece para escolher um novo
+        "SELECT id, nome FROM jogadores WHERE excluido_em IS NULL ORDER BY visto_em DESC LIMIT 12"
     ).fetchall()]
 
 

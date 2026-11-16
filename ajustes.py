@@ -8,6 +8,7 @@ import time
 from flask import abort, jsonify, render_template, request
 
 import config
+import db
 from auth import login_obrigatorio
 
 
@@ -38,7 +39,9 @@ def register_ajustes(app, catalog, porta_atual):
     @app.get("/ajustes")
     @login_obrigatorio()
     def ajustes():
-        return render_template("ajustes.html", jogos=catalog.scan(), porta=porta_atual())
+        with db.ler() as con:
+            outros = [j for j in db.jogadores_ativos(con) if j["id"] != request.jogador["id"]]
+        return render_template("ajustes.html", jogos=catalog.scan(), porta=porta_atual(), outros=outros)
 
     @app.delete("/api/jogos/<console>/<slug>")
     @login_obrigatorio(api=True)

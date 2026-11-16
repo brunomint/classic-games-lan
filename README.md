@@ -57,6 +57,11 @@ Tudo fica num banco SQLite em `dados/classic-games.db` (fora do git), criado soz
   IP, trocou de aparelho ou limpou o navegador, é só entrar de novo.
   5 PINs errados seguidos bloqueiam aquele nome por 5 minutos.
   Para jogar e enviar ROMs é preciso estar logado; a home e o histórico são abertos.
+- **Conta (Ajustes):** **Trocar PIN** (PIN atual, novo e repetir) e **Excluir meu jogador**
+  (pede o PIN). Excluir não apaga nada: o nome some da entrada e as partidas aparecem como
+  "Jogador excluído" no placar; criando de novo com o mesmo nome, voltam partidas, saves e
+  favoritos. Em **Outros jogadores**, **Liberar PIN** serve para quem esqueceu: o próximo PIN
+  que a pessoa usar ao entrar passa a ser o dela.
 - **Mais de um jogador no mesmo aparelho** (2º, 3º, 4º controle): botão
   **＋ Jogador** na tela do jogo; a pessoa entra com o próprio nome + PIN (ou cria
   um jogador). Ela conta no histórico junto com quem está logado e acompanha a
@@ -216,6 +221,7 @@ games.py        catálogo automático (lê roms/)
 netplay.py      servidor de salas (substitui o servidor oficial do EmulatorJS)
 uploads.py      envio de ROMs pelo navegador
 auth.py         login (nome + PIN) e sessão
+conta.py        trocar PIN, excluir jogador, liberar PIN de quem esqueceu
 db.py           banco SQLite (jogadores, partidas, participações, saves)
 registro.py     API de partidas/resultados/saves e página de histórico
 templates/      páginas

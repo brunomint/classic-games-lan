@@ -94,6 +94,8 @@ def autenticar(con, nome, pin):
     """
     if len(nome) < 2:
         raise ErroLogin("Escreva o nome (pelo menos 2 letras).")
+    if nome.lower() == db.NOME_EXCLUIDO.lower():
+        raise ErroLogin("Esse nome não pode ser usado.")
     if not PIN_VALIDO.match(pin):
         raise ErroLogin("O PIN tem de 4 a 8 números.")
     chave = nome.lower()
@@ -115,6 +117,11 @@ def autenticar(con, nome, pin):
 
 
 def criar_conta(con, nome, pin):
+    # quem foi excluído e volta com o mesmo nome recupera partidas, saves e favoritos
+    antigo = db.buscar_excluido(con, nome)
+    if antigo:
+        db.reativar_jogador(con, antigo, nome, generate_password_hash(pin))
+        return antigo
     jogador_id = str(uuid.uuid4())
     db.criar_jogador(con, jogador_id, nome, generate_password_hash(pin))
     return jogador_id
