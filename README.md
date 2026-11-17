@@ -61,6 +61,9 @@ meio segundo. De tempos em tempos os aparelhos comparam o estado do jogo e, se d
 quem criou a sala manda o dele de novo.
 
 - Melhor no **Wi-Fi 5 GHz** (ou cabo): no 2,4 GHz os picos de rede viram pausas curtas.
+- Se um aparelho fizer os outros esperarem demais (conexão lenta), quem criou a sala o
+  **afasta**: os outros seguem jogando e ele assiste; volta sozinho quando a conexão fica
+  estável por uns segundos (mais tempo se caiu de novo há pouco).
 - Feito e medido para **Super Nintendo** e jogos leves. Para PS1 e N64, use o modo por vídeo.
 - Código: `static/js/modo-antigo.js` (motor) e `antigo.py` (salas). O motor liga o avanço
   rápido do emulador para rodar um quadro por vez no próprio ritmo (sem o aviso na tela).

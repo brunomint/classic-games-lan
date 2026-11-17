@@ -23,7 +23,8 @@ window.CG = window.CG || {};
   const FOTO_A_CADA = 1;       // quadros entre fotos do estado (com salvarEstado, uma foto custa ~0,2 ms)
   const CHECAR_A_CADA = 240;   // quadros (~4 s) entre comparações (múltiplo de FOTO_A_CADA)
   const BOTOES_EMULADOR = 24;  // 24 em diante são atalhos do emulador (salvar, acelerar...): bloqueados
-  const REPETIR = 10;          // cada mensagem rápida leva os últimos 10 quadros fechados (cobre pacote perdido)
+  const REPETIR = 10;
+  const AFASTAR_APOS = 350;    // ms esperando um aparelho além da JANELA: quem criou a sala o afasta          // cada mensagem rápida leva os últimos 10 quadros fechados (cobre pacote perdido)
 
   const emu = () => window.EJS_emulator;
   const gm = () => emu() && emu().gameManager;
@@ -126,8 +127,14 @@ window.CG = window.CG || {};
       }
       this.eu = eu;
       this.epoca = epoca;
+      // afastado por conexão lenta: não está na lista; segue o jogo dos outros sem jogar
+      this.espectador = !jogadores.includes(eu);
+      this.pediuAfastar = false;
       this.outros = jogadores.filter((j) => j !== eu);
       this.jogadores = [...jogadores].sort((a, b) => a - b);
+      espera.textContent = this.espectador
+        ? "Sua conexão ficou lenta: os outros seguiram jogando. Você volta assim que ela melhorar…"
+        : "Esperando o outro aparelho…";
       this.periodo = 1000 / (ritmo || this.ritmo());
       g.functions.setFastForwardRatio(0);
       g.functions.toggleFastForward(1);
@@ -152,6 +159,7 @@ window.CG = window.CG || {};
       this.livres = this.livres || [];  // espaços de memória de fotos descartadas, para reaproveitar
       this.corrigir = null;      // quadro mais antigo que precisa ser refeito
       this.esperandoDesde = 0;
+      espera.hidden = true;
       this.est = zerarEst();
       this.total = { voltas: 0, refeitos: 0 };
       this.foto();
@@ -236,6 +244,7 @@ window.CG = window.CG || {};
 
     // um quadro novo: fecha o quadro f + ATRASO com os botões deste aparelho e roda o quadro f
     passo() {
+      if (this.espectador) { this.rodar(); this.est.quadros += 1; return; }
       const alvo = this.f + ATRASO;
       const ev = this.pendentes;
       this.pendentes = [];
@@ -300,6 +309,14 @@ window.CG = window.CG || {};
       if (this.f - minConf > JANELA) {
         if (!this.esperandoDesde) { this.esperandoDesde = agora; this.est.esperas += 1; }
         else if (agora - this.esperandoDesde > 400) espera.hidden = false;
+        // quem criou a sala não deixa um aparelho lento travar os outros: afasta-o
+        if (this.eu === 0 && !this.pediuAfastar && agora - this.esperandoDesde > AFASTAR_APOS) {
+          const lentos = this.outros.filter((j) => this.f - this.confirmado[j] > JANELA);
+          if (lentos.length) {
+            this.pediuAfastar = true;
+            setTimeout(() => document.dispatchEvent(new CustomEvent("cg:antigo-afastar", { detail: lentos })), 0);
+          }
+        }
         if (this.historico.length && agora - (this.reenviadoEm || 0) > 8) {
           this.reenviadoEm = agora;
           this.rapido({ t: "q", e: this.epoca, j: this.eu, n: this.f, s: this.historico });
@@ -353,7 +370,7 @@ window.CG = window.CG || {};
       const limite = minConf + 1;
       for (const foto of this.fotos) {
         if (foto.f > limite) break;
-        if (!foto.conferida && foto.f > 0 && foto.f % CHECAR_A_CADA === 0) {
+        if (!this.espectador && !foto.conferida && foto.f > 0 && foto.f % CHECAR_A_CADA === 0) {
           foto.conferida = true;
           const h = impressao(foto.estado);
           this.anotarImpressao(foto.f, this.eu, h);
@@ -404,7 +421,7 @@ window.CG = window.CG || {};
     // botões apertados neste aparelho (já com o número do jogador certo)
     local(p, i, v) {
       if (this.est) this.est.teclasAqui += 1;
-      if (i >= BOTOES_EMULADOR) { if (this.est) this.est.teclasRecusadas += 1; return; }
+      if (i >= BOTOES_EMULADOR || this.espectador) { if (this.est) this.est.teclasRecusadas += 1; return; }
       this.pendentes.push([Math.min(3, this.eu + p), i, v]);
     }
 
@@ -416,7 +433,7 @@ window.CG = window.CG || {};
           if (m.v && m.v[this.eu] != null) this.vantagemDele[m.j] = m.v[this.eu];
         }
         (m.s || []).forEach(([f, ev]) => this.selar(m.j, f, ev));
-      } else if (m.t === "h") {
+      } else if (m.t === "h" && !this.espectador && m.j in this.confirmado) {
         this.anotarImpressao(m.f, m.j, m.h);
       }
     }
@@ -434,6 +451,10 @@ window.CG = window.CG || {};
   let sala = null;            // {codigo, jogador}
   let jogadores = [0];        // só quem criou a sala usa: números dos jogadores presentes
   let epoca = 0;
+  // só quem criou a sala usa: aparelhos afastados por conexão lenta (seguem na sala, assistindo)
+  const afastados = new Set();
+  const afastadoEm = {}, vezesAfastado = {}, voltouEm = {}, nomes = {};
+  const ouvidos = {};         // jogador -> instantes das últimas mensagens dele (6 s)
 
   function nome() {
     return (CG.getNome && CG.getNome()) || document.body.dataset.jogadorNome || "Jogador";
@@ -447,15 +468,22 @@ window.CG = window.CG || {};
       if (m && m.t === "estado") {
         // sincronização vinda de quem criou a sala
         epoca = m.e;
+        const fora = !m.jogadores.includes(sala.jogador);
+        if (fora && !motor.espectador) CG.aviso && CG.aviso("Sua conexão ficou lenta: assistindo até ela melhorar.", "erro");
+        if (!fora && motor.espectador) CG.aviso && CG.aviso("Conexão melhorou: de volta ao jogo!", "ok");
         motor.iniciar(new Uint8Array(m.estado), m.e, sala.jogador, m.jogadores, m.ritmo);
-        status.textContent = `Na sala ${sala.codigo}: jogando junto (jogador ${sala.jogador + 1}).`;
+        status.textContent = fora
+          ? `Na sala ${sala.codigo}: assistindo (conexão lenta), volta sozinho quando melhorar.`
+          : `Na sala ${sala.codigo}: jogando junto (jogador ${sala.jogador + 1}).`;
         if (emu() && emu().paused && !document.querySelector("dialog[open]")) emu().play();
         return;
       }
+      ouvir(m);
       motor.receber(m);
     });
     socket.on("antigo-entrou", (d) => {
       if (!sala || sala.jogador !== 0) return;
+      nomes[d.jogador] = d.nome;
       if (!jogadores.includes(d.jogador)) jogadores.push(d.jogador);
       CG.aviso && CG.aviso(`${d.nome} entrou (jogador ${d.jogador + 1})`, "ok");
       sincronizar();
@@ -466,6 +494,7 @@ window.CG = window.CG || {};
       fecharDireto(d.jogador);
       if (sala && sala.jogador === 0) {
         jogadores = jogadores.filter((j) => j !== d.jogador);
+        afastados.delete(d.jogador);
         if (jogadores.length > 1) sincronizar(); else { motor.parar(); mostrarSala(); }
       } else if (d.jogador === 0) {
         sairDaSala("Quem criou a sala saiu.");
@@ -517,6 +546,7 @@ window.CG = window.CG || {};
         mostrarConexao();
         return;
       }
+      ouvir(m);
       motor.receber(m);
     };
   }
@@ -593,11 +623,76 @@ window.CG = window.CG || {};
     const estado = g.getState();
     const ritmo = motor.ritmo();
     epoca += 1;
-    socket.emit("antigo-msg", { t: "estado", e: epoca, ritmo, estado: estado.buffer.slice(estado.byteOffset, estado.byteOffset + estado.byteLength), jogadores });
-    motor.iniciar(estado, epoca, 0, jogadores, ritmo);
-    status.textContent = `Sala ${sala.codigo}: ${jogadores.length} aparelhos jogando junto.`;
+    const ativos = jogadores.filter((j) => !afastados.has(j));
+    socket.emit("antigo-msg", { t: "estado", e: epoca, ritmo, estado: estado.buffer.slice(estado.byteOffset, estado.byteOffset + estado.byteLength), jogadores: ativos });
+    motor.iniciar(estado, epoca, 0, ativos, ritmo);
+    status.textContent = `Sala ${sala.codigo}: ${ativos.length} aparelhos jogando junto` +
+      (afastados.size ? `, ${afastados.size} assistindo (conexão lenta).` : ".");
   }
   document.addEventListener("cg:antigo-ressincronizar", sincronizar);
+
+  // ---------- aparelho com conexão lenta ----------
+  // Quem criou a sala afasta quem fez todos esperarem demais: os outros seguem jogando e o
+  // afastado assiste. Ele manda um "sinal de vida" a cada 100 ms; quando os sinais chegam
+  // sem falha por 3 s (mais tempo se ele caiu de novo há pouco), volta ao jogo. Cada saída
+  // e volta é uma nova sincronização (todos recebem o estado de quem criou a sala).
+  const nomeDe = (j) => nomes[j] || `Jogador ${j + 1}`;
+
+  function ouvir(m) {
+    if (!m || m.j == null) return;
+    const agora = performance.now();
+    const lista = (ouvidos[m.j] = ouvidos[m.j] || []);
+    lista.push(agora);
+    while (lista.length && lista[0] < agora - 6000) lista.shift();
+  }
+
+  document.addEventListener("cg:antigo-afastar", (ev) => {
+    if (!sala || sala.jogador !== 0) return;
+    const agora = performance.now();
+    ev.detail.forEach((j) => {
+      if (!jogadores.includes(j) || afastados.has(j)) return;
+      afastados.add(j);
+      afastadoEm[j] = agora;
+      vezesAfastado[j] = agora - (voltouEm[j] || -1e9) < 60000 ? (vezesAfastado[j] || 0) + 1 : 1;
+      CG.aviso && CG.aviso(`${nomeDe(j)} está com a conexão lenta: os outros seguem jogando.`, "erro");
+    });
+    sincronizar();
+  });
+
+  function prontoParaVoltar(j, agora) {
+    const espera = Math.min(30000, 3000 * 2 ** ((vezesAfastado[j] || 1) - 1));
+    if (agora - afastadoEm[j] < espera) return false;
+    const lista = (ouvidos[j] || []).filter((t) => t >= agora - 3000);
+    if (lista.length < 20 || lista[0] > agora - 2700 || lista[lista.length - 1] < agora - 300) return false;
+    for (let k = 1; k < lista.length; k++) if (lista[k] - lista[k - 1] > 300) return false;
+    return true;
+  }
+
+  setInterval(() => {
+    if (!sala) return;
+    const e = emu();
+    if (sala.jogador !== 0) {
+      // sinal de vida de quem está assistindo (só com o jogo aberto e rodando)
+      if (motor.espectador && e && !e.paused && !document.hidden) {
+        const m = { t: "vivo", e: epoca, j: sala.jogador };
+        rapido(m);
+        enviar(m);
+      }
+      return;
+    }
+    const agora = performance.now();
+    const voltam = [...afastados].filter((j) => {
+      if (!jogadores.includes(j)) { afastados.delete(j); return false; }
+      return prontoParaVoltar(j, agora);
+    });
+    if (!voltam.length) return;
+    voltam.forEach((j) => {
+      afastados.delete(j);
+      voltouEm[j] = agora;
+      CG.aviso && CG.aviso(`${nomeDe(j)} voltou ao jogo.`, "ok");
+    });
+    sincronizar();
+  }, 100);
 
   // botões deste aparelho passam pelo motor enquanto a sala está ativa
   function prenderEntradas() {
