@@ -4,6 +4,19 @@ Jogos antigos (SNES, NES, PS1…) no navegador, com **multiplayer entre aparelho
 pela rede local**: um aparelho cria a sala e roda o jogo, os outros entram e
 recebem a tela em vídeo, mandando só os comandos do controle. Não usa internet.
 
+![Menu inicial](docs/prints/inicio.png)
+
+| | |
+|---|---|
+| ![Jogo rodando](docs/prints/jogo.png) | ![Menu do jogo](docs/prints/menu-do-jogo.png) |
+| Jogo rodando (Top Gear para 2 jogadores) | Menu do jogo: salvar, jogar junto, opções |
+| ![No iPad, com controle na tela](docs/prints/ipad.png) | ![Placar da casa](docs/prints/placar.png) |
+| No iPad, com o controle na tela | Placar da casa |
+| ![Quem está jogando?](docs/prints/entrar.png) | ![Escolha do avatar](docs/prints/avatar.png) |
+| Quem está jogando? | Escolha do avatar |
+
+Os jogadores dos prints são fictícios. Nenhum jogo vem junto com o projeto.
+
 ## Rodar
 
 **No PC (Linux):**
