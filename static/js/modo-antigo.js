@@ -16,6 +16,7 @@ window.CG = window.CG || {};
   const ATRASO = 3;            // quadros (~50 ms): tempo para os botões chegarem ao outro aparelho
   const CHECAR_A_CADA = 300;   // quadros (~5 s) entre comparações de estado
   const BOTOES_EMULADOR = 24;  // 24 em diante são atalhos do emulador (salvar, acelerar...): bloqueados
+  const REPETIR = 10;          // cada mensagem rápida leva os últimos 10 quadros fechados (cobre pacote perdido)
 
   const emu = () => window.EJS_emulator;
   const gm = () => emu() && emu().gameManager;
@@ -45,8 +46,11 @@ window.CG = window.CG || {};
   const espera = document.getElementById("espera-antigo");
 
   class Motor {
-    constructor(enviar) {
+    // enviar: caminho garantido (servidor); rapido: conexão direta entre os aparelhos, que pode
+    // perder pacote mas não espera reenvio. Os quadros vão pelos dois; vale o que chegar antes.
+    constructor(enviar, rapido) {
       this.enviar = enviar;
+      this.rapido = rapido;
       this.ativo = false;
       this.eu = 0;
       this.epoca = 0;
@@ -65,8 +69,10 @@ window.CG = window.CG || {};
       this.rodados = 0;
       this.agenda = {};          // quadro -> [[jogador, botão, valor], ...]
       this.pendentes = [];       // botões deste aparelho ainda sem quadro
-      this.confirmado = {};      // jogador -> último quadro "fechado" por ele
-      this.outros.forEach((j) => { this.confirmado[j] = ATRASO - 1; });
+      this.confirmado = {};      // jogador -> último quadro fechado por ele sem buracos antes
+      this.fora = {};            // jogador -> quadros fechados que chegaram antes de um buraco
+      this.outros.forEach((j) => { this.confirmado[j] = ATRASO - 1; this.fora[j] = new Set(); });
+      this.historico = [];       // últimos quadros fechados por este aparelho: [[quadro, botões]]
       this.impressoes = {};      // quadro -> {jogador: impressão}
       this.esperandoDesde = 0;
       this.ativo = this.outros.length > 0;
@@ -83,8 +89,15 @@ window.CG = window.CG || {};
       const f = g.getFrameNum() - this.base;
       const falta = this.outros.some((j) => this.confirmado[j] < f);
       if (falta) {
-        if (!this.esperandoDesde) this.esperandoDesde = performance.now();
-        else if (performance.now() - this.esperandoDesde > 400) espera.hidden = false;
+        const agora = performance.now();
+        if (!this.esperandoDesde) this.esperandoDesde = agora;
+        else if (agora - this.esperandoDesde > 400) espera.hidden = false;
+        // os dois podem estar esperando um ao outro (a última mensagem de um se perdeu):
+        // enquanto espera, reenvia os últimos quadros fechados pela conexão direta
+        if (this.historico.length && agora - (this.reenviadoEm || 0) > 8) {
+          this.reenviadoEm = agora;
+          this.rapido({ t: "q", e: this.epoca, j: this.eu, s: this.historico });
+        }
         return false;
       }
       if (this.esperandoDesde) { this.esperandoDesde = 0; espera.hidden = true; }
@@ -105,7 +118,10 @@ window.CG = window.CG || {};
         const ev = this.pendentes;
         this.pendentes = [];
         if (ev.length) (this.agenda[alvo] = this.agenda[alvo] || []).push(...ev);
-        this.enviar({ t: "q", e: this.epoca, j: this.eu, f: alvo, ev });
+        this.historico.push([alvo, ev]);
+        if (this.historico.length > REPETIR) this.historico.shift();
+        this.rapido({ t: "q", e: this.epoca, j: this.eu, s: this.historico });
+        this.enviar({ t: "q", e: this.epoca, j: this.eu, s: [[alvo, ev]] });
         this.rodados += 1;
         if (this.rodados % CHECAR_A_CADA === 0) this.conferir(this.rodados);
       }
@@ -131,6 +147,17 @@ window.CG = window.CG || {};
       document.dispatchEvent(new CustomEvent("cg:antigo-conferido", { detail: { quadro, iguais } }));
     }
 
+    // um quadro fechado por outro aparelho (pode chegar repetido e fora de ordem)
+    selar(j, f, ev) {
+      if (!(j in this.confirmado) || f <= this.confirmado[j] || this.fora[j].has(f)) return;
+      if (ev && ev.length) (this.agenda[f] = this.agenda[f] || []).push(...ev);
+      this.fora[j].add(f);
+      while (this.fora[j].has(this.confirmado[j] + 1)) {
+        this.confirmado[j] += 1;
+        this.fora[j].delete(this.confirmado[j]);
+      }
+    }
+
     // botões apertados neste aparelho (já com o número do jogador certo)
     local(p, i, v) {
       if (i >= BOTOES_EMULADOR) return;
@@ -140,8 +167,7 @@ window.CG = window.CG || {};
     receber(m) {
       if (m.e !== this.epoca || !this.ativo) return;
       if (m.t === "q") {
-        if (m.ev && m.ev.length) (this.agenda[m.f] = this.agenda[m.f] || []).push(...m.ev);
-        if (m.f > (this.confirmado[m.j] ?? -1)) this.confirmado[m.j] = m.f;
+        (m.s || []).forEach(([f, ev]) => this.selar(m.j, f, ev));
       } else if (m.t === "h") {
         this.anotarImpressao(m.f, m.j, m.h);
       }
@@ -169,6 +195,7 @@ window.CG = window.CG || {};
     if (socket) return socket;
     socket = window.io(location.origin + "/antigo");
     socket.on("antigo-msg", (m) => {
+      if (m && m.t === "rtc") { sinal(m); return; }
       if (m && m.t === "estado") {
         // sincronização vinda de quem criou a sala
         epoca = m.e;
@@ -184,9 +211,11 @@ window.CG = window.CG || {};
       if (!jogadores.includes(d.jogador)) jogadores.push(d.jogador);
       CG.aviso && CG.aviso(`${d.nome} entrou (jogador ${d.jogador + 1})`, "ok");
       sincronizar();
+      ligarDireto(d.jogador);
     });
     socket.on("antigo-saiu", (d) => {
       CG.aviso && CG.aviso(`${d.nome} saiu da sala`, "erro");
+      fecharDireto(d.jogador);
       if (sala && sala.jogador === 0) {
         jogadores = jogadores.filter((j) => j !== d.jogador);
         if (jogadores.length > 1) sincronizar(); else { motor.parar(); mostrarSala(); }
@@ -199,7 +228,114 @@ window.CG = window.CG || {};
   }
 
   const enviar = (m) => { if (socket) socket.emit("antigo-msg", m); };
-  motor = new Motor(enviar);
+
+  // ---------- conexão direta entre os aparelhos (WebRTC) ----------
+  // Sem passar pelo servidor e sem esperar reenvio de pacote perdido (ordered: false,
+  // maxRetransmits: 0): um pacote perdido no Wi-Fi não segura os seguintes. A repetição dos
+  // últimos quadros em cada mensagem cobre a perda; o servidor continua como reserva.
+  const diretos = {};          // jogador -> {pc, dc}
+  const candidatosAntes = {};  // jogador -> candidatos que chegaram antes da oferta
+  let rtt = null;              // tempo de ida e volta pela conexão direta (ms, média móvel)
+  const conexao = document.createElement("p");
+  conexao.className = "status-antigo conexao-antigo";
+  status.after(conexao);
+
+  function rapido(m) {
+    const texto = JSON.stringify(m);
+    Object.values(diretos).forEach((c) => {
+      if (c.dc && c.dc.readyState === "open") { try { c.dc.send(texto); } catch (e) { /* segue pelo servidor */ } }
+    });
+  }
+
+  function mostrarConexao() {
+    const abertas = Object.values(diretos).filter((c) => c.dc && c.dc.readyState === "open").length;
+    if (!sala || !motor.ativo) { conexao.textContent = ""; return; }
+    conexao.textContent = abertas
+      ? `Conexão direta entre os aparelhos${rtt != null ? `: ${Math.round(rtt)} ms de ida e volta` : ""}.`
+      : "Conexão direta ainda não abriu: usando o servidor.";
+  }
+
+  function prepararCanal(dc) {
+    dc.onopen = mostrarConexao;
+    dc.onclose = mostrarConexao;
+    dc.onmessage = (ev) => {
+      let m;
+      try { m = JSON.parse(ev.data); } catch (e) { return; }
+      if (m.t === "p") { try { dc.send(JSON.stringify({ t: "pp", ts: m.ts })); } catch (e) { /* ignora */ } return; }
+      if (m.t === "pp") {
+        const x = performance.now() - m.ts;
+        rtt = rtt == null ? x : rtt * 0.8 + x * 0.2;
+        motor.rtt = rtt;
+        mostrarConexao();
+        return;
+      }
+      motor.receber(m);
+    };
+  }
+
+  function fecharDireto(j) {
+    const c = diretos[j];
+    if (!c) return;
+    try { c.dc && c.dc.close(); } catch (e) { /* ignora */ }
+    try { c.pc.close(); } catch (e) { /* ignora */ }
+    delete diretos[j];
+    mostrarConexao();
+  }
+
+  function novaConexao(j) {
+    fecharDireto(j);
+    const pc = new RTCPeerConnection({ iceServers: [] });   // só rede local
+    const c = { pc, dc: null };
+    diretos[j] = c;
+    pc.onicecandidate = (e) => {
+      if (e.candidate) enviar({ t: "rtc", de: sala.jogador, para: j, cand: e.candidate.toJSON() });
+    };
+    pc.ondatachannel = (e) => { c.dc = e.channel; prepararCanal(c.dc); };
+    return c;
+  }
+
+  // quem criou a sala chama cada aparelho que entra
+  async function ligarDireto(j) {
+    try {
+      const c = novaConexao(j);
+      c.dc = c.pc.createDataChannel("antigo", { ordered: false, maxRetransmits: 0 });
+      prepararCanal(c.dc);
+      await c.pc.setLocalDescription(await c.pc.createOffer());
+      enviar({ t: "rtc", de: 0, para: j, sdp: c.pc.localDescription.toJSON() });
+    } catch (e) { /* fica só pelo servidor */ }
+  }
+
+  async function sinal(m) {
+    if (!sala || m.para !== sala.jogador) return;
+    try {
+      if (m.sdp && m.sdp.type === "offer") {
+        const c = novaConexao(m.de);
+        await c.pc.setRemoteDescription(m.sdp);
+        await c.pc.setLocalDescription(await c.pc.createAnswer());
+        enviar({ t: "rtc", de: sala.jogador, para: m.de, sdp: c.pc.localDescription.toJSON() });
+      } else if (m.sdp) {
+        if (diretos[m.de]) await diretos[m.de].pc.setRemoteDescription(m.sdp);
+      } else if (m.cand) {
+        const c = diretos[m.de];
+        if (c && c.pc.remoteDescription) await c.pc.addIceCandidate(m.cand);
+        else (candidatosAntes[m.de] = candidatosAntes[m.de] || []).push(m.cand);
+        return;
+      }
+      const c = diretos[m.de];
+      if (c && c.pc.remoteDescription) {
+        for (const cand of candidatosAntes[m.de] || []) await c.pc.addIceCandidate(cand).catch(() => {});
+        delete candidatosAntes[m.de];
+      }
+    } catch (e) { /* fica só pelo servidor */ }
+  }
+
+  // mede a conexão direta a cada segundo
+  setInterval(() => {
+    if (motor.ativo) rapido({ t: "p", ts: performance.now() });
+    mostrarConexao();
+  }, 1000);
+
+  motor = new Motor(enviar, rapido);
   CG.modoAntigo = motor;
 
   // quem criou a sala manda o estado atual para todos e recomeça junto com eles
@@ -279,6 +415,7 @@ window.CG = window.CG || {};
 
   function sairDaSala(motivo) {
     motor.parar();
+    Object.keys(diretos).forEach(fecharDireto);
     if (socket && sala) socket.emit("antigo-sair");
     sala = null;
     jogadores = [0];
