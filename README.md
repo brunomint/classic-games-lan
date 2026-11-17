@@ -107,6 +107,9 @@ quem joga com quem e as partidas recentes.
 
 ## Ajustes (ícone de engrenagem)
 
+- **Trocar avatar:** cor + um dos 24 desenhos, ou uma foto (recortada e reduzida no
+  aparelho antes de enviar; ela fica no lugar do desenho). Sem escolha, fica a inicial
+  numa cor fixa.
 - **Excluir jogo:** apaga os arquivos do jogo (todas as faixas, no caso de CD) e a
   capa. O histórico e os saves ficam: enviando o jogo de novo, voltam a valer.
 - **Porta do servidor:** salva em `dados/config.json` e reinicia o servidor na
@@ -244,6 +247,7 @@ antigo.py       salas do "Jogar junto (rollback)" (o motor fica em static/js/mod
 uploads.py      envio de ROMs pelo navegador
 auth.py         login (nome + PIN) e sessão
 conta.py        trocar PIN, excluir jogador, liberar PIN de quem esqueceu
+avatares.py     avatar: cor + desenho (pixel art próprio) ou foto (dados/avatares/)
 db.py           banco SQLite (jogadores, partidas, participações, saves)
 registro.py     API de partidas/resultados/saves e página de histórico
 templates/      páginas

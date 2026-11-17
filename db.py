@@ -152,6 +152,11 @@ def iniciar_banco():
     if "excluido_em" not in colunas:
         con.execute("ALTER TABLE jogadores ADD COLUMN excluido_em INTEGER")
         con.execute("ALTER TABLE jogadores ADD COLUMN nome_antigo TEXT")
+    colunas = {r[1] for r in con.execute("PRAGMA table_info(jogadores)")}
+    if "avatar_cor" not in colunas:
+        con.execute("ALTER TABLE jogadores ADD COLUMN avatar_cor TEXT")     # ver avatares.py
+        con.execute("ALTER TABLE jogadores ADD COLUMN avatar_icone TEXT")
+        con.execute("ALTER TABLE jogadores ADD COLUMN avatar_foto TEXT")    # arquivo em dados/avatares/
     con.execute("CREATE INDEX IF NOT EXISTS idx_jogadores_nome ON jogadores(nome COLLATE NOCASE)")
     con.commit()
     con.close()
@@ -435,6 +440,27 @@ def obter_save(con, save_id):
 
 def apagar_save(con, save_id):
     con.execute("DELETE FROM saves WHERE id = ?", (save_id,))
+
+
+# ---------- avatar (avatares.py) ----------
+
+def avatares(con):
+    """{jogador_id: {cor, icone, foto}} de todos (a tabela é pequena)."""
+    return {
+        r["id"]: {"cor": r["avatar_cor"], "icone": r["avatar_icone"], "foto": r["avatar_foto"]}
+        for r in con.execute("SELECT id, avatar_cor, avatar_icone, avatar_foto FROM jogadores")
+    }
+
+
+def definir_avatar(con, jogador_id, cor, icone):
+    con.execute("UPDATE jogadores SET avatar_cor = ?, avatar_icone = ? WHERE id = ?", (cor, icone, jogador_id))
+
+
+def definir_foto_avatar(con, jogador_id, arquivo):
+    """Troca a foto e devolve o arquivo da anterior (para apagar)."""
+    row = con.execute("SELECT avatar_foto FROM jogadores WHERE id = ?", (jogador_id,)).fetchone()
+    con.execute("UPDATE jogadores SET avatar_foto = ? WHERE id = ?", (arquivo, jogador_id))
+    return row["avatar_foto"] if row else None
 
 
 # ---------- página inicial e escolha de perfil ----------

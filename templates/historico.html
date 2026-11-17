@@ -16,7 +16,7 @@
   <section class="podio" aria-label="Jogadores">
     {% for j in ranking %}
     <article class="jogador-card">
-      <span class="avatar avatar-{{ loop.index0 % 5 }}" aria-hidden="true">{{ j.nome[:1]|upper }}</span>
+      {{ avatar(j.id, j.nome) }}
       <h2>{{ j.nome }}</h2>
       <p class="numero">{{ j.vitorias or 0 }}<small> vitória{{ "s" if j.vitorias != 1 }}</small></p>
       <p class="detalhe">{{ j.partidas }} partida{{ "s" if j.partidas != 1 }}, {{ j.segundos|duracao }} jogando</p>

@@ -9,14 +9,14 @@
     <nav class="perfis-topo" aria-label="Jogadores">
       {% if jogador %}
       <span class="perfil-topo eu" title="{{ jogador.nome }} (você)">
-        <span class="avatar avatar-0" aria-hidden="true">{{ jogador.nome[:1]|upper }}</span>
+        {{ avatar(jogador.id, jogador.nome) }}
       </span>
       {% endif %}
       {% for p in perfis if not jogador or p.id != jogador.id %}
       {% if loop.index <= 4 %}
       <form method="post" action="/sair?para={{ p.nome|urlencode }}">
         <button type="submit" class="perfil-topo" data-nav title="Jogar como {{ p.nome }}" aria-label="Jogar como {{ p.nome }}">
-          <span class="avatar avatar-{{ loop.index % 5 }}" aria-hidden="true">{{ p.nome[:1]|upper }}</span>
+          {{ avatar(p.id, p.nome) }}
         </button>
       </form>
       {% endif %}

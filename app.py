@@ -15,6 +15,7 @@ from flask_socketio import SocketIO
 import config
 from ajustes import register_ajustes
 from antigo import listar_salas, register_antigo
+from avatares import register_avatares
 from auth import login_obrigatorio, register_auth
 from codigos import register_codigos
 from conta import register_conta
@@ -35,6 +36,7 @@ catalog = Catalog(BASE_DIR)
 register_auth(app)
 register_netplay(app, socketio)
 register_antigo(socketio)   # "Jogar junto (rollback)": salas e mensagens entre aparelhos
+register_avatares(app)
 register_uploads(app, catalog)
 register_registro(app, catalog)
 register_codigos(app, catalog)

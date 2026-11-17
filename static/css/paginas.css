@@ -318,3 +318,48 @@
 .etiqueta-4 { --etiqueta: #c98d12; }
 .etiqueta-5 { --etiqueta: #7a2f6e; }
 .etiqueta-6 { --etiqueta: #1f6f78; }
+
+/* ---------- Ajustes: avatar (avatar.js) ---------- */
+
+.meu-jogador { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+.meu-jogador .texto-apoio { margin: 0; }
+.avatar-medio { width: 56px; height: 56px; font-size: 24px; }
+.avatar-grande { width: 88px; height: 88px; font-size: 38px; }
+
+.dialogo-avatar { width: min(620px, calc(100vw - 24px)); max-height: calc(100vh - 24px); overflow-y: auto; }
+.avatar-topo { display: flex; align-items: center; gap: 18px; margin-bottom: 6px; }
+.avatar-topo h2 { margin-bottom: 6px; }
+.avatar-topo .texto-apoio { margin: 0; }
+.titulo-avatar { margin: 16px 0 8px; font-size: 15px; font-weight: 750; }
+
+.cores-avatar { display: flex; flex-wrap: wrap; gap: 10px; }
+.cor-avatar {
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--cor);
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, .25);
+  cursor: pointer;
+}
+
+.icones-avatar { display: grid; grid-template-columns: repeat(auto-fill, minmax(50px, 1fr)); gap: 10px; }
+.icone-avatar {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  border: 0;
+  border-radius: 50%;
+  background: var(--cor-escolhida, var(--roxo));
+  color: var(--tinta-escolhida, #fff);
+  font: inherit;
+  font-size: 20px;
+  font-weight: 800;
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, .25);
+  cursor: pointer;
+}
+
+.cor-avatar[aria-pressed="true"],
+.icone-avatar[aria-pressed="true"] { box-shadow: 0 0 0 3px var(--plastico-claro), 0 0 0 6px var(--grafite); }
+
+.acoes-foto { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }

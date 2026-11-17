@@ -12,8 +12,12 @@
 <main class="ajustes-main">
   <section class="bloco-ajuste">
     <h2>Meu jogador</h2>
-    <p class="texto-apoio">Você está como <strong>{{ jogador.nome }}</strong>.</p>
+    <div class="meu-jogador">
+      {{ avatar(jogador.id, jogador.nome, "avatar-medio") }}
+      <p class="texto-apoio">Você está como <strong>{{ jogador.nome }}</strong>.</p>
+    </div>
     <div class="acoes-conta">
+      <button type="button" class="botao" data-nav id="trocar-avatar">Trocar avatar</button>
       <button type="button" class="botao" data-nav id="trocar-pin">Trocar PIN</button>
       <button type="button" class="botao botao-claro" data-nav id="excluir-conta">Excluir meu jogador</button>
     </div>
@@ -26,7 +30,7 @@
     <ul class="lista-jogadores">
       {% for j in outros %}
       <li class="jogador-item">
-        <span class="avatar avatar-{{ loop.index0 % 5 }}" aria-hidden="true">{{ j.nome[:1]|upper }}</span>
+        {{ avatar(j.id, j.nome) }}
         <strong>{{ j.nome }}</strong>
         {% if j.tem_pin %}
         <button type="button" class="botao botao-peq botao-claro" data-nav
@@ -98,6 +102,43 @@
   </div>
 </dialog>
 
+{% set meu = info_avatar(jogador.id) %}
+<dialog id="dialogo-avatar" class="dialogo dialogo-avatar"
+        data-cor="{{ meu.cor }}" data-icone="{{ meu.icone }}" data-foto="{{ meu.foto }}" data-inicial="{{ jogador.nome[:1]|upper }}">
+  <div class="avatar-topo">
+    <div id="avatar-previa">{{ avatar(jogador.id, jogador.nome, "avatar-grande") }}</div>
+    <div>
+      <h2>Meu avatar</h2>
+      <p class="texto-apoio">Escolha a cor e um desenho, ou use uma foto (ela aparece no lugar do desenho).</p>
+    </div>
+  </div>
+  <h3 class="titulo-avatar">Cor</h3>
+  <div class="cores-avatar">
+    {% for nome, cor in cores_avatar.items() %}
+    <button type="button" class="cor-avatar" data-nav data-cor="{{ nome }}" data-fundo="{{ cor[0] }}" data-tinta="{{ cor[1] }}"
+            style="--cor:{{ cor[0] }}" aria-label="Cor {{ nome }}" aria-pressed="false"></button>
+    {% endfor %}
+  </div>
+  <h3 class="titulo-avatar">Desenho</h3>
+  <div class="icones-avatar">
+    <button type="button" class="icone-avatar" data-nav data-icone="" aria-label="Inicial do nome" aria-pressed="false"><span class="inicial-avatar">{{ jogador.nome[:1]|upper }}</span></button>
+    {% for nome in icones_avatar %}
+    <button type="button" class="icone-avatar" data-nav data-icone="{{ nome }}" aria-label="{{ nome }}" aria-pressed="false">{{ svg_icone(nome) }}</button>
+    {% endfor %}
+  </div>
+  <h3 class="titulo-avatar">Foto</h3>
+  <div class="acoes-foto">
+    <button type="button" class="botao botao-claro" data-nav id="escolher-foto">Escolher foto</button>
+    <button type="button" class="botao botao-claro" data-nav id="tirar-foto" hidden>Tirar a foto</button>
+    <input type="file" id="arquivo-foto" accept="image/*" hidden>
+  </div>
+  <p class="erro-form" id="erro-avatar" hidden></p>
+  <div class="acoes">
+    <button type="button" class="botao botao-claro" data-botao="B" id="cancelar-avatar">Cancelar</button>
+    <button type="button" class="botao" data-botao="A" id="salvar-avatar">Salvar</button>
+  </div>
+</dialog>
+
 <dialog id="dialogo-pin" class="dialogo dialogo-pin">
   <form id="form-pin-passo">
     <h2 id="pin-titulo"></h2>
@@ -139,5 +180,6 @@
 <script src="{{ url_for('static', filename='js/ajustes.js') }}"></script>
 <script src="{{ url_for('static', filename='js/avisos.js') }}"></script>
 <script src="{{ url_for('static', filename='js/conta.js') }}"></script>
+<script src="{{ url_for('static', filename='js/avatar.js') }}"></script>
 <script src="{{ url_for('static', filename='js/gamepad-menu.js') }}"></script>
 {% endblock %}

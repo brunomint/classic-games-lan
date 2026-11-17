@@ -17,7 +17,7 @@
     {% for p in perfis %}
     <button type="button" class="perfil-btn" role="listitem" data-nav data-nome="{{ p.nome }}"
             {% if p.nome|lower == nome|lower and nome %}aria-pressed="true"{% endif %}>
-      <span class="avatar avatar-{{ loop.index0 % 5 }}" aria-hidden="true">{{ p.nome[:1]|upper }}</span>
+      {{ avatar(p.id, p.nome) }}
       <span>{{ p.nome }}</span>
     </button>
     {% endfor %}
