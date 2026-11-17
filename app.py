@@ -114,7 +114,11 @@ def play(console, slug):
     ordem = list(jogou)
     outros = [g for g in catalog.scan() if g["game_id"] != game["game_id"]]
     outros.sort(key=lambda g: ordem.index(g["game_id"]) if g["game_id"] in jogou else len(ordem))
-    return render_template("play.html", game=game, perfis=perfis, recentes=outros[:8], favorito=favorito)
+    # o emulator.min.js fica uma semana no cache do navegador: a data do arquivo vai no endereço,
+    # e quando ele muda (ex.: ajuste do jogo em rede) os aparelhos baixam o novo
+    ejs_versao = int(os.path.getmtime(os.path.join(EJS_DIR, "emulator.min.js")))
+    return render_template("play.html", game=game, perfis=perfis, recentes=outros[:8], favorito=favorito,
+                           ejs_versao=ejs_versao)
 
 
 @app.post("/api/favoritos/<int:game_id>")

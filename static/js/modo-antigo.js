@@ -45,6 +45,14 @@ window.CG = window.CG || {};
   };
   window.Blob.prototype = BlobOriginal.prototype;
 
+  // O motor usa o avanço rápido só para rodar um quadro por chamada: sem o aviso
+  // "Fast-Forward" na tela, sem pular quadros na imagem e sem mexer no som.
+  window.EJS_retroarchExtra = (window.EJS_retroarchExtra || "") +
+    "notification_show_fast_forward = false\n" +
+    "fastforward_frameskip = false\n" +
+    "audio_fastforward_mute = false\n" +
+    "audio_fastforward_speedup = false\n";
+
   // ---------- gancho em cada volta do laço ----------
   let motor = null;
   let runtime;

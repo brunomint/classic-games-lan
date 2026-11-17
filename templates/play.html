@@ -20,7 +20,8 @@
        data-rom="/roms/{{ game.rom }}"
        data-bios="{{ '/bios/' ~ game.bios if game.bios else '' }}"
        data-title="{{ game.title }}"
-       data-game-id="{{ game.game_id }}"></div>
+       data-game-id="{{ game.game_id }}"
+       data-ejs-versao="{{ ejs_versao }}"></div>
 </div>
 
 {% include "_dialogo_resultado.html" %}
