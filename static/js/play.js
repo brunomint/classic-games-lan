@@ -7,6 +7,8 @@
 
   window.EJS_player = "#game";
   window.EJS_pathtodata = "/emulatorjs/";
+  // versão do emulator.min.js no endereço: o navegador o guarda por uma semana
+  if (d.ejsVersao) window.EJS_paths = { "emulator.min.js": `/emulatorjs/emulator.min.js?v=${d.ejsVersao}` };
   window.EJS_core = d.core;
   window.EJS_gameUrl = d.rom;
   window.EJS_gameName = d.title;

@@ -779,10 +779,10 @@ export class Netplay {
                 const emuCanvas = this.emu.canvas;
                 if (!emuCanvas || !emuCanvas.captureStream) { resolve(); return; }
 
-                // Capture directly from emulator canvas at 30fps
+                // Capture directly from emulator canvas at 60fps (Classic Games LAN: era 30; rede local aguenta)
                 let rawStream;
                 try {
-                    rawStream = emuCanvas.captureStream(30);
+                    rawStream = emuCanvas.captureStream(60);
                 } catch (e) {
                     resolve(); return;
                 }
@@ -1152,8 +1152,8 @@ export class Netplay {
                     const p = sender.getParameters();
                     p.degradationPreference = "maintain-framerate";
                     if (!p.encodings || !p.encodings.length) p.encodings = [{}];
-                    p.encodings[0].maxBitrate = 1800000;
-                    p.encodings[0].maxFramerate = 30;
+                    p.encodings[0].maxBitrate = 8000000;
+                    p.encodings[0].maxFramerate = 60;
                     p.encodings[0].priority = "high";
                     p.encodings[0].networkPriority = "high";
                     p.encodings[0].scaleResolutionDownBy = 1.0;
@@ -1305,12 +1305,12 @@ export class Netplay {
 
             // Framerate matters more than resolution for gameplay perception.
             p.degradationPreference = "maintain-framerate";
-            p.encodings[0].maxFramerate = 30;
+            p.encodings[0].maxFramerate = 60;
 
             if (usingRelay) {
                 p.encodings[0].maxBitrate = 900000;
             } else {
-                p.encodings[0].maxBitrate = 2500000;
+                p.encodings[0].maxBitrate = 8000000;
             }
 
             p.encodings[0].scaleResolutionDownBy = 1.0;
