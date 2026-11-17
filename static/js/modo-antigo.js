@@ -19,7 +19,7 @@ window.CG = window.CG || {};
 
 (function () {
   const ATRASO = 2;            // quadros de atraso nos botões deste aparelho
-  const JANELA = 15;           // no máximo 15 quadros (~250 ms) à frente dos botões confirmados do outro
+  const JANELA = 30;           // no máximo 30 quadros (~500 ms) à frente dos botões confirmados do outro (era 15: o Wi-Fi 2,4 GHz tem picos de 300 ms)
   const FOTO_A_CADA = 1;       // quadros entre fotos do estado (com salvarEstado, uma foto custa ~0,2 ms)
   const CHECAR_A_CADA = 240;   // quadros (~4 s) entre comparações (múltiplo de FOTO_A_CADA)
   const BOTOES_EMULADOR = 24;  // 24 em diante são atalhos do emulador (salvar, acelerar...): bloqueados
