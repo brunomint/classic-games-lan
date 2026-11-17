@@ -1,4 +1,4 @@
-"""Classic Games LAN: jogos antigos no navegador, com multiplayer pela rede local.
+"""Fliperama de Casa: jogos antigos no navegador, com multiplayer pela rede local.
 
 Rodar:  python app.py          (porta escolhida em Ajustes; 5000 se nunca mudou)
         python app.py 8080     (força outra porta)
@@ -216,7 +216,7 @@ if __name__ == "__main__":
     # porta: a da linha de comando, senão a escolhida em Ajustes, senão 5000
     port = int(sys.argv[1]) if len(sys.argv) > 1 else config.porta()
     _porta["atual"] = port
-    print(f"\n  Classic Games LAN  →  http://{lan_ip()}:{port}\n")
+    print(f"\n  Fliperama de Casa  →  http://{lan_ip()}:{port}\n")
     # capas que faltam: baixa da internet em segundo plano (sem internet, só pula)
     capas.em_segundo_plano(capas.baixar_faltantes, BASE_DIR)
     socketio.run(app, host="0.0.0.0", port=port, allow_unsafe_werkzeug=True)

@@ -1,5 +1,5 @@
 #!/bin/sh
-# Abre o Classic Games no Chrome em tela cheia, como um aparelho de videogame:
+# Abre o Fliperama de Casa no Chrome em tela cheia, como um aparelho de videogame:
 # sem barra do navegador em nenhuma página, dá para usar tudo só com o controle.
 # Usa um perfil próprio do Chrome (entre com seu jogador uma vez); F11 sai da tela cheia
 # e Alt+F4 fecha.

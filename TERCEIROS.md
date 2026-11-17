@@ -1,6 +1,6 @@
 # Código de terceiros
 
-O Classic Games LAN é distribuído sob a **GPL-3.0** (arquivo `LICENSE`), a mesma licença do
+O Fliperama de Casa é distribuído sob a **GPL-3.0** (arquivo `LICENSE`), a mesma licença do
 EmulatorJS, que vai junto no repositório. Cada parte abaixo continua sob a sua própria licença.
 
 ## EmulatorJS 4.3.0-pre (pasta `emulatorjs/`)

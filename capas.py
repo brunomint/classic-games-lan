@@ -43,7 +43,7 @@ REGIOES = ["USA", "World", "Europe", "Brazil", "Japan"]
 DESCARTAR = re.compile(r"\((Beta|Proto|Demo|Sample|Pirate|Unl)[^)]*\)", re.I)
 MAX_BYTES = 5 * 1024 * 1024
 TENTAR_DE_NOVO_SEG = 7 * 24 * 3600
-AGENTE = "classic-games-lan (uso doméstico)"
+AGENTE = "fliperama-de-casa (uso doméstico)"
 
 _listas = {}                 # cache das listagens de cada sistema
 _lock = threading.Lock()

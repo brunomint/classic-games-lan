@@ -3,7 +3,7 @@
 // (separada da do jogo, que liga sozinha). Ao trocar de página o navegador sai da tela cheia,
 // então ela volta no primeiro toque, clique ou tecla da página nova.
 // O navegador só aceita tela cheia depois de um toque, clique ou tecla: o controle não
-// conta. Para usar só com o controle, abra pelo atalho "Classic Games" (abrir-tela-cheia.sh)
+// conta. Para usar só com o controle, abra pelo atalho "Fliperama de Casa" (abrir-tela-cheia.sh)
 // ou aperte F11, que valem para todas as páginas.
 (function () {
   if (document.body.classList.contains("jogo")) return;
@@ -51,7 +51,7 @@
       guardar(true);
       entrar().then((ok) => {
         if (!ok && window.CG && CG.aviso) {
-          CG.aviso("Pelo controle o navegador não deixa. Toque na tela, clique ou aperte F11 (ou abra pelo atalho Classic Games).", "erro");
+          CG.aviso("Pelo controle o navegador não deixa. Toque na tela, clique ou aperte F11 (ou abra pelo atalho Fliperama de Casa).", "erro");
         }
       });
     });
