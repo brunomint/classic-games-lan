@@ -20,7 +20,7 @@ pip install -r requirements.txt
 ```
 Dica: com o celular como roteador (hotspot), dá para jogar em qualquer lugar.
 
-Abra o endereço que aparece no terminal (ex.: `http://192.168.0.7:5000`).
+Abra o endereço que aparece no terminal (ex.: `http://192.168.0.10:5000`).
 Nos outros aparelhos, escaneie o QR code da página inicial.
 
 ## Menu inicial: consoles e pesquisa
@@ -217,13 +217,13 @@ Só com o controle isso não funciona (o navegador não aceita). Para usar só c
 **atalho "Classic Games"** do menu de aplicativos, que roda `abrir-tela-cheia.sh`: o Chrome abre em
 tela cheia, num perfil só dele (entre com o jogador uma vez), sem barra em nenhuma página e com o
 som liberado sem precisar de clique. F11 sai da tela cheia e Alt+F4 fecha. Para outro computador da
-casa: `./abrir-tela-cheia.sh http://192.168.0.7:5000/`.
+casa: `./abrir-tela-cheia.sh http://192.168.0.10:5000/`.
 
 **Esc e tela cheia:** no jogo, um toque no Esc abre o menu sem sair da tela cheia (segurar o Esc
 sai). Mas o Chrome só deixa a página segurar o Esc em endereço seguro (https ou localhost), e
-`http://192.168.0.7:5000` não é: ali o Esc tira da tela cheia e ela volta na próxima tecla ou toque.
+`http://192.168.0.10:5000` não é: ali o Esc tira da tela cheia e ela volta na próxima tecla ou toque.
 Para ficar como deveria, uma vez em cada aparelho: abra `chrome://flags/#unsafely-treat-insecure-origin-as-secure`,
-coloque `http://192.168.0.7:5000`, escolha **Enabled** e reinicie o Chrome. O atalho "Classic Games"
+coloque `http://192.168.0.10:5000`, escolha **Enabled** e reinicie o Chrome. O atalho "Classic Games"
 já faz isso sozinho.
 
 O que acontece por fora do jogo vira aviso rápido no canto (salvo, controle conectado,
@@ -276,3 +276,12 @@ Alguns núcleos (ex.: snes9x) proíbem uso comercial.
 
 - Qualquer aparelho da rede pode enviar ROMs. Use só em rede de confiança.
 - ROMs e BIOS têm direitos autorais e não vão para o git.
+- Ideias e melhorias combinadas e ainda não feitas: `PENDENTES.md`.
+
+## Licença
+
+**GPL-3.0** (arquivo `LICENSE`), a mesma do EmulatorJS que vai junto. O código de terceiros
+incluído (EmulatorJS, núcleos de emulação, fonte, QR code) e as licenças de cada um estão em
+`TERCEIROS.md`. Dois núcleos (snes9x e genesis_plus_gx) proíbem uso comercial.
+
+Nenhum jogo, BIOS ou capa vem junto: use só cópias de jogos que você tem.
