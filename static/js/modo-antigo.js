@@ -93,7 +93,8 @@ window.CG = window.CG || {};
 
   const espera = document.getElementById("espera-antigo");
   const zerarEst = () => ({ quadros: 0, iter: 0, esperas: 0, esperaMs: 0, maiorEspera: 0, voltas: 0, refeitos: 0,
-    maiorVolta: 0, voltaMs: 0, fotoMs: 0, segurados: 0, acelerados: 0, semFoto: 0 });
+    maiorVolta: 0, voltaMs: 0, fotoMs: 0, segurados: 0, acelerados: 0, semFoto: 0,
+    teclasAqui: 0, teclasRecusadas: 0, botoesDeles: 0, aplicados: 0, ff: null });
 
   class Motor {
     // enviar: caminho garantido (servidor); rapido: conexão direta entre os aparelhos, que pode
@@ -197,7 +198,7 @@ window.CG = window.CG || {};
         const lista = this.eventos[j][this.f];
         if (!lista) continue;
         for (const [p, i, v] of lista) {
-          if (this.botoes[p][i] !== v) { this.botoes[p][i] = v; fn.simulateInput(p, i, v); }
+          if (this.botoes[p][i] !== v) { this.botoes[p][i] = v; fn.simulateInput(p, i, v); this.est.aplicados += 1; }
         }
       }
       this.quadro();
@@ -356,6 +357,7 @@ window.CG = window.CG || {};
     selar(j, f, ev) {
       if (!(j in this.confirmado) || f <= this.confirmado[j] || this.fora[j].has(f)) return;
       if (ev && ev.length) {
+        this.est.botoesDeles += ev.length;
         this.eventos[j][f] = ev;
         // o palpite para esse quadro foi "nada mudou"; se já rodou, precisa refazer
         if (f < this.f) this.corrigir = this.corrigir === null ? f : Math.min(this.corrigir, f);
@@ -369,7 +371,8 @@ window.CG = window.CG || {};
 
     // botões apertados neste aparelho (já com o número do jogador certo)
     local(p, i, v) {
-      if (i >= BOTOES_EMULADOR) return;
+      if (this.est) this.est.teclasAqui += 1;
+      if (i >= BOTOES_EMULADOR) { if (this.est) this.est.teclasRecusadas += 1; return; }
       this.pendentes.push([Math.min(3, this.eu + p), i, v]);
     }
 
@@ -559,6 +562,7 @@ window.CG = window.CG || {};
     const t = performance.now(), seg = (t - antes10) / 1000, e = motor.est;
     const info = {
       eu: motor.eu, qps: +(e.quadros / seg).toFixed(1), iter: e.iter, voltas: e.voltas, refeitos: e.refeitos,
+      teclasAqui: e.teclasAqui, teclasRecusadas: e.teclasRecusadas, botoesDeles: e.botoesDeles, aplicados: e.aplicados,
       maiorVolta: e.maiorVolta, voltaMs: +e.voltaMs.toFixed(1), fotoMs: +e.fotoMs.toFixed(1),
       esperas: e.esperas, esperaMs: Math.round(e.esperaMs), maiorEspera: Math.round(e.maiorEspera),
       segurados: e.segurados, acelerados: e.acelerados, semFoto: e.semFoto,
