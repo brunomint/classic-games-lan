@@ -37,7 +37,14 @@ window.CG = window.CG || {};
       if (opcoes && opcoes.type === "application/javascript" && partes && partes[0] instanceof Uint8Array) {
         const texto = new TextDecoder().decode(partes[0]);
         if (texto.includes(MARCA) && !texto.includes('Module["MainLoop"]')) {
-          partes = [texto.replace(MARCA, MARCA + 'Module["MainLoop"]=MainLoop;')];
+          partes = [texto
+            .replace(MARCA, MARCA + 'Module["MainLoop"]=MainLoop;Module["rwa"]=()=>typeof RWA!=="undefined"?RWA:null;')
+            // som (driver rwebaudio): RWA.descartar joga fora o som dos quadros refeitos numa volta
+            // (já tocou uma vez); conta pedaços perdidos com a fila cheia e buracos com ela vazia
+            .replace("if(RWA.nonblock&&_RWebAudioWriteAvailFrames()<num_frames)return 0;",
+              "if(RWA.descartar)return num_frames;if(RWA.nonblock&&_RWebAudioWriteAvailFrames()<num_frames){RWA.perdidos=(RWA.perdidos||0)+1;return 0}")
+            .replace("var startTime=RWA.endTime>currentTime?RWA.endTime:",
+              "if(RWA.endTime&&RWA.endTime<=currentTime)RWA.vazios=(RWA.vazios||0)+1;var startTime=RWA.endTime>currentTime?RWA.endTime:")];
         }
       }
     } catch (e) { /* segue com o original */ }
@@ -94,7 +101,7 @@ window.CG = window.CG || {};
   const espera = document.getElementById("espera-antigo");
   const zerarEst = () => ({ quadros: 0, iter: 0, esperas: 0, esperaMs: 0, maiorEspera: 0, voltas: 0, refeitos: 0,
     maiorVolta: 0, voltaMs: 0, fotoMs: 0, segurados: 0, acelerados: 0, semFoto: 0,
-    teclasAqui: 0, teclasRecusadas: 0, botoesDeles: 0, aplicados: 0, ff: null });
+    teclasAqui: 0, teclasRecusadas: 0, botoesDeles: 0, aplicados: 0, somMin: 1e9, somMax: -1e9 });
 
   class Motor {
     // enviar: caminho garantido (servidor); rapido: conexão direta entre os aparelhos, que pode
@@ -168,6 +175,17 @@ window.CG = window.CG || {};
 
     quadro() { this.ML.func(); }
 
+    som() { const M = gm().Module; return M.rwa ? M.rwa() : null; }
+
+    // quanto som está na fila do alto-falante (ms), para o diagnóstico
+    medirSom() {
+      const r = this.som();
+      if (!r || !r.context) return;
+      const fila = (r.endTime - (performance.now() / 1000 - r.currentTimeDiff)) * 1000;
+      if (fila < this.est.somMin) this.est.somMin = fila;
+      if (fila > this.est.somMax) this.est.somMax = fila;
+    }
+
     // o carregamento é uma tarefa do RetroArch: só vale na próxima volta, que não roda quadro
     carregar(estado) {
       const g = gm();
@@ -240,6 +258,7 @@ window.CG = window.CG || {};
       this.enviar({ t: "q", e: this.epoca, j: this.eu, n: this.f + 1, s: [[alvo, ev]] });
       this.rodar();
       this.est.quadros += 1;
+      this.medirSom();
     }
 
     // chegou botão do outro para um quadro que já passou: volta à foto e refaz até o presente
@@ -260,11 +279,14 @@ window.CG = window.CG || {};
         if (this.botoes[p][i] !== v) { this.botoes[p][i] = v; fn.simulateInput(p, i, v); }
       }
       this.f = foto.f;
+      const som = this.som();
+      if (som) som.descartar = true;
       while (this.f < ate) {
         // refaz as fotos no caminho (agora custam pouco), com os botões certos
         if (this.f > foto.f && this.f % FOTO_A_CADA === 0) this.foto();
         this.rodar();
       }
+      if (som) som.descartar = false;
       if (this.f % FOTO_A_CADA === 0 && this.fotos[this.fotos.length - 1].f !== this.f) this.foto();
       this.est.voltas += 1;
       this.total.voltas += 1;
@@ -579,13 +601,23 @@ window.CG = window.CG || {};
   // DIAGNÓSTICO TEMPORÁRIO: a cada 10 s manda ao log do servidor quantos quadros rodaram,
   // quantas vezes voltou e refez, quanto esperou e o acerto de relógio
   let antes10 = performance.now();
+  let somAntes = { perdidos: 0, vazios: 0 };
+  function somContado() {
+    const r = motor.som();
+    if (!r) return {};
+    const agora = { perdidos: r.perdidos || 0, vazios: r.vazios || 0 };
+    const d = { somPerdidos: agora.perdidos - somAntes.perdidos, somVazios: agora.vazios - somAntes.vazios };
+    somAntes = agora;
+    return d;
+  }
   setInterval(() => {
     if (!motor.ativo || !motor.est) return;
     const t = performance.now(), seg = (t - antes10) / 1000, e = motor.est;
     const info = {
       eu: motor.eu, qps: +(e.quadros / seg).toFixed(1), iter: e.iter, voltas: e.voltas, refeitos: e.refeitos,
       teclasAqui: e.teclasAqui, teclasRecusadas: e.teclasRecusadas, botoesDeles: e.botoesDeles, aplicados: e.aplicados,
-      maiorVolta: e.maiorVolta, voltaMs: +e.voltaMs.toFixed(1), fotoMs: +e.fotoMs.toFixed(1),
+      maiorVolta: e.maiorVolta,
+      somMin: Math.round(e.somMin), somMax: Math.round(e.somMax), ...somContado(), voltaMs: +e.voltaMs.toFixed(1), fotoMs: +e.fotoMs.toFixed(1),
       esperas: e.esperas, esperaMs: Math.round(e.esperaMs), maiorEspera: Math.round(e.maiorEspera),
       segurados: e.segurados, acelerados: e.acelerados, semFoto: e.semFoto,
       vantagem: motor.outros.map((j) => +motor.vantagem[j].toFixed(2)), fotos: motor.fotos.length,
