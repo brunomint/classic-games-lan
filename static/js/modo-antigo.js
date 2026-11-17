@@ -13,7 +13,7 @@
 window.CG = window.CG || {};
 
 (function () {
-  const ATRASO = 3;            // quadros (~50 ms): tempo para os botões chegarem ao outro aparelho
+  const ATRASO = 6;            // quadros (~100 ms): tempo para os botões chegarem ao outro aparelho (era 3: o Wi-Fi tem picos maiores)
   const CHECAR_A_CADA = 300;   // quadros (~5 s) entre comparações de estado
   const BOTOES_EMULADOR = 24;  // 24 em diante são atalhos do emulador (salvar, acelerar...): bloqueados
   const REPETIR = 10;          // cada mensagem rápida leva os últimos 10 quadros fechados (cobre pacote perdido)
@@ -75,6 +75,7 @@ window.CG = window.CG || {};
       this.historico = [];       // últimos quadros fechados por este aparelho: [[quadro, botões]]
       this.impressoes = {};      // quadro -> {jogador: impressão}
       this.esperandoDesde = 0;
+      this.est = { iter: 0, esperas: 0, esperaMs: 0, maiorEspera: 0 };
       this.ativo = this.outros.length > 0;
     }
 
@@ -88,8 +89,10 @@ window.CG = window.CG || {};
       const g = gm();
       const f = g.getFrameNum() - this.base;
       const falta = this.outros.some((j) => this.confirmado[j] < f);
+      this.est.iter += 1;
       if (falta) {
         const agora = performance.now();
+        this.est.esperas += 1;
         if (!this.esperandoDesde) this.esperandoDesde = agora;
         else if (agora - this.esperandoDesde > 400) espera.hidden = false;
         // os dois podem estar esperando um ao outro (a última mensagem de um se perdeu):
@@ -100,7 +103,13 @@ window.CG = window.CG || {};
         }
         return false;
       }
-      if (this.esperandoDesde) { this.esperandoDesde = 0; espera.hidden = true; }
+      if (this.esperandoDesde) {
+        const d = performance.now() - this.esperandoDesde;
+        this.est.esperaMs += d;
+        if (d > this.est.maiorEspera) this.est.maiorEspera = d;
+        this.esperandoDesde = 0;
+        espera.hidden = true;
+      }
       const lista = this.agenda[f];
       if (lista) {
         lista.forEach(([p, i, v]) => g.functions.simulateInput(p, i, v));
@@ -337,6 +346,25 @@ window.CG = window.CG || {};
 
   motor = new Motor(enviar, rapido);
   CG.modoAntigo = motor;
+
+  // DIAGNÓSTICO TEMPORÁRIO: a cada 10 s manda ao log do servidor quantos quadros rodaram,
+  // quantas vezes esperou o outro aparelho e o ritmo da tela (requestAnimationFrame)
+  let quadros = 0;
+  (function contar() { quadros += 1; requestAnimationFrame(contar); })();
+  let antes10 = { rodados: 0, quadros: 0, t: performance.now() };
+  setInterval(() => {
+    if (!motor.ativo || !motor.est) return;
+    const t = performance.now(), seg = (t - antes10.t) / 1000;
+    const info = {
+      eu: motor.eu, qps: +((motor.rodados - antes10.rodados) / seg).toFixed(1),
+      raf: +((quadros - antes10.quadros) / seg).toFixed(1), ...motor.est,
+      esperaMs: Math.round(motor.est.esperaMs), maiorEspera: Math.round(motor.est.maiorEspera),
+      rtt: motor.rtt && Math.round(motor.rtt), direta: Object.values(diretos).some((c) => c.dc && c.dc.readyState === "open"),
+    };
+    antes10 = { rodados: motor.rodados, quadros, t };
+    motor.est = { iter: 0, esperas: 0, esperaMs: 0, maiorEspera: 0 };
+    fetch("/static/diag-antigo?" + encodeURIComponent(JSON.stringify(info))).catch(() => {});
+  }, 10000);
 
   // quem criou a sala manda o estado atual para todos e recomeça junto com eles
   function sincronizar() {
