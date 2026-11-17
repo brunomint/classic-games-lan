@@ -28,6 +28,12 @@
     document.dispatchEvent(new CustomEvent("cg:jogo-iniciado"));   // registro.js abre a sessão
 
     const emu = window.EJS_emulator;
+    // controle na tela: o EmulatorJS só o mostra se a pessoa tocou na tela antes de o jogo
+    // começar; como o jogo começa sozinho, em celular/iPad ele ficava escondido
+    if (emu && emu.isMobile && typeof emu.toggleVirtualGamepad === "function"
+        && emu.getSettingValue("virtual-gamepad") !== "disabled") {
+      emu.toggleVirtualGamepad(true);
+    }
     const netplay = emu && emu.netplay;
     if (!netplay) return;
 
@@ -115,3 +121,4 @@
   loader.src = "/emulatorjs/loader.js";
   document.body.appendChild(loader);
 })();
+
