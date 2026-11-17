@@ -1,4 +1,4 @@
-// Jogo em rede com ROLLBACK (EXPERIMENTAL, branch rollback-rede).
+// Jogo em rede com ROLLBACK: "Jogar junto (rollback)" no menu de pausa.
 //
 // Todos os aparelhos rodam o jogo e trocam só os botões, como no modo antigo, mas ninguém
 // espera o outro a cada quadro:
@@ -39,12 +39,10 @@ window.CG = window.CG || {};
         if (texto.includes(MARCA) && !texto.includes('Module["MainLoop"]')) {
           partes = [texto
             .replace(MARCA, MARCA + 'Module["MainLoop"]=MainLoop;Module["rwa"]=()=>typeof RWA!=="undefined"?RWA:null;')
-            // som (driver rwebaudio): RWA.descartar joga fora o som dos quadros refeitos numa volta
-            // (já tocou uma vez); conta pedaços perdidos com a fila cheia e buracos com ela vazia
+            // som (driver rwebaudio): RWA.descartar joga fora o som dos quadros refeitos numa volta,
+            // que já tocou uma vez (senão a fila do alto-falante enchia e o som estalava)
             .replace("if(RWA.nonblock&&_RWebAudioWriteAvailFrames()<num_frames)return 0;",
-              "if(RWA.descartar)return num_frames;if(RWA.nonblock&&_RWebAudioWriteAvailFrames()<num_frames){RWA.perdidos=(RWA.perdidos||0)+1;return 0}")
-            .replace("var startTime=RWA.endTime>currentTime?RWA.endTime:",
-              "if(RWA.endTime&&RWA.endTime<=currentTime)RWA.vazios=(RWA.vazios||0)+1;var startTime=RWA.endTime>currentTime?RWA.endTime:")];
+              "if(RWA.descartar)return num_frames;if(RWA.nonblock&&_RWebAudioWriteAvailFrames()<num_frames)return 0;")];
         }
       }
     } catch (e) { /* segue com o original */ }
@@ -101,7 +99,7 @@ window.CG = window.CG || {};
   const espera = document.getElementById("espera-antigo");
   const zerarEst = () => ({ quadros: 0, iter: 0, esperas: 0, esperaMs: 0, maiorEspera: 0, voltas: 0, refeitos: 0,
     maiorVolta: 0, voltaMs: 0, fotoMs: 0, segurados: 0, acelerados: 0, semFoto: 0,
-    teclasAqui: 0, teclasRecusadas: 0, botoesDeles: 0, aplicados: 0, somMin: 1e9, somMax: -1e9 });
+    teclasAqui: 0, teclasRecusadas: 0, botoesDeles: 0, aplicados: 0 });
 
   class Motor {
     // enviar: caminho garantido (servidor); rapido: conexão direta entre os aparelhos, que pode
@@ -177,15 +175,6 @@ window.CG = window.CG || {};
 
     som() { const M = gm().Module; return M.rwa ? M.rwa() : null; }
 
-    // quanto som está na fila do alto-falante (ms), para o diagnóstico
-    medirSom() {
-      const r = this.som();
-      if (!r || !r.context) return;
-      const fila = (r.endTime - (performance.now() / 1000 - r.currentTimeDiff)) * 1000;
-      if (fila < this.est.somMin) this.est.somMin = fila;
-      if (fila > this.est.somMax) this.est.somMax = fila;
-    }
-
     // o carregamento é uma tarefa do RetroArch: só vale na próxima volta, que não roda quadro
     carregar(estado) {
       const g = gm();
@@ -258,7 +247,6 @@ window.CG = window.CG || {};
       this.enviar({ t: "q", e: this.epoca, j: this.eu, n: this.f + 1, s: [[alvo, ev]] });
       this.rodar();
       this.est.quadros += 1;
-      this.medirSom();
     }
 
     // chegou botão do outro para um quadro que já passou: volta à foto e refaz até o presente
@@ -597,36 +585,6 @@ window.CG = window.CG || {};
 
   motor = new Motor(enviar, rapido);
   CG.modoAntigo = motor;
-
-  // DIAGNÓSTICO TEMPORÁRIO: a cada 10 s manda ao log do servidor quantos quadros rodaram,
-  // quantas vezes voltou e refez, quanto esperou e o acerto de relógio
-  let antes10 = performance.now();
-  let somAntes = { perdidos: 0, vazios: 0 };
-  function somContado() {
-    const r = motor.som();
-    if (!r) return {};
-    const agora = { perdidos: r.perdidos || 0, vazios: r.vazios || 0 };
-    const d = { somPerdidos: agora.perdidos - somAntes.perdidos, somVazios: agora.vazios - somAntes.vazios };
-    somAntes = agora;
-    return d;
-  }
-  setInterval(() => {
-    if (!motor.ativo || !motor.est) return;
-    const t = performance.now(), seg = (t - antes10) / 1000, e = motor.est;
-    const info = {
-      eu: motor.eu, qps: +(e.quadros / seg).toFixed(1), iter: e.iter, voltas: e.voltas, refeitos: e.refeitos,
-      teclasAqui: e.teclasAqui, teclasRecusadas: e.teclasRecusadas, botoesDeles: e.botoesDeles, aplicados: e.aplicados,
-      maiorVolta: e.maiorVolta,
-      somMin: Math.round(e.somMin), somMax: Math.round(e.somMax), ...somContado(), voltaMs: +e.voltaMs.toFixed(1), fotoMs: +e.fotoMs.toFixed(1),
-      esperas: e.esperas, esperaMs: Math.round(e.esperaMs), maiorEspera: Math.round(e.maiorEspera),
-      segurados: e.segurados, acelerados: e.acelerados, semFoto: e.semFoto,
-      vantagem: motor.outros.map((j) => +motor.vantagem[j].toFixed(2)), fotos: motor.fotos.length,
-      rtt: motor.rtt && Math.round(motor.rtt), direta: Object.values(diretos).some((c) => c.dc && c.dc.readyState === "open"),
-    };
-    antes10 = t;
-    motor.est = zerarEst();
-    fetch("/static/diag-rollback-jogo?" + encodeURIComponent(JSON.stringify(info))).catch(() => {});
-  }, 10000);
 
   // quem criou a sala manda o estado atual para todos e recomeça junto com eles
   function sincronizar() {

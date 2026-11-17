@@ -1,9 +1,10 @@
-"""Jogo em rede no "modo antigo" (EXPERIMENTAL, branch modo-antigo-rede).
+"""Jogar junto com rollback ("Jogar junto (rollback)" no menu de pausa).
 
-No modo atual do EmulatorJS 4.3, só quem cria a sala roda o jogo e transmite o vídeo.
-No modo antigo, todos os aparelhos rodam o jogo e trocam só os botões apertados,
-quadro a quadro (lockstep). Este servidor só cuida das salas e repassa as mensagens
-entre os aparelhos da mesma sala; a lógica fica em static/js/modo-antigo.js.
+No modo por vídeo do EmulatorJS 4.3, só quem cria a sala roda o jogo e transmite o vídeo.
+Aqui, todos os aparelhos rodam o jogo e trocam só os botões apertados; quando um botão
+chega atrasado, o jogo volta uns quadros e refaz (rollback). Este servidor só cuida das
+salas e repassa as mensagens (e a combinação da conexão direta entre os aparelhos); a
+lógica fica em static/js/modo-antigo.js.
 
 Canal Socket.IO separado ("/antigo") para não se misturar com o netplay do EmulatorJS.
   antigo-listar {game_id}            -> [{codigo, nome, jogadores}]

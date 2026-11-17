@@ -492,7 +492,7 @@ body > .fechar-avancado {
 .fechar-avancado[hidden] { display: none; }
 body.avancado .botao-menu { display: none; }
 
-/* ---------- jogo em rede, modo antigo (experimental) ---------- */
+/* ---------- jogar junto com rollback (modo-antigo.js) ---------- */
 
 .dialogo-antigo { width: min(520px, calc(100vw - 24px)); }
 .status-antigo { margin: 0 0 10px; font-weight: 650; }
