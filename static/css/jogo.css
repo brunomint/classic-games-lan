@@ -491,3 +491,27 @@ body > .fechar-avancado {
 
 .fechar-avancado[hidden] { display: none; }
 body.avancado .botao-menu { display: none; }
+
+/* ---------- jogar junto com rollback (modo-antigo.js) ---------- */
+
+.dialogo-antigo { width: min(520px, calc(100vw - 24px)); }
+.status-antigo { margin: 0 0 10px; font-weight: 650; }
+.status-antigo:empty { display: none; }
+.salas-antigo { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 8px; }
+.salas-antigo:empty { display: none; }
+.salas-antigo .botao { width: 100%; justify-content: space-between; }
+
+.espera-antigo {
+  position: fixed;
+  top: 14px;
+  left: 50%;
+  z-index: 6;
+  transform: translateX(-50%);
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, .75);
+  color: #fff;
+  font-weight: 650;
+  pointer-events: none;
+}
+.espera-antigo[hidden] { display: none; }

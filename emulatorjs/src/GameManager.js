@@ -156,7 +156,8 @@ class EJS_GameManager {
             "slowmotion_ratio = 3.0\n" +
             (this.EJS.rewindEnabled ? "rewind_enable = true\n" : "") +
             (this.EJS.rewindEnabled ? "rewind_granularity = 6\n" : "") +
-            "savefile_directory = \"/data/saves\"\n";
+            "savefile_directory = \"/data/saves\"\n" +
+            (window.EJS_retroarchExtra || ""); // linhas extras do Classic Games (rollback)
 
         if (this.EJS.retroarchOpts && Array.isArray(this.EJS.retroarchOpts)) {
             this.EJS.retroarchOpts.forEach(option => {

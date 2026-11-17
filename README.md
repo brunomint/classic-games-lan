@@ -48,6 +48,23 @@ a pessoa entrar. Dentro do jogo, o menu de pausa também tem **Favoritar**.
 
 Quem cria a sala roda o emulador. Use o aparelho mais forte (de preferência o PC).
 
+### Jogar junto (rollback)
+
+Outra forma, no menu de pausa: **Jogar junto (rollback)** ▸ **Criar sala** num aparelho e,
+nos outros (no mesmo jogo), entrar na sala pelo mesmo menu. Até 4 aparelhos.
+
+Aqui **cada aparelho roda o jogo** e só os botões passam pela rede, com 2 quadros (~33 ms)
+de folga: a imagem é a original (sem o granulado do vídeo) e os botões respondem quase na
+hora. Quando um botão do outro chega atrasado, o jogo volta uns quadros e refaz, sem
+aparecer (rollback, como nos jogos de luta online); só espera se a rede sumir por mais de
+meio segundo. De tempos em tempos os aparelhos comparam o estado do jogo e, se divergiu,
+quem criou a sala manda o dele de novo.
+
+- Melhor no **Wi-Fi 5 GHz** (ou cabo): no 2,4 GHz os picos de rede viram pausas curtas.
+- Feito e medido para **Super Nintendo** e jogos leves. Para PS1 e N64, use o modo por vídeo.
+- Código: `static/js/modo-antigo.js` (motor) e `antigo.py` (salas). O motor liga o avanço
+  rápido do emulador para rodar um quadro por vez no próprio ritmo (sem o aviso na tela).
+
 ## Histórico, resultados e saves
 
 Tudo fica num banco SQLite em `dados/classic-games.db` (fora do git), criado sozinho.
@@ -219,6 +236,7 @@ Para incluir um controle novo, acrescente um item em `PERFIS`.
 app.py          rotas e arquivos estáticos
 games.py        catálogo automático (lê roms/)
 netplay.py      servidor de salas (substitui o servidor oficial do EmulatorJS)
+antigo.py       salas do "Jogar junto (rollback)" (o motor fica em static/js/modo-antigo.js)
 uploads.py      envio de ROMs pelo navegador
 auth.py         login (nome + PIN) e sessão
 conta.py        trocar PIN, excluir jogador, liberar PIN de quem esqueceu

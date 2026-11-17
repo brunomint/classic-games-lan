@@ -39,6 +39,10 @@
       };
       [600, 1500, 3000].forEach((ms) => setTimeout(mostrarControle, ms));
     }
+    const g = emu && emu.gameManager;
+    const salvar = g && getStateSemVazar(g.Module);
+    if (salvar) g.getState = salvar;
+
     const netplay = emu && emu.netplay;
     if (!netplay) return;
 
@@ -55,6 +59,24 @@
       netplay.openMenu();
     });
   };
+
+  // Salvar o estado (salvar agora, salvamento automático, jogo em rede): a função do
+  // EmulatorJS (EmulatorJSGetState) não devolve a memória que o núcleo reserva a cada save
+  // (~800 KB no Super Nintendo) e a memória do jogo só crescia. Esta faz o mesmo e devolve.
+  function getStateSemVazar(M) {
+    if (!M || !M.HEAPU8 || !M._save_state_info || !M._free) return null;
+    return () => {
+      const p = M._save_state_info();
+      let info = "";
+      for (let h = M.HEAPU8, k = p; h[k]; k++) info += String.fromCharCode(h[k]);
+      const [tam, ini, ok] = info.split("|");
+      if (ok !== "1") throw new Error("Falha ao salvar o estado: " + tam);
+      const n = +tam, d = +ini;
+      const copia = M.HEAPU8.slice(d, d + n);
+      M._free(d);
+      return copia;
+    };
+  }
 
   function entrarNaSala(netplay, sessionId) {
     fetch(`/list?game_id=${encodeURIComponent(d.gameId)}`)
