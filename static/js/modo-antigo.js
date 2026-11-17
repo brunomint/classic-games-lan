@@ -13,7 +13,7 @@
 window.CG = window.CG || {};
 
 (function () {
-  const ATRASO = 6;            // quadros (~100 ms): tempo para os botões chegarem ao outro aparelho (era 3: o Wi-Fi tem picos maiores)
+  const ATRASO = 10;           // quadros (~167 ms): tempo para os botões chegarem ao outro aparelho (era 3, depois 6: o Wi-Fi tem picos maiores)
   const CHECAR_A_CADA = 300;   // quadros (~5 s) entre comparações de estado
   const BOTOES_EMULADOR = 24;  // 24 em diante são atalhos do emulador (salvar, acelerar...): bloqueados
   const REPETIR = 10;          // cada mensagem rápida leva os últimos 10 quadros fechados (cobre pacote perdido)
