@@ -8,7 +8,7 @@
 // E o jogo precisa ser determinístico: do mesmo estado, com os mesmos botões, chegar
 // sempre no mesmo resultado. Este arquivo mede tudo isso e mostra na tela.
 (function () {
-  if (!/[?&]teste-rollback\b/.test(location.search)) return;
+  if (!/[?&]teste?-rollback\b/.test(location.search)) return;
 
   // O laço principal do Emscripten (MainLoop) fica escondido dentro do núcleo.
   // O EmulatorJS carrega o núcleo como um Blob de JavaScript; aqui a gente acrescenta
