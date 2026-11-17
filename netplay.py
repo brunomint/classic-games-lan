@@ -10,7 +10,7 @@ Protocolo compatível com o EmulatorJS 4.3 (data/src/netplay.js):
 """
 import threading
 
-from flask import jsonify, request
+from flask import jsonify, request, session
 from flask_socketio import emit, join_room, leave_room
 
 rooms = {}        # session_id -> sala
@@ -66,6 +66,12 @@ def register_netplay(app, socketio):
             players = dict(room["players"])
         socketio_emit("users-updated", players, to=session_id)
         return session_id
+
+    # só quem está logado neste app entra nas salas (a origem já é conferida no app.py)
+    @socketio.on("connect")
+    def conectou(*_):
+        if not session.get("jogador_id"):
+            return False
 
     @socketio.on("open-room")
     def open_room(data):

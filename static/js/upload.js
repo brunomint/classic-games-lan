@@ -32,9 +32,24 @@
   }));
   soltar.addEventListener("drop", (e) => { arquivos = Array.from(e.dataTransfer.files); mostrarFila(); });
 
-  form.addEventListener("submit", (e) => {
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
     if (!arquivos.length) return;
+
+    // o servidor tem limite por envio e precisa de espaço livre: confere antes de mandar
+    const total = arquivos.reduce((n, f) => n + f.size, 0);
+    try {
+      const espaco = await (await fetch("/api/roms/espaco")).json();
+      const gb = (n) => (n / 1024 ** 3).toFixed(1).replace(".", ",");
+      if (total > espaco.limite) {
+        botao.textContent = `Grande demais: envie até ${gb(espaco.limite)} GB de cada vez`;
+        return;
+      }
+      if (total > espaco.disponivel) {
+        botao.textContent = `Pouco espaço no servidor (cabem ${gb(espaco.disponivel)} GB)`;
+        return;
+      }
+    } catch (err) { /* sem a conferência, o servidor ainda recusa se passar */ }
 
     const dados = new FormData();
     dados.append("console", document.getElementById("console").value);
@@ -51,6 +66,11 @@
     xhr.addEventListener("load", () => {
       let resultados = [];
       try { resultados = JSON.parse(xhr.responseText); } catch (err) { /* resposta inválida */ }
+      if (!Array.isArray(resultados)) {
+        botao.textContent = (resultados && resultados.erro) || "O servidor recusou o envio";
+        botao.disabled = false;
+        return;
+      }
       resultados.forEach((r) => {
         const li = fila.querySelector(`li[data-nome="${CSS.escape(r.arquivo)}"]`);
         if (!li) return;

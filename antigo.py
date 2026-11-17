@@ -16,7 +16,7 @@ Canal Socket.IO separado ("/antigo") para não se misturar com o netplay do Emul
 import random
 import threading
 
-from flask import request
+from flask import request, session
 from flask_socketio import emit, join_room, leave_room
 
 NS = "/antigo"
@@ -46,6 +46,12 @@ def listar_salas():
 
 
 def register_antigo(socketio):
+
+    # só quem está logado neste app entra nas salas (a origem já é conferida no app.py)
+    @socketio.on("connect", namespace=NS)
+    def conectou(*_):
+        if not session.get("jogador_id"):
+            return False
 
     @socketio.on("antigo-listar", namespace=NS)
     def listar(data):

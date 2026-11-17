@@ -31,7 +31,9 @@ EJS_DIR = os.path.join(BASE_DIR, "emulatorjs")   # conteúdo da pasta data/ do E
 
 app = Flask(__name__)
 # max_http_buffer_size: o jogo com rollback manda o "save state" inteiro pela rede (PS1 tem ~5 MB)
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading", max_http_buffer_size=32 * 1024 * 1024)
+# sem cors_allowed_origins: o Socket.IO só aceita páginas servidas por este mesmo servidor
+# (um site qualquer aberto num aparelho da casa não consegue entrar nas salas)
+socketio = SocketIO(app, async_mode="threading", max_http_buffer_size=32 * 1024 * 1024)
 catalog = Catalog(BASE_DIR)
 register_auth(app)
 register_netplay(app, socketio)

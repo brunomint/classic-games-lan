@@ -1,5 +1,10 @@
-"""Envio de ROMs pelo navegador: a ROM vai para roms/<console>/ e já aparece no menu."""
+"""Envio de ROMs pelo navegador: a ROM vai para roms/<console>/ e já aparece no menu.
+
+Cada envio tem no máximo LIMITE_ENVIO e precisa deixar RESERVA livre no disco, para um
+envio grande não encher o disco do servidor.
+"""
 import os
+import shutil
 
 from flask import jsonify, render_template, request
 
@@ -9,6 +14,9 @@ from games import CONSOLES
 
 
 CONSOLES_POR_LABEL = {label: key for key, (label, _, _) in CONSOLES.items()}
+GB = 1024 ** 3
+LIMITE_ENVIO = 4 * GB   # por envio (dá uns 5 jogos de PlayStation de uma vez)
+RESERVA = 2 * GB        # espaço que precisa sobrar no disco depois do envio
 
 
 def _console_for(filename, chosen):
@@ -36,9 +44,26 @@ def register_uploads(app, catalog):
         consoles = [(key, label, sorted(exts)) for key, (label, _, exts) in CONSOLES.items()]
         return render_template("upload.html", consoles=consoles)
 
+    def _livre():
+        return shutil.disk_usage(catalog.roms_dir if os.path.isdir(catalog.roms_dir) else catalog.base_dir).free
+
+    @app.get("/api/roms/espaco")
+    @login_obrigatorio(api=True)
+    def espaco_roms():
+        """Quanto ainda dá para enviar (a página confere antes de mandar)."""
+        return jsonify(limite=LIMITE_ENVIO, disponivel=max(0, _livre() - RESERVA))
+
     @app.post("/api/roms")
     @login_obrigatorio(api=True)
     def upload_roms():
+        # confere o tamanho ANTES de ler o corpo (ler já grava os arquivos em disco)
+        tamanho = request.content_length
+        if tamanho is None:
+            return jsonify(erro="Envio sem tamanho informado."), 411
+        if tamanho > LIMITE_ENVIO:
+            return jsonify(erro=f"Envio grande demais: no máximo {LIMITE_ENVIO // GB} GB de cada vez."), 413
+        if _livre() - tamanho < RESERVA:
+            return jsonify(erro="Pouco espaço livre no servidor para esse envio."), 507
         chosen = request.form.get("console", "auto")
         results = []
         for file in request.files.getlist("roms"):
