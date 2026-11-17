@@ -19,7 +19,7 @@
     try {
       if (opcoes && opcoes.type === "application/javascript" && partes && partes[0] instanceof Uint8Array) {
         const texto = new TextDecoder().decode(partes[0]);
-        if (texto.includes(MARCA)) {
+        if (texto.includes(MARCA) && !texto.includes('Module["MainLoop"]')) {
           partes = [texto.replace(MARCA, MARCA + 'Module["MainLoop"]=MainLoop;')];
         }
       }

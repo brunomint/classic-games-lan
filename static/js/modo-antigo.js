@@ -1,27 +1,51 @@
-// Jogo em rede no "modo antigo" (EXPERIMENTAL, branch modo-antigo-rede).
+// Jogo em rede com ROLLBACK (EXPERIMENTAL, branch rollback-rede).
 //
-// Todos os aparelhos rodam o jogo e trocam só os botões, quadro a quadro (lockstep):
-//   1. Quem cria a sala manda o estado do jogo ("save state"); todos carregam o mesmo estado.
-//   2. Um botão apertado no quadro F vale no quadro F + ATRASO, em todos os aparelhos.
-//      Ao fim de cada quadro, o aparelho "fecha" o quadro F + ATRASO e manda seus botões
-//      (mesmo sem botão nenhum, para os outros saberem que podem seguir).
-//   3. Antes de cada quadro, se faltar o "fechamento" de algum aparelho, o quadro espera.
-//   4. De tempos em tempos todos comparam uma impressão digital do estado; se divergiu,
-//      quem criou a sala manda o estado de novo.
-// O servidor (antigo.py) só repassa as mensagens. O gancho em cada quadro usa o preMainLoop
-// / postMainLoop do Emscripten: o EJS_Runtime é envolvido antes de o núcleo carregar.
+// Todos os aparelhos rodam o jogo e trocam só os botões, como no modo antigo, mas ninguém
+// espera o outro a cada quadro:
+//   1. Quem cria a sala manda o estado do jogo; todos começam do mesmo estado, no quadro 0.
+//   2. Um botão apertado aqui vale ATRASO quadros depois (2 quadros, ~33 ms), nos dois aparelhos.
+//   3. Cada aparelho roda o jogo no seu ritmo. Para os botões do outro que ainda não chegaram,
+//      supõe que "nada mudou" (ele continua apertando o que apertava).
+//   4. A cada FOTO_A_CADA quadros o estado é guardado ("foto"). Se chega um botão do outro para
+//      um quadro que já passou, o jogo volta para a foto anterior e refaz os quadros até o
+//      presente, já com o botão certo, tudo dentro de um único quadro da tela.
+//   5. Se o outro sumir por mais de JANELA quadros, aí sim espera (com o aviso na tela).
+//   6. Os relógios se acertam: quem está adiantado segura um quadro de vez em quando.
+//   7. De tempos em tempos todos comparam uma impressão digital de uma foto já confirmada;
+//      se divergiu, quem criou a sala manda o estado de novo.
+// O laço do jogo é do próprio motor: o avanço rápido do RetroArch fica ligado (sem limite) e
+// o motor chama um quadro por vez (MainLoop.func) no ritmo certo, pelo preMainLoop.
 window.CG = window.CG || {};
 
 (function () {
-  const ATRASO = 10;           // quadros (~167 ms): tempo para os botões chegarem ao outro aparelho (era 3, depois 6: o Wi-Fi tem picos maiores)
-  const CHECAR_A_CADA = 300;   // quadros (~5 s) entre comparações de estado
+  const ATRASO = 2;            // quadros de atraso nos botões deste aparelho
+  const JANELA = 15;           // no máximo 15 quadros (~250 ms) à frente dos botões confirmados do outro
+  const FOTO_A_CADA = 4;       // quadros entre fotos do estado (salvar custa ~8 ms)
+  const CHECAR_A_CADA = 240;   // quadros (~4 s) entre comparações (múltiplo de FOTO_A_CADA)
   const BOTOES_EMULADOR = 24;  // 24 em diante são atalhos do emulador (salvar, acelerar...): bloqueados
   const REPETIR = 10;          // cada mensagem rápida leva os últimos 10 quadros fechados (cobre pacote perdido)
 
   const emu = () => window.EJS_emulator;
   const gm = () => emu() && emu().gameManager;
 
-  // ---------- gancho em cada quadro ----------
+  // O laço principal do Emscripten (MainLoop) fica escondido dentro do núcleo. O EmulatorJS
+  // carrega o núcleo como um Blob de JavaScript; aqui ele ganha uma linha que o expõe.
+  const BlobOriginal = window.Blob;
+  const MARCA = 'Module["EmulatorJSGetState"]=EmulatorJSGetState;';
+  window.Blob = function (partes, opcoes) {
+    try {
+      if (opcoes && opcoes.type === "application/javascript" && partes && partes[0] instanceof Uint8Array) {
+        const texto = new TextDecoder().decode(partes[0]);
+        if (texto.includes(MARCA) && !texto.includes('Module["MainLoop"]')) {
+          partes = [texto.replace(MARCA, MARCA + 'Module["MainLoop"]=MainLoop;')];
+        }
+      }
+    } catch (e) { /* segue com o original */ }
+    return new BlobOriginal(partes, opcoes);
+  };
+  window.Blob.prototype = BlobOriginal.prototype;
+
+  // ---------- gancho em cada volta do laço ----------
   let motor = null;
   let runtime;
   Object.defineProperty(window, "EJS_Runtime", {
@@ -30,7 +54,6 @@ window.CG = window.CG || {};
     set: (f) => {
       runtime = typeof f !== "function" ? f : (cfg) => {
         cfg.preMainLoop = () => (motor && motor.ativo ? motor.antes() : undefined);
-        cfg.postMainLoop = () => { if (motor && motor.ativo) motor.depois(); };
         return f(cfg);
       };
     },
@@ -43,7 +66,26 @@ window.CG = window.CG || {};
     return (h >>> 0).toString(16);
   }
 
+  // ritmo natural do jogo (60 ou 50 quadros/s), medido antes de entrar na sala
+  let ritmoMedido = null;
+  (function medirRitmo() {
+    let antes = null;
+    setInterval(() => {
+      const g = gm();
+      if (!g || !emu().started || (motor && motor.ativo) || emu().paused) { antes = null; return; }
+      const agora = { q: g.getFrameNum(), t: performance.now() };
+      if (antes) {
+        const qps = (agora.q - antes.q) / ((agora.t - antes.t) / 1000);
+        if (qps > 45 && qps < 56) ritmoMedido = 50.007;
+        else if (qps >= 56 && qps < 65) ritmoMedido = 60.0988;
+      }
+      antes = agora;
+    }, 2000);
+  })();
+
   const espera = document.getElementById("espera-antigo");
+  const zerarEst = () => ({ quadros: 0, iter: 0, esperas: 0, esperaMs: 0, maiorEspera: 0, voltas: 0, refeitos: 0,
+    maiorVolta: 0, voltaMs: 0, fotoMs: 0, segurados: 0, acelerados: 0, semFoto: 0 });
 
   class Motor {
     // enviar: caminho garantido (servidor); rapido: conexão direta entre os aparelhos, que pode
@@ -55,97 +97,243 @@ window.CG = window.CG || {};
       this.eu = 0;
       this.epoca = 0;
       this.outros = [];
+      this.rtt = 0;
     }
 
+    ritmo() { return ritmoMedido || 60.0988; }
+
     // começa (ou recomeça) do estado recebido, numa nova época; mensagens antigas são ignoradas
-    iniciar(estado, epoca, eu, jogadores) {
+    iniciar(estado, epoca, eu, jogadores, ritmo) {
       const g = gm();
+      this.ML = g.Module.MainLoop;
+      if (!this.ML || !this.ML.func) {
+        CG.aviso && CG.aviso("Não deu para ligar o rollback neste jogo.", "erro");
+        return;
+      }
       this.eu = eu;
       this.epoca = epoca;
       this.outros = jogadores.filter((j) => j !== eu);
-      g.loadState(estado);
+      this.jogadores = [...jogadores].sort((a, b) => a - b);
+      this.periodo = 1000 / (ritmo || this.ritmo());
+      g.functions.setFastForwardRatio(0);
+      g.functions.toggleFastForward(1);
+      this.carregar(estado);
+      this.botoes = [0, 1, 2, 3].map(() => new Array(BOTOES_EMULADOR).fill(0));
       for (let p = 0; p < 4; p++) for (let i = 0; i < BOTOES_EMULADOR; i++) g.functions.simulateInput(p, i, 0);
-      this.base = g.getFrameNum();
-      this.rodados = 0;
-      this.agenda = {};          // quadro -> [[jogador, botão, valor], ...]
+      this.f = 0;                // próximo quadro a rodar
+      this.eventos = {};         // jogador -> {quadro: [[p, botão, valor], ...]}
+      this.jogadores.forEach((j) => { this.eventos[j] = {}; });
       this.pendentes = [];       // botões deste aparelho ainda sem quadro
       this.confirmado = {};      // jogador -> último quadro fechado por ele sem buracos antes
       this.fora = {};            // jogador -> quadros fechados que chegaram antes de um buraco
-      this.outros.forEach((j) => { this.confirmado[j] = ATRASO - 1; this.fora[j] = new Set(); });
+      this.remoto = {};          // jogador -> {n: quadro dele, t: quando soube}
+      this.vantagem = {};        // jogador -> quantos quadros estou à frente dele (média)
+      this.vantagemDele = {};    // jogador -> quanto ele acha que está à frente de mim
+      this.outros.forEach((j) => {
+        this.confirmado[j] = ATRASO - 1; this.fora[j] = new Set(); this.vantagem[j] = 0;
+      });
       this.historico = [];       // últimos quadros fechados por este aparelho: [[quadro, botões]]
       this.impressoes = {};      // quadro -> {jogador: impressão}
+      this.fotos = [];           // [{f, estado, botoes, conferida}]
+      this.corrigir = null;      // quadro mais antigo que precisa ser refeito
       this.esperandoDesde = 0;
-      this.est = { iter: 0, esperas: 0, esperaMs: 0, maiorEspera: 0 };
+      this.est = zerarEst();
+      this.total = { voltas: 0, refeitos: 0 };
+      this.foto();
+      this.t0 = performance.now();
       this.ativo = this.outros.length > 0;
+      if (!this.ativo) g.functions.toggleFastForward(0);
     }
 
     parar() {
       this.ativo = false;
       espera.hidden = true;
+      const g = gm();
+      if (!g) return;
+      try { g.functions.toggleFastForward(0); } catch (e) { /* ignora */ }
+      if (this.botoes) for (let p = 0; p < 4; p++) for (let i = 0; i < BOTOES_EMULADOR; i++) {
+        if (this.botoes[p][i]) g.functions.simulateInput(p, i, 0);
+      }
     }
 
-    // antes de cada quadro: só segue se todos já fecharam este quadro
-    antes() {
+    quadro() { this.ML.func(); }
+
+    // o carregamento é uma tarefa do RetroArch: só vale na próxima volta, que não roda quadro
+    carregar(estado) {
       const g = gm();
-      const f = g.getFrameNum() - this.base;
-      const falta = this.outros.some((j) => this.confirmado[j] < f);
+      try { g.FS.unlink("/game.state"); } catch (e) { /* não existia */ }
+      g.FS.writeFile("/game.state", estado);
+      g.functions.loadState("game.state", 0);
+      this.quadro();
+    }
+
+    // fotos nos quadros múltiplos de FOTO_A_CADA (os mesmos em todos os aparelhos, para a
+    // comparação); se uma passou (quadro de volta), tira assim que der
+    precisaFoto() {
+      const ultima = this.fotos[this.fotos.length - 1].f;
+      if (ultima === this.f) return false;
+      return this.f % FOTO_A_CADA === 0 || this.f - ultima > FOTO_A_CADA + 2;
+    }
+
+    foto() {
+      const t = performance.now();
+      const estado = gm().Module.EmulatorJSGetState();
+      this.fotos.push({ f: this.f, estado, botoes: this.botoes.map((b) => b.slice()), conferida: false });
+      this.est.fotoMs = Math.max(this.est.fotoMs, performance.now() - t);
+    }
+
+    // aplica os botões do quadro atual (de todos, sempre na mesma ordem) e roda o quadro
+    rodar() {
+      const fn = gm().functions;
+      for (const j of this.jogadores) {
+        const lista = this.eventos[j][this.f];
+        if (!lista) continue;
+        for (const [p, i, v] of lista) {
+          if (this.botoes[p][i] !== v) { this.botoes[p][i] = v; fn.simulateInput(p, i, v); }
+        }
+      }
+      this.quadro();
+      this.f += 1;
+    }
+
+    // um quadro novo: fecha o quadro f + ATRASO com os botões deste aparelho e roda o quadro f
+    passo() {
+      const alvo = this.f + ATRASO;
+      const ev = this.pendentes;
+      this.pendentes = [];
+      if (ev.length) this.eventos[this.eu][alvo] = ev;
+      this.historico.push([alvo, ev]);
+      if (this.historico.length > REPETIR) this.historico.shift();
+      // n = quantos quadros este aparelho terá rodado ao fim deste (para o acerto de relógio)
+      this.rapido({ t: "q", e: this.epoca, j: this.eu, n: this.f + 1, v: this.vantagem, s: this.historico });
+      this.enviar({ t: "q", e: this.epoca, j: this.eu, n: this.f + 1, s: [[alvo, ev]] });
+      this.rodar();
+      this.est.quadros += 1;
+    }
+
+    // chegou botão do outro para um quadro que já passou: volta à foto e refaz até o presente
+    voltar() {
+      const alvo = this.corrigir;
+      this.corrigir = null;
+      let k = this.fotos.length - 1;
+      while (k > 0 && this.fotos[k].f > alvo) k--;
+      const foto = this.fotos[k];
+      if (!foto || foto.f > alvo) { this.est.semFoto += 1; return; }
+      this.fotos.length = k + 1;           // as fotos depois do erro foram tiradas com o palpite errado
+      const ate = this.f;
+      const t = performance.now();
+      this.carregar(foto.estado);
+      const fn = gm().functions;
+      for (let p = 0; p < 4; p++) for (let i = 0; i < BOTOES_EMULADOR; i++) {
+        const v = foto.botoes[p][i];
+        if (this.botoes[p][i] !== v) { this.botoes[p][i] = v; fn.simulateInput(p, i, v); }
+      }
+      this.f = foto.f;
+      while (this.f < ate) {
+        // a foto da comparação não pode faltar: se cair no meio da volta, tira aqui mesmo
+        if (this.f > foto.f && this.f % CHECAR_A_CADA === 0) this.foto();
+        this.rodar();
+      }
+      if (this.f % CHECAR_A_CADA === 0 && this.fotos[this.fotos.length - 1].f !== this.f) this.foto();
+      this.est.voltas += 1;
+      this.total.voltas += 1;
+      this.total.refeitos += ate - foto.f;
+      this.est.refeitos += ate - foto.f;
+      this.est.maiorVolta = Math.max(this.est.maiorVolta, ate - foto.f);
+      this.est.voltaMs = Math.max(this.est.voltaMs, performance.now() - t);
+    }
+
+    // a cada volta do laço: roda o próximo quadro quando chega a hora; nunca deixa o laço do
+    // Emscripten rodar o seu (return false)
+    antes() {
+      const agora = performance.now();
       this.est.iter += 1;
-      if (falta) {
-        const agora = performance.now();
-        this.est.esperas += 1;
-        if (!this.esperandoDesde) this.esperandoDesde = agora;
+      let devidos = Math.floor((agora - this.t0) / this.periodo);
+      if (devidos - this.f > 4) {            // voltou de uma pausa ou a aba ficou parada: não dispara
+        this.t0 = agora - this.f * this.periodo;
+        devidos = this.f;
+      }
+      if (this.f >= devidos) return false;
+
+      const minConf = Math.min(...this.outros.map((j) => this.confirmado[j]));
+      if (this.f - minConf > JANELA) {
+        if (!this.esperandoDesde) { this.esperandoDesde = agora; this.est.esperas += 1; }
         else if (agora - this.esperandoDesde > 400) espera.hidden = false;
-        // os dois podem estar esperando um ao outro (a última mensagem de um se perdeu):
-        // enquanto espera, reenvia os últimos quadros fechados pela conexão direta
         if (this.historico.length && agora - (this.reenviadoEm || 0) > 8) {
           this.reenviadoEm = agora;
-          this.rapido({ t: "q", e: this.epoca, j: this.eu, s: this.historico });
+          this.rapido({ t: "q", e: this.epoca, j: this.eu, n: this.f, s: this.historico });
         }
+        this.t0 = agora - this.f * this.periodo;
         return false;
       }
       if (this.esperandoDesde) {
-        const d = performance.now() - this.esperandoDesde;
+        const d = agora - this.esperandoDesde;
         this.est.esperaMs += d;
-        if (d > this.est.maiorEspera) this.est.maiorEspera = d;
+        this.est.maiorEspera = Math.max(this.est.maiorEspera, d);
         this.esperandoDesde = 0;
         espera.hidden = true;
       }
-      const lista = this.agenda[f];
-      if (lista) {
-        lista.forEach(([p, i, v]) => g.functions.simulateInput(p, i, v));
-        delete this.agenda[f];
+
+      // acerto de relógio (como no GGPO): cada um mede quanto está à frente do outro e conta para
+      // ele; a metade da diferença é o adiantamento de verdade (o atraso da rede se cancela).
+      // Adiantado em relação a alguém -> segura um quadro; atrasado -> acelera.
+      const vant = this.outros.map((j) => (this.vantagem[j] - (this.vantagemDele[j] || 0)) / 2);
+      if (Math.max(...vant) > 1) {
+        this.outros.forEach((j) => { this.vantagem[j] -= 1; this.vantagemDele[j] = (this.vantagemDele[j] || 0) + 1; });
+        this.t0 += this.periodo;
+        this.est.segurados += 1;
+        return false;
       }
-      return undefined;
+      if (Math.min(...vant) < -1.5 && Math.max(...vant) < 0) {
+        this.outros.forEach((j) => { this.vantagem[j] += 1; this.vantagemDele[j] = (this.vantagemDele[j] || 0) - 1; });
+        this.t0 -= this.periodo;
+        this.est.acelerados += 1;
+      }
+
+      if (this.corrigir !== null) this.voltar();
+      else if (this.precisaFoto()) this.foto();
+      this.passo();
+      this.medirVantagem(agora);
+      this.podar(minConf);
+      return false;
     }
 
-    // depois de cada quadro: fecha o quadro F + ATRASO com os botões deste aparelho
-    depois() {
-      const g = gm();
-      const agora = g.getFrameNum() - this.base;
-      while (this.rodados < agora) {
-        const alvo = this.rodados + ATRASO;
-        const ev = this.pendentes;
-        this.pendentes = [];
-        if (ev.length) (this.agenda[alvo] = this.agenda[alvo] || []).push(...ev);
-        this.historico.push([alvo, ev]);
-        if (this.historico.length > REPETIR) this.historico.shift();
-        this.rapido({ t: "q", e: this.epoca, j: this.eu, s: this.historico });
-        this.enviar({ t: "q", e: this.epoca, j: this.eu, s: [[alvo, ev]] });
-        this.rodados += 1;
-        if (this.rodados % CHECAR_A_CADA === 0) this.conferir(this.rodados);
+    medirVantagem(agora) {
+      for (const j of this.outros) {
+        const r = this.remoto[j];
+        if (!r) continue;
+        const dele = r.n + (agora - r.t + (this.rtt || 0) / 2) / this.periodo;
+        this.vantagem[j] = this.vantagem[j] * 0.95 + (this.f - dele) * 0.05;
       }
     }
 
-    conferir(quadro) {
-      let h;
-      try { h = impressao(gm().getState()); } catch (e) { return; }
-      this.anotarImpressao(quadro, this.eu, h);
-      this.enviar({ t: "h", e: this.epoca, j: this.eu, f: quadro, h });
+    // fotos antigas: só precisa da mais nova até o primeiro quadro ainda sem confirmação
+    podar(minConf) {
+      const limite = minConf + 1;
+      for (const foto of this.fotos) {
+        if (foto.f > limite) break;
+        if (!foto.conferida && foto.f > 0 && foto.f % CHECAR_A_CADA === 0) {
+          foto.conferida = true;
+          const h = impressao(foto.estado);
+          this.anotarImpressao(foto.f, this.eu, h);
+          this.enviar({ t: "h", e: this.epoca, j: this.eu, f: foto.f, h });
+        }
+      }
+      let k = 0;
+      while (k + 1 < this.fotos.length && this.fotos[k + 1].f <= limite) k++;
+      if (k > 0) {
+        this.fotos.splice(0, k);
+        const primeiro = this.fotos[0].f;
+        for (const j of this.jogadores) {
+          for (const q in this.eventos[j]) if (+q < primeiro) delete this.eventos[j][q];
+        }
+      }
     }
 
     anotarImpressao(quadro, jogador, h) {
       const mapa = (this.impressoes[quadro] = this.impressoes[quadro] || {});
       mapa[jogador] = h;
+      for (const q in this.impressoes) if (+q < quadro - 4 * CHECAR_A_CADA) delete this.impressoes[q];
       if (Object.keys(mapa).length < this.outros.length + 1) return;
       delete this.impressoes[quadro];
       const iguais = new Set(Object.values(mapa)).size === 1;
@@ -159,7 +347,11 @@ window.CG = window.CG || {};
     // um quadro fechado por outro aparelho (pode chegar repetido e fora de ordem)
     selar(j, f, ev) {
       if (!(j in this.confirmado) || f <= this.confirmado[j] || this.fora[j].has(f)) return;
-      if (ev && ev.length) (this.agenda[f] = this.agenda[f] || []).push(...ev);
+      if (ev && ev.length) {
+        this.eventos[j][f] = ev;
+        // o palpite para esse quadro foi "nada mudou"; se já rodou, precisa refazer
+        if (f < this.f) this.corrigir = this.corrigir === null ? f : Math.min(this.corrigir, f);
+      }
       this.fora[j].add(f);
       while (this.fora[j].has(this.confirmado[j] + 1)) {
         this.confirmado[j] += 1;
@@ -176,6 +368,10 @@ window.CG = window.CG || {};
     receber(m) {
       if (m.e !== this.epoca || !this.ativo) return;
       if (m.t === "q") {
+        if (m.n != null && (!this.remoto[m.j] || m.n > this.remoto[m.j].n)) {
+          this.remoto[m.j] = { n: m.n, t: performance.now() };
+          if (m.v && m.v[this.eu] != null) this.vantagemDele[m.j] = m.v[this.eu];
+        }
         (m.s || []).forEach(([f, ev]) => this.selar(m.j, f, ev));
       } else if (m.t === "h") {
         this.anotarImpressao(m.f, m.j, m.h);
@@ -208,7 +404,7 @@ window.CG = window.CG || {};
       if (m && m.t === "estado") {
         // sincronização vinda de quem criou a sala
         epoca = m.e;
-        motor.iniciar(new Uint8Array(m.estado), m.e, sala.jogador, m.jogadores);
+        motor.iniciar(new Uint8Array(m.estado), m.e, sala.jogador, m.jogadores, m.ritmo);
         status.textContent = `Na sala ${sala.codigo}: jogando junto (jogador ${sala.jogador + 1}).`;
         if (emu() && emu().paused && !document.querySelector("dialog[open]")) emu().play();
         return;
@@ -348,22 +544,22 @@ window.CG = window.CG || {};
   CG.modoAntigo = motor;
 
   // DIAGNÓSTICO TEMPORÁRIO: a cada 10 s manda ao log do servidor quantos quadros rodaram,
-  // quantas vezes esperou o outro aparelho e o ritmo da tela (requestAnimationFrame)
-  let quadros = 0;
-  (function contar() { quadros += 1; requestAnimationFrame(contar); })();
-  let antes10 = { rodados: 0, quadros: 0, t: performance.now() };
+  // quantas vezes voltou e refez, quanto esperou e o acerto de relógio
+  let antes10 = performance.now();
   setInterval(() => {
     if (!motor.ativo || !motor.est) return;
-    const t = performance.now(), seg = (t - antes10.t) / 1000;
+    const t = performance.now(), seg = (t - antes10) / 1000, e = motor.est;
     const info = {
-      eu: motor.eu, qps: +((motor.rodados - antes10.rodados) / seg).toFixed(1),
-      raf: +((quadros - antes10.quadros) / seg).toFixed(1), ...motor.est,
-      esperaMs: Math.round(motor.est.esperaMs), maiorEspera: Math.round(motor.est.maiorEspera),
+      eu: motor.eu, qps: +(e.quadros / seg).toFixed(1), iter: e.iter, voltas: e.voltas, refeitos: e.refeitos,
+      maiorVolta: e.maiorVolta, voltaMs: +e.voltaMs.toFixed(1), fotoMs: +e.fotoMs.toFixed(1),
+      esperas: e.esperas, esperaMs: Math.round(e.esperaMs), maiorEspera: Math.round(e.maiorEspera),
+      segurados: e.segurados, acelerados: e.acelerados, semFoto: e.semFoto,
+      vantagem: motor.outros.map((j) => +motor.vantagem[j].toFixed(2)), fotos: motor.fotos.length,
       rtt: motor.rtt && Math.round(motor.rtt), direta: Object.values(diretos).some((c) => c.dc && c.dc.readyState === "open"),
     };
-    antes10 = { rodados: motor.rodados, quadros, t };
-    motor.est = { iter: 0, esperas: 0, esperaMs: 0, maiorEspera: 0 };
-    fetch("/static/diag-antigo?" + encodeURIComponent(JSON.stringify(info))).catch(() => {});
+    antes10 = t;
+    motor.est = zerarEst();
+    fetch("/static/diag-rollback-jogo?" + encodeURIComponent(JSON.stringify(info))).catch(() => {});
   }, 10000);
 
   // quem criou a sala manda o estado atual para todos e recomeça junto com eles
@@ -371,9 +567,10 @@ window.CG = window.CG || {};
     const g = gm();
     if (!g || !sala || sala.jogador !== 0) return;
     const estado = g.getState();
+    const ritmo = motor.ritmo();
     epoca += 1;
-    socket.emit("antigo-msg", { t: "estado", e: epoca, estado: estado.buffer.slice(estado.byteOffset, estado.byteOffset + estado.byteLength), jogadores });
-    motor.iniciar(estado, epoca, 0, jogadores);
+    socket.emit("antigo-msg", { t: "estado", e: epoca, ritmo, estado: estado.buffer.slice(estado.byteOffset, estado.byteOffset + estado.byteLength), jogadores });
+    motor.iniciar(estado, epoca, 0, jogadores, ritmo);
     status.textContent = `Sala ${sala.codigo}: ${jogadores.length} aparelhos jogando junto.`;
   }
   document.addEventListener("cg:antigo-ressincronizar", sincronizar);
