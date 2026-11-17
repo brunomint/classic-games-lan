@@ -28,3 +28,6 @@ O servidor não é o gargalo (entrega a ~500 MB/s no próprio PC); o que limita 
 - Jogo em rede com rollback: medidor opcional (`?medir` no endereço) para descobrir o que
   atrasa um aparelho; testar com 4 aparelhos; PS1 não serve (o estado salvo muda alguns bytes
   a cada vez, e a conferência entre aparelhos falharia).
+- Mandar para o EmulatorJS original (fork + pull request) as correções que fizemos aqui:
+  `EmulatorJSGetState` vaza a memória de cada save; o arquivo `cores/reports/*.json` nunca
+  é lido (o N64 caía no núcleo antigo); o controle na tela do iPad se esconde sozinho.
