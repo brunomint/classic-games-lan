@@ -2,9 +2,16 @@
 
 *A retro living-room arcade for your local network.* (Antes se chamava Classic Games LAN.)
 
-Jogos antigos (SNES, NES, PS1…) no navegador, com **multiplayer entre aparelhos
-pela rede local**: um aparelho cria a sala e roda o jogo, os outros entram e
-recebem a tela em vídeo, mandando só os comandos do controle. Não usa internet.
+Jogos antigos (Super Nintendo, NES, Mega Drive, Game Boy, N64, PlayStation…) no navegador,
+servidos por um PC (ou celular Android) da casa para qualquer aparelho do Wi-Fi: TV, PC, iPad,
+celular. Dá para jogar **junto entre aparelhos pela rede local**, de dois jeitos:
+
+- **Rollback** (Super Nintendo e jogos leves): cada aparelho roda o jogo e só os botões passam
+  pela rede, com resposta quase na hora, como nos jogos de luta online.
+- **Por vídeo** (PS1, N64): um aparelho roda o jogo e transmite a imagem para os outros.
+
+Tem login por PIN para cada pessoa da casa, avatar, placar, saves no servidor, controle na tela
+para celular/iPad e navegação inteira pelo controle (feito para a TV). Não usa internet.
 
 ![Menu inicial](docs/prints/inicio.png)
 
@@ -23,6 +30,8 @@ Os jogadores dos prints são fictícios. Nenhum jogo vem junto com o projeto.
 
 **No PC (Linux):**
 ```bash
+git clone https://github.com/brunomint/fliperama-de-casa.git
+cd fliperama-de-casa
 pip install -r requirements.txt
 python app.py            # porta 5000 (ou: python app.py 8080)
 ```
@@ -37,6 +46,9 @@ Dica: com o celular como roteador (hotspot), dá para jogar em qualquer lugar.
 
 Abra o endereço que aparece no terminal (ex.: `http://192.168.0.10:5000`).
 Nos outros aparelhos, escaneie o QR code da página inicial.
+
+Os jogos você coloca em `roms/<console>/` (ou envia pela página **Enviar ROMs**). Para PS1, a
+BIOS vai em `bios/`. Nenhum jogo nem BIOS vem junto: use só cópias dos que você tem.
 
 ## Menu inicial: consoles e pesquisa
 
@@ -58,7 +70,7 @@ a pessoa entrar. Dentro do jogo, o menu de pausa também tem **Favoritar**.
 
 ## Jogar junto
 
-1. Um aparelho abre o jogo ▸ menu do jogo ▸ **Netplay** ▸ **Criar sala**.
+1. Um aparelho abre o jogo ▸ menu de pausa ▸ **Criar sala para jogar junto**.
 2. Nos outros, a sala aparece em **Salas abertas** na página inicial: toque e pronto.
 
 Quem cria a sala roda o emulador. Use o aparelho mais forte (de preferência o PC).
