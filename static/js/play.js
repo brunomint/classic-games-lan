@@ -29,10 +29,13 @@
 
     const emu = window.EJS_emulator;
     // controle na tela: o EmulatorJS só o mostra se a pessoa tocou na tela antes de o jogo
-    // começar; como o jogo começa sozinho, em celular/iPad ele ficava escondido
-    if (emu && emu.isMobile && typeof emu.toggleVirtualGamepad === "function"
-        && emu.getSettingValue("virtual-gamepad") !== "disabled") {
-      emu.toggleVirtualGamepad(true);
+    // começar; como o jogo começa sozinho, em celular/iPad ele ficava escondido. Mostra
+    // depois de um tempo: ao ajustar a tela, o emulador o esconde de novo 250 ms depois.
+    if (emu && emu.isMobile && typeof emu.toggleVirtualGamepad === "function") {
+      const mostrarControle = () => {
+        if (emu.getSettingValue("virtual-gamepad") !== "disabled") emu.toggleVirtualGamepad(true);
+      };
+      [600, 1500, 3000].forEach((ms) => setTimeout(mostrarControle, ms));
     }
     const netplay = emu && emu.netplay;
     if (!netplay) return;
@@ -121,4 +124,6 @@
   loader.src = "/emulatorjs/loader.js";
   document.body.appendChild(loader);
 })();
+
+
 
