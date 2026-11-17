@@ -14,6 +14,7 @@ from flask_socketio import SocketIO
 
 import config
 from ajustes import register_ajustes
+from antigo import register_antigo
 from auth import login_obrigatorio, register_auth
 from codigos import register_codigos
 from conta import register_conta
@@ -28,10 +29,12 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 EJS_DIR = os.path.join(BASE_DIR, "emulatorjs")   # conteúdo da pasta data/ do EmulatorJS
 
 app = Flask(__name__)
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading")
+# max_http_buffer_size: o modo antigo manda o "save state" inteiro pela rede (PS1 tem ~5 MB)
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading", max_http_buffer_size=32 * 1024 * 1024)
 catalog = Catalog(BASE_DIR)
 register_auth(app)
 register_netplay(app, socketio)
+register_antigo(socketio)   # experimental: jogo em rede no modo antigo
 register_uploads(app, catalog)
 register_registro(app, catalog)
 register_codigos(app, catalog)

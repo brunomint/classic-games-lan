@@ -81,6 +81,7 @@
               aria-pressed="{{ 'true' if favorito else 'false' }}"><span id="pausa-favorito-texto">{{ "Favorito" if favorito else "Favoritar" }}</span></button>
       <button type="button" class="item-pausa" id="pausa-sala" hidden>Criar sala para jogar junto</button>
       <button type="button" class="item-pausa" id="jogar-junto" hidden>Entrar na sala de outro aparelho</button>
+      <button type="button" class="item-pausa" id="pausa-antigo">Jogar junto (modo antigo) <kbd>experimental</kbd></button>
       <button type="button" class="item-pausa" id="abrir-local" hidden>Adicionar jogador neste aparelho</button>
       <button type="button" class="item-pausa" id="abrir-resultado" hidden>Anotar resultado</button>
       <a class="item-pausa item-sair" href="/" id="pausa-sair">Sair do jogo</a>
@@ -140,6 +141,21 @@
 </dialog>
 
 <!-- Reiniciar: perde o que não foi salvo -->
+<dialog id="dialogo-antigo" class="dialogo dialogo-antigo">
+  <h2>Jogar junto (modo antigo)</h2>
+  <p class="texto-apoio">Os dois aparelhos rodam o jogo e trocam só os botões apertados, quadro a quadro.
+    Experimental: os dois precisam estar neste mesmo jogo.</p>
+  <p class="status-antigo" id="status-antigo" aria-live="polite"></p>
+  <ul class="salas-antigo" id="salas-antigo"></ul>
+  <div class="acoes">
+    <button type="button" class="botao botao-claro" data-botao="B" id="fechar-antigo">Fechar</button>
+    <button type="button" class="botao" id="sair-antigo" hidden>Sair da sala</button>
+    <button type="button" class="botao" data-botao="A" id="criar-antigo">Criar sala</button>
+  </div>
+</dialog>
+
+<div class="espera-antigo" id="espera-antigo" hidden>Esperando o outro aparelho…</div>
+
 <dialog id="dialogo-reiniciar" class="dialogo">
   <h2>Reiniciar o jogo?</h2>
   <p class="texto-apoio">O jogo volta para o começo. O que não foi salvo se perde.</p>
@@ -233,5 +249,6 @@
 <script src="{{ url_for('static', filename='js/atalhos-jogo.js') }}"></script>
 <script src="{{ url_for('static', filename='js/gamepad-menu.js') }}"></script>
 <script src="{{ url_for('static', filename='js/analogico-direcional.js') }}"></script>
+<script src="{{ url_for('static', filename='js/modo-antigo.js') }}"></script>
 <script src="{{ url_for('static', filename='js/play.js') }}"></script>
 {% endblock %}
