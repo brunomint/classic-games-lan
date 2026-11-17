@@ -20,7 +20,7 @@ window.CG = window.CG || {};
 (function () {
   const ATRASO = 2;            // quadros de atraso nos botões deste aparelho
   const JANELA = 15;           // no máximo 15 quadros (~250 ms) à frente dos botões confirmados do outro
-  const FOTO_A_CADA = 4;       // quadros entre fotos do estado (salvar custa ~8 ms)
+  const FOTO_A_CADA = 1;       // quadros entre fotos do estado (com salvarEstado, uma foto custa ~0,2 ms)
   const CHECAR_A_CADA = 240;   // quadros (~4 s) entre comparações (múltiplo de FOTO_A_CADA)
   const BOTOES_EMULADOR = 24;  // 24 em diante são atalhos do emulador (salvar, acelerar...): bloqueados
   const REPETIR = 10;          // cada mensagem rápida leva os últimos 10 quadros fechados (cobre pacote perdido)
@@ -144,6 +144,7 @@ window.CG = window.CG || {};
       this.historico = [];       // últimos quadros fechados por este aparelho: [[quadro, botões]]
       this.impressoes = {};      // quadro -> {jogador: impressão}
       this.fotos = [];           // [{f, estado, botoes, conferida}]
+      this.livres = this.livres || [];  // espaços de memória de fotos descartadas, para reaproveitar
       this.corrigir = null;      // quadro mais antigo que precisa ser refeito
       this.esperandoDesde = 0;
       this.est = zerarEst();
@@ -184,9 +185,30 @@ window.CG = window.CG || {};
       return this.f % FOTO_A_CADA === 0 || this.f - ultima > FOTO_A_CADA + 2;
     }
 
+    // Salva o estado direto do núcleo, num espaço de memória reaproveitado. A função do
+    // EmulatorJS (EmulatorJSGetState) não devolve os ~800 KB que o núcleo reserva a cada vez:
+    // a memória do jogo crescia sem parar e o navegador travava para aumentá-la.
+    salvarEstado() {
+      const M = gm().Module;
+      if (!M.HEAPU8 || !M._save_state_info) return M.EmulatorJSGetState();
+      const p = M._save_state_info();
+      let info = "";
+      for (let h = M.HEAPU8, k = p; h[k]; k++) info += String.fromCharCode(h[k]);
+      const [tam, ini, ok] = info.split("|");
+      if (ok !== "1") throw new Error("Falha ao salvar o estado: " + tam);
+      const n = +tam, d = +ini;
+      let buf = this.livres.pop();
+      if (!buf || buf.length !== n) buf = new Uint8Array(n);
+      buf.set(M.HEAPU8.subarray(d, d + n));
+      M._free(d);
+      return buf;
+    }
+
+    devolver(fotos) { for (const x of fotos) if (this.livres.length < 64) this.livres.push(x.estado); }
+
     foto() {
       const t = performance.now();
-      const estado = gm().Module.EmulatorJSGetState();
+      const estado = this.salvarEstado();
       this.fotos.push({ f: this.f, estado, botoes: this.botoes.map((b) => b.slice()), conferida: false });
       this.est.fotoMs = Math.max(this.est.fotoMs, performance.now() - t);
     }
@@ -228,7 +250,7 @@ window.CG = window.CG || {};
       while (k > 0 && this.fotos[k].f > alvo) k--;
       const foto = this.fotos[k];
       if (!foto || foto.f > alvo) { this.est.semFoto += 1; return; }
-      this.fotos.length = k + 1;           // as fotos depois do erro foram tiradas com o palpite errado
+      this.devolver(this.fotos.splice(k + 1)); // as fotos depois do erro foram tiradas com o palpite errado
       const ate = this.f;
       const t = performance.now();
       this.carregar(foto.estado);
@@ -239,11 +261,11 @@ window.CG = window.CG || {};
       }
       this.f = foto.f;
       while (this.f < ate) {
-        // a foto da comparação não pode faltar: se cair no meio da volta, tira aqui mesmo
-        if (this.f > foto.f && this.f % CHECAR_A_CADA === 0) this.foto();
+        // refaz as fotos no caminho (agora custam pouco), com os botões certos
+        if (this.f > foto.f && this.f % FOTO_A_CADA === 0) this.foto();
         this.rodar();
       }
-      if (this.f % CHECAR_A_CADA === 0 && this.fotos[this.fotos.length - 1].f !== this.f) this.foto();
+      if (this.f % FOTO_A_CADA === 0 && this.fotos[this.fotos.length - 1].f !== this.f) this.foto();
       this.est.voltas += 1;
       this.total.voltas += 1;
       this.total.refeitos += ate - foto.f;
@@ -331,7 +353,7 @@ window.CG = window.CG || {};
       let k = 0;
       while (k + 1 < this.fotos.length && this.fotos[k + 1].f <= limite) k++;
       if (k > 0) {
-        this.fotos.splice(0, k);
+        this.devolver(this.fotos.splice(0, k));
         const primeiro = this.fotos[0].f;
         for (const j of this.jogadores) {
           for (const q in this.eventos[j]) if (+q < primeiro) delete this.eventos[j][q];
