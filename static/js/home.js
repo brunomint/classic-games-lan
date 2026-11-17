@@ -99,7 +99,10 @@
     lista.replaceChildren(...salas.map((sala) => {
       const li = document.createElement("li");
       const a = document.createElement("a");
-      a.href = `${sala.url}?${new URLSearchParams({ sala: sala.session_id })}`;
+      // rollback: o jogo abre e entra sozinho na sala (modo-antigo.js lê ?sala-rollback=)
+      a.href = sala.tipo === "rollback"
+        ? `${sala.url}?${new URLSearchParams({ "sala-rollback": sala.codigo })}`
+        : `${sala.url}?${new URLSearchParams({ sala: sala.session_id })}`;
       a.className = "sala";
       const pulso = document.createElement("span");
       pulso.className = "pulso";
@@ -109,7 +112,8 @@
       jogo.textContent = sala.title;
       const quem = document.createElement("span");
       const vagas = sala.max - sala.current;
-      quem.textContent = `${sala.player_name} está esperando, ${vagas === 1 ? "falta 1 jogador" : `cabem mais ${vagas}`}`;
+      const modo = sala.tipo === "rollback" ? "Rollback" : "Por vídeo";
+      quem.textContent = `${modo}: ${sala.player_name} está esperando, ${vagas === 1 ? "falta 1 jogador" : `cabem mais ${vagas}`}`;
       texto.append(jogo, quem);
       const entrar = document.createElement("span");
       entrar.className = "botao botao-peq";

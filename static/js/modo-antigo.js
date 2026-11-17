@@ -742,11 +742,16 @@ window.CG = window.CG || {};
     });
   }
 
-  function entrar(codigo) {
+  function entrar(codigo, doLink) {
     prenderEntradas();
     status.textContent = "Entrando…";
     conectar().emit("antigo-entrar", { codigo, nome: nome() }, (r) => {
-      if (r.erro) { status.textContent = r.erro; return; }
+      if (r.erro) {
+        status.textContent = r.erro;
+        if (doLink) CG.aviso && CG.aviso(r.erro, "erro");
+        return;
+      }
+      if (doLink) CG.aviso && CG.aviso(`Entrou na sala de rollback ${r.codigo}. Recebendo o jogo…`, "ok");
       sala = r;
       status.textContent = `Entrou na sala ${r.codigo}. Recebendo o jogo…`;
       lista.replaceChildren();
@@ -771,6 +776,12 @@ window.CG = window.CG || {};
     $("dialogo-pausa").close();
     setTimeout(() => { dialogo.showModal(); mostrarSala(); }, 10);
   });
+  // veio pela home (Salas abertas): entra sozinho quando o jogo começar
+  const salaDoLink = new URLSearchParams(location.search).get("sala-rollback");
+  if (salaDoLink) {
+    document.addEventListener("cg:jogo-iniciado", () => setTimeout(() => entrar(salaDoLink, true), 300), { once: true });
+  }
+
   botaoCriar.addEventListener("click", criar);
   botaoSair.addEventListener("click", () => { sairDaSala(); mostrarSala(); });
   $("fechar-antigo").addEventListener("click", () => dialogo.close());

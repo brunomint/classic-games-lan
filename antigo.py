@@ -34,6 +34,17 @@ def _novo_codigo():
             return codigo
 
 
+def listar_salas():
+    """Salas com vaga, para o lobby da home: [{codigo, game_id, nome, jogadores, max}]."""
+    with lock:
+        return [
+            {"codigo": c, "game_id": s["game_id"], "nome": s["dono_nome"],
+             "jogadores": len(s["jogadores"]), "max": MAX_JOGADORES}
+            for c, s in salas.items()
+            if len(s["jogadores"]) < MAX_JOGADORES
+        ]
+
+
 def register_antigo(socketio):
 
     @socketio.on("antigo-listar", namespace=NS)

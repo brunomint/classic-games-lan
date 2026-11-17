@@ -51,7 +51,8 @@ Quem cria a sala roda o emulador. Use o aparelho mais forte (de preferência o P
 ### Jogar junto (rollback)
 
 Outra forma, no menu de pausa: **Jogar junto (rollback)** ▸ **Criar sala** num aparelho e,
-nos outros (no mesmo jogo), entrar na sala pelo mesmo menu. Até 4 aparelhos.
+nos outros, entrar pela home (**Salas abertas**, marcada "Rollback": o jogo abre e entra sozinho)
+ou pelo mesmo menu, no mesmo jogo. Até 4 aparelhos.
 
 Aqui **cada aparelho roda o jogo** e só os botões passam pela rede, com 2 quadros (~33 ms)
 de folga: a imagem é a original (sem o granulado do vídeo) e os botões respondem quase na

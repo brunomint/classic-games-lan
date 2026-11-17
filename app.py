@@ -14,7 +14,7 @@ from flask_socketio import SocketIO
 
 import config
 from ajustes import register_ajustes
-from antigo import register_antigo
+from antigo import listar_salas, register_antigo
 from auth import login_obrigatorio, register_auth
 from codigos import register_codigos
 from conta import register_conta
@@ -168,7 +168,19 @@ def api_rooms():
         game = games.get(room["game_id"])
         if not game:
             continue
-        result.append({**room, "session_id": session_id,
+        result.append({**room, "session_id": session_id, "tipo": "video",
+                       "title": game["title"], "console_label": game["console_label"],
+                       "url": f"/jogo/{game['console']}/{game['slug']}"})
+    # salas do "Jogar junto (rollback)" (antigo.py)
+    for sala in listar_salas():
+        try:
+            game = games.get(int(sala["game_id"]))
+        except (TypeError, ValueError):
+            game = None
+        if not game:
+            continue
+        result.append({"tipo": "rollback", "codigo": sala["codigo"], "player_name": sala["nome"],
+                       "current": sala["jogadores"], "max": sala["max"], "hasPassword": False,
                        "title": game["title"], "console_label": game["console_label"],
                        "url": f"/jogo/{game['console']}/{game['slug']}"})
     return jsonify(result)
