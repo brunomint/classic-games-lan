@@ -14,6 +14,9 @@
   window.EJS_language = "pt";
   window.EJS_color = "#4d3f8c";
   window.EJS_startOnLoaded = true;
+  // iPad: desde o iPadOS 13 o Safari diz que é um Mac, e o EmulatorJS deixa o controle na
+  // tela desligado (só liga sozinho em celular/tablet). Avisa que é aparelho móvel.
+  if (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 0) window.EJS_browserMode = 1;
   if (d.bios) window.EJS_biosUrl = d.bios;
 
   // Netplay: o próprio servidor Flask faz a sinalização.
