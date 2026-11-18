@@ -19,4 +19,11 @@
     <string name="pasta_ok">Os jogos ficam na pasta "%1$s" do celular, dentro de roms, uma pasta por console (o LEIA-ME de lá explica). Depois de copiar, recarregue a página.</string>
     <string name="pasta_reiniciar">\n\nPara começar a usar a pasta, desligue e ligue o Fliperama.</string>
     <string name="pasta_botao">Usar uma pasta do celular</string>
+    <string name="busca_sem">Jogos espalhados pelo celular (Download, Documentos, outras pastas)? O app pode procurar e mostrar no menu sem mudar nada de lugar.</string>
+    <string name="busca_ligar">Procurar jogos no celular</string>
+    <string name="busca_de_novo">Procurar de novo</string>
+    <string name="busca_procurando">Procurando jogos no celular…</string>
+    <string name="busca_resultado">Busca ligada: %1$d jogos em %2$d pastas, nos lugares onde estão. A busca se repete toda vez que você liga o Fliperama. Recarregue a página para ver.</string>
+    <string name="busca_nada">Busca ligada, mas nenhum jogo foi achado fora da pasta "Fliperama de Casa". A busca se repete toda vez que você liga o Fliperama.</string>
+    <string name="busca_desligar">Parar de procurar</string>
 </resources>

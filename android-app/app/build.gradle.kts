@@ -11,8 +11,8 @@ plugins {
     id("com.chaquo.python")
 }
 
-val versao = "1.0.0"
-val numeroVersao = 1
+val versao = "1.1.0"
+val numeroVersao = 2
 
 android {
     namespace = "io.github.brunomint.fliperama"

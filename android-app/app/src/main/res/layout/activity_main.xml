@@ -137,6 +137,43 @@
                 android:textSize="15sp"
                 android:textStyle="bold"
                 android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/busca_info"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:textColor="@color/cinza"
+                android:textSize="14sp"
+                android:visibility="gone" />
+
+            <Button
+                android:id="@+id/busca_botao"
+                android:layout_width="wrap_content"
+                android:layout_height="48dp"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/botao_claro_cinza"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:stateListAnimator="@null"
+                android:text="@string/busca_ligar"
+                android:textAllCaps="false"
+                android:textColor="@color/grafite"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
+
+            <Button
+                android:id="@+id/busca_desligar"
+                style="?android:attr/borderlessButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="44dp"
+                android:layout_marginTop="4dp"
+                android:text="@string/busca_desligar"
+                android:textAllCaps="false"
+                android:textColor="@color/cinza"
+                android:textSize="14sp"
+                android:visibility="gone" />
         </LinearLayout>
 
         <TextView

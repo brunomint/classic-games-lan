@@ -51,10 +51,19 @@ class ServidorService : Service() {
             val pasta = extrairServidor()
             val dados = File(filesDir, "dados").apply { mkdirs() }
             val jogos = PastaJogos.preparar(this, pasta)   // null: jogos dentro do app
+            // busca pelas pastas do celular: refeita a cada Ligar, para achar os jogos novos
+            if (jogos != null && BuscaJogos.ligada(this)) {
+                try {
+                    BuscaJogos.procurar(this)
+                } catch (e: Exception) {
+                    Log.w(TAG, "busca de jogos", e)
+                }
+            }
             if (!Python.isStarted()) Python.start(AndroidPlatform(this))
             Python.getInstance().getModule("fliperama_android").callAttr(
                 "iniciar", pasta.absolutePath, dados.absolutePath, Rede.PORTA,
-                jogos?.first?.absolutePath, jogos?.second?.absolutePath
+                jogos?.first?.absolutePath, jogos?.second?.absolutePath,
+                BuscaJogos.arquivo(this).absolutePath
             )
         } catch (e: Throwable) {
             Log.e(TAG, "o servidor parou", e)

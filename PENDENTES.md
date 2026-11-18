@@ -23,8 +23,8 @@ O servidor não é o gargalo (entrega a ~500 MB/s no próprio PC); o que limita 
 Feito: app que liga o servidor (Chaquopy), endereço com QR code, notificação com Desligar,
 "Jogar neste celular", assinatura própria, pasta "Fliperama de Casa" no celular e APK de 35 MB
 (só arm64, sem os núcleos *-thread*). Testado no realme C85 (Android 16). Ideias:
-- procurar ROMs em outras pastas do celular (Download, Documentos, pastas "ROMs"), sem mover;
-- ligar sozinho quando o celular liga (opcional).
+- ligar sozinho quando o celular liga (opcional);
+- desligar sozinho depois de um tempo sem ninguém conectado (opcional).
 
 ## Outras ideias
 

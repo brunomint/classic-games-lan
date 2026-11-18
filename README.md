@@ -42,7 +42,9 @@ python app.py            # porta 5000 (ou: python app.py 8080)
 **Ligar**: aparece o endereço e um QR code para os outros aparelhos, e **Jogar neste celular**
 abre o fliperama no próprio telefone. Toque em **Usar uma pasta do celular** para os jogos
 ficarem em `Fliperama de Casa/roms/<console>` no armazenamento, e copie as ROMs para lá pelo
-gerenciador de arquivos ou pelo cabo (ou envie pela página Enviar ROMs). O Android avisa que o
+gerenciador de arquivos ou pelo cabo (ou envie pela página Enviar ROMs). Se os jogos já estão
+espalhados pelo celular (Download, outras pastas), toque em **Procurar jogos no celular**: eles
+aparecem no menu sem sair do lugar, e a busca se repete toda vez que o Fliperama liga. O Android avisa que o
 app é de fonte desconhecida porque ele não vem da Play Store.
 
 **No Android (Termux), sem instalar o app:** instale o [Termux pelo F-Droid](https://f-droid.org/packages/com.termux/)

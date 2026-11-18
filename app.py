@@ -4,6 +4,7 @@ Rodar:  python app.py          (porta escolhida em Ajustes; 5000 se nunca mudou)
         python app.py 8080     (força outra porta)
 """
 import os
+import re
 import socket
 import sys
 
@@ -194,6 +195,13 @@ def api_rooms():
 
 @app.get("/roms/<path:filename>")
 def roms(filename):
+    # "achados/<n>/<arquivo>": jogo numa pasta do celular achada pela busca do app
+    m = re.match(r"achados/(\d+)/([^/]+)$", filename)
+    if m:
+        pasta = catalog.pasta_achada(int(m.group(1)))
+        if not pasta:
+            abort(404)
+        return send_from_directory(pasta, m.group(2), max_age=ONE_WEEK)
     return send_from_directory(catalog.roms_dir, filename, max_age=ONE_WEEK)
 
 

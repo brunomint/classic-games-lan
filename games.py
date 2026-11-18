@@ -2,6 +2,7 @@
 
 Para adicionar um jogo basta colocar a ROM na pasta do console certo.
 """
+import json
 import os
 import re
 import zlib
@@ -23,6 +24,20 @@ BIOS = {
 }
 
 COVER_EXTS = (".jpg", ".jpeg", ".png", ".webp")
+
+# Jogos achados em outras pastas (busca do app de Android): sem a pasta do console para
+# dizer o que é, só valem as extensões que não deixam dúvida. Um .bin solto ou um .iso pode
+# ser qualquer coisa (o .bin do PlayStation entra pelo .cue); o .zip só numa pasta com
+# "snes" no caminho.
+EXTS_ACHADOS = {
+    "snes": {".sfc", ".smc"},
+    "nes": {".nes"},
+    "n64": {".z64", ".n64", ".v64"},
+    "gba": {".gba"},
+    "gb": {".gb", ".gbc"},
+    "megadrive": {".md", ".gen", ".smd"},
+    "psx": {".cue", ".chd", ".pbp"},
+}
 
 
 def clean_title(filename):
@@ -60,6 +75,23 @@ class Catalog:
         self.roms_dir = os.environ.get("CG_ROMS") or os.path.join(base_dir, "roms")
         self.bios_dir = os.environ.get("CG_BIOS") or os.path.join(base_dir, "bios")
         self.covers_dir = os.path.join(base_dir, "covers")
+        # CG_ACHADOS: arquivo JSON com a lista de pastas onde a busca do app achou jogos
+        self.achados = os.environ.get("CG_ACHADOS")
+
+    def pastas_achadas(self):
+        """Pastas da busca do app (lidas a cada vez: a busca pode rodar com o servidor ligado)."""
+        if not self.achados:
+            return []
+        try:
+            with open(self.achados) as f:
+                pastas = json.load(f)
+        except (OSError, ValueError):
+            return []
+        return [p for p in pastas if isinstance(p, str)]
+
+    def pasta_achada(self, numero):
+        pastas = self.pastas_achadas()
+        return pastas[numero] if 0 <= numero < len(pastas) else None
 
     def _cover_for(self, console, slug):
         for ext in COVER_EXTS:
@@ -111,15 +143,36 @@ class Catalog:
                 jogos.append((n, clean_title(n), os.path.getsize(caminho(n)), [n]))
         return sorted(jogos, key=lambda j: j[1].lower())
 
+    def _pastas_para_ler(self):
+        """(console, pasta, prefixo do endereço, extensões): roms/<console> e depois as achadas."""
+        for console, (_, _, exts) in CONSOLES.items():
+            yield console, os.path.join(self.roms_dir, console), console, exts
+        dentro = os.path.realpath(self.roms_dir) + os.sep
+        for numero, pasta in enumerate(self.pastas_achadas()):
+            if (os.path.realpath(pasta) + os.sep).startswith(dentro):
+                continue                       # a própria pasta de jogos já foi lida
+            for console, exts in EXTS_ACHADOS.items():
+                if console == "snes" and "snes" in pasta.lower():
+                    exts = exts | {".zip"}
+                yield console, pasta, f"achados/{numero}", exts
+
     def scan(self):
         """Relê as pastas a cada chamada (é barato e evita reiniciar o servidor)."""
         games = []
-        for console, (label, core, exts) in CONSOLES.items():
-            folder = os.path.join(self.roms_dir, console)
+        vistos = set()
+        for console, folder, prefixo, exts in self._pastas_para_ler():
+            label, core, _ = CONSOLES[console]
             if not os.path.isdir(folder):
                 continue
-            for filename, title, size, arquivos in self._arquivos_de_jogo(folder, exts):
+            try:
+                achados = self._arquivos_de_jogo(folder, exts)
+            except OSError:
+                continue
+            for filename, title, size, arquivos in achados:
                 slug = slugify(title)
+                if (console, slug) in vistos:
+                    continue                   # o mesmo jogo em duas pastas: fica o primeiro
+                vistos.add((console, slug))
                 bios = BIOS.get(console)
                 games.append({
                     "console": console,
@@ -128,8 +181,8 @@ class Catalog:
                     "title": title,
                     "initials": initials(title),
                     "slug": slug,
-                    "rom": f"{console}/{filename}",
-                    "arquivos": [f"{console}/{a}" for a in arquivos],   # tudo que compõe o jogo
+                    "rom": f"{prefixo}/{filename}",
+                    "arquivos": [f"{prefixo}/{a}" for a in arquivos],   # tudo que compõe o jogo
                     "size_mb": round(size / 1e6, 1),
                     # número estável: o netplay usa para separar as salas por jogo
                     "game_id": zlib.crc32(f"{console}/{slug}".encode()) & 0x7FFFFFFF,

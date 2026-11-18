@@ -42,6 +42,10 @@ class MainActivity : Activity() {
     private lateinit var pastaInfo: TextView
     private lateinit var pastaBotao: Button
     private var pediuPasta = false
+    private lateinit var buscaInfo: TextView
+    private lateinit var buscaBotao: Button
+    private lateinit var buscaDesligar: Button
+    private var procurando = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,6 +59,14 @@ class MainActivity : Activity() {
         pastaInfo = findViewById(R.id.pasta_info)
         pastaBotao = findViewById(R.id.pasta_botao)
         pastaBotao.setOnClickListener { pedirPasta() }
+        buscaInfo = findViewById(R.id.busca_info)
+        buscaBotao = findViewById(R.id.busca_botao)
+        buscaDesligar = findViewById(R.id.busca_desligar)
+        buscaBotao.setOnClickListener { procurarJogos() }
+        buscaDesligar.setOnClickListener {
+            BuscaJogos.desligar(this)
+            mostrarPasta()
+        }
 
         botao.setOnClickListener { if (noAr) desligar() else ligar() }
         abrirAqui.setOnClickListener {
@@ -94,9 +106,44 @@ class MainActivity : Activity() {
             val reiniciar = if (pediuPasta && noAr) getString(R.string.pasta_reiniciar) else ""
             pastaInfo.text = getString(R.string.pasta_ok, PastaJogos.NOME) + reiniciar
             pastaBotao.visibility = View.GONE
+            mostrarBusca()
         } else {
             pastaInfo.setText(R.string.pasta_sem)
             pastaBotao.visibility = View.VISIBLE
+            listOf(buscaInfo, buscaBotao, buscaDesligar).forEach { it.visibility = View.GONE }
+        }
+    }
+
+    /** "Procurar jogos no celular": só aparece com o acesso aos arquivos liberado */
+    private fun mostrarBusca() {
+        buscaInfo.visibility = View.VISIBLE
+        buscaBotao.visibility = View.VISIBLE
+        buscaBotao.isEnabled = !procurando
+        val r = BuscaJogos.ultimo(this)
+        when {
+            procurando -> buscaInfo.setText(R.string.busca_procurando)
+            !BuscaJogos.ligada(this) || r == null -> buscaInfo.setText(R.string.busca_sem)
+            r.jogos == 0 -> buscaInfo.setText(R.string.busca_nada)
+            else -> buscaInfo.text = getString(R.string.busca_resultado, r.jogos, r.pastas)
+        }
+        val ligada = BuscaJogos.ligada(this)
+        buscaBotao.setText(if (ligada) R.string.busca_de_novo else R.string.busca_ligar)
+        buscaDesligar.visibility = if (ligada && !procurando) View.VISIBLE else View.GONE
+    }
+
+    private fun procurarJogos() {
+        procurando = true
+        mostrarBusca()
+        thread {
+            try {
+                BuscaJogos.procurar(this)
+            } catch (e: Exception) {
+                // sem acesso ou pasta ilegível: fica como estava
+            }
+            runOnUiThread {
+                procurando = false
+                mostrarBusca()
+            }
         }
     }
 

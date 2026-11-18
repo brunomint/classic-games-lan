@@ -8,12 +8,14 @@ import os
 import sys
 
 
-def iniciar(pasta, dados, porta, roms=None, bios=None):
+def iniciar(pasta, dados, porta, roms=None, bios=None, achados=None):
     os.environ["CG_DADOS"] = dados
     if roms:   # pasta "Fliperama de Casa" do celular (ver PastaJogos.kt)
         os.environ["CG_ROMS"] = roms
     if bios:
         os.environ["CG_BIOS"] = bios
+    if achados:   # lista de pastas da busca de jogos do app (ver BuscaJogos.kt)
+        os.environ["CG_ACHADOS"] = achados
     os.environ["CG_ANDROID"] = "1"   # no app a porta é fixa (Ajustes não reinicia o processo)
     os.chdir(pasta)
     if pasta not in sys.path:
