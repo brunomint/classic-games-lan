@@ -5,6 +5,7 @@ Para adicionar um jogo basta colocar a ROM na pasta do console certo.
 import json
 import os
 import re
+import time
 import zlib
 
 # pasta em roms/  ->  (nome exibido, core do EmulatorJS, extensões aceitas)
@@ -90,7 +91,7 @@ class Catalog:
         self.covers_dir = os.environ.get("CG_CAPAS") or os.path.join(base_dir, "covers")
         # CG_ACHADOS: arquivo JSON com a lista de pastas onde a busca do app achou jogos
         self.achados = os.environ.get("CG_ACHADOS")
-        self._cache_achados = {}   # (pasta achada, extensões) -> (data da pasta, jogos)
+        self._cache_achados = {}   # (pasta, extensões) -> (data da pasta, jogos)
 
     def pastas_achadas(self):
         """Pastas da busca do app (lidas a cada vez: a busca pode rodar com o servidor ligado)."""
@@ -107,12 +108,25 @@ class Catalog:
         pastas = self.pastas_achadas()
         return pastas[numero] if 0 <= numero < len(pastas) else None
 
-    def _cover_for(self, console, slug):
+    def _cover_for(self, console, slug, existentes=None):
+        """existentes: {console: nomes dos arquivos de capa}, lido uma vez por scan() (no celular,
+        perguntar arquivo por arquivo, 4 formatos x mil jogos, levava dezenas de segundos)."""
         for ext in COVER_EXTS:
-            name = f"{console}/{slug}{ext}"
-            if os.path.isfile(os.path.join(self.covers_dir, name)):
-                return name
+            if existentes is not None:
+                if f"{slug}{ext}" in existentes.get(console, ()):
+                    return f"{console}/{slug}{ext}"
+            elif os.path.isfile(os.path.join(self.covers_dir, console, f"{slug}{ext}")):
+                return f"{console}/{slug}{ext}"
         return None
+
+    def _capas_existentes(self):
+        existentes = {}
+        for console in CONSOLES:
+            try:
+                existentes[console] = set(os.listdir(os.path.join(self.covers_dir, console)))
+            except OSError:
+                existentes[console] = set()
+        return existentes
 
     @staticmethod
     def _arquivos_de_jogo(folder, exts):
@@ -170,31 +184,35 @@ class Catalog:
                     exts = exts | {".zip"}
                 yield console, pasta, f"achados/{numero}", exts
 
-    def _ler(self, folder, exts, guardar):
-        """As pastas achadas pela busca ficam guardadas até mudarem (a data da pasta muda quando
-        entra ou sai um arquivo): ler a memória do celular a cada página deixava tudo lento."""
-        if not guardar:
-            return self._arquivos_de_jogo(folder, exts)
+    def _ler(self, folder, exts, achada):
+        """Cada pasta fica guardada até mudar (a data da pasta muda quando entra ou sai um
+        arquivo): ler a memória do celular a cada página deixava tudo lento, ainda mais com
+        mil jogos. Uma pasta que acabou de mudar não é guardada (um envio pode estar gravando,
+        e o tamanho do jogo ainda vai crescer)."""
         data = os.stat(folder).st_mtime_ns
         chave = (folder, frozenset(exts))
         guardado = self._cache_achados.get(chave)
         if guardado and guardado[0] == data:
             return guardado[1]
-        # o emulador abre o 1º arquivo (num jogo de CD, o .bin; o .cue é texto mesmo)
-        jogos = [j for j in self._arquivos_de_jogo(folder, exts) if parece_jogo(os.path.join(folder, j[0]))]
-        self._cache_achados[chave] = (data, jogos)
+        jogos = self._arquivos_de_jogo(folder, exts)
+        if achada:
+            # o emulador abre o 1º arquivo (num jogo de CD, o .bin; o .cue é texto mesmo)
+            jogos = [j for j in jogos if parece_jogo(os.path.join(folder, j[0]))]
+        if time.time() - data / 1e9 > 10:
+            self._cache_achados[chave] = (data, jogos)
         return jogos
 
     def scan(self):
         """Relê as pastas a cada chamada (é barato e evita reiniciar o servidor)."""
         games = []
         vistos = set()
+        capas = self._capas_existentes()
         for console, folder, prefixo, exts in self._pastas_para_ler():
             label, core, _ = CONSOLES[console]
             if not os.path.isdir(folder):
                 continue
             try:
-                achados = self._ler(folder, exts, guardar=prefixo.startswith("achados/"))
+                achados = self._ler(folder, exts, achada=prefixo.startswith("achados/"))
             except OSError:
                 continue
             for filename, title, size, arquivos in achados:
@@ -218,7 +236,7 @@ class Catalog:
                     # cor da etiqueta do cartucho: fixa para cada jogo, varia entre jogos
                     "cor": zlib.crc32(slug.encode()) % 7,
                     "bios": bios if bios and os.path.isfile(os.path.join(self.bios_dir, bios)) else None,
-                    "cover": self._cover_for(console, slug),
+                    "cover": self._cover_for(console, slug, capas),
                 })
         return games
 

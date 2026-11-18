@@ -575,6 +575,9 @@ body.inicio { height: 100vh; overflow: hidden; }
   .centro { justify-content: flex-start; padding-top: 18px; }
   .barra-jogos { padding: 0 16px; }
   .legenda { padding: 0 16px; margin-bottom: 4px; }
+  /* filtros de console: em linhas, todos à vista (rolando de lado, sem barra, ninguém via) */
+  .abas { flex-wrap: wrap; overflow: visible; gap: 4px; }
+  .aba { padding: 6px 12px; font-size: 15px; }
   .legenda strong { font-size: 19px; }
 
   .fileira {
