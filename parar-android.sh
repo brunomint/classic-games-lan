@@ -1,7 +1,7 @@
 #!/data/data/com.termux/files/usr/bin/bash
 # Desliga o Fliperama de Casa no Android (ícone "Parar Fliperama" do Termux:Widget).
 cd "$(dirname "$(readlink -f "$0")")" || exit 1
-if pkill -f "python app.py"; then
+if pkill -f "^python app\.py"; then   # só o servidor (a linha de comando começa assim)
   msg="Fliperama de Casa desligado."
 else
   msg="O Fliperama de Casa já estava desligado."
