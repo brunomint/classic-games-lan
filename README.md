@@ -40,7 +40,8 @@ python app.py            # porta 5000 (ou: python app.py 8080)
 [**fliperama-de-casa.apk**](https://github.com/brunomint/fliperama-de-casa/releases/latest/download/fliperama-de-casa.apk)
 (35 MB, Android 7 ou mais novo, celulares de 64 bits), abra e permita instalar. No app, toque em
 **Ligar**: aparece o endereço e um QR code para os outros aparelhos, e **Jogar neste celular**
-abre o fliperama no próprio telefone. Toque em **Usar uma pasta do celular** para os jogos
+abre o fliperama dentro do app, em tela cheia (o app se declara jogo, e o celular libera o
+processador para ele). Toque em **Usar uma pasta do celular** para os jogos
 ficarem em `Fliperama de Casa/roms/<console>` no armazenamento, e copie as ROMs para lá pelo
 gerenciador de arquivos ou pelo cabo (ou envie pela página Enviar ROMs). Se os jogos já estão
 espalhados pelo celular (Download, outras pastas), toque em **Procurar jogos no celular**: eles
