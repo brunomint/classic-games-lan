@@ -13,5 +13,10 @@
     <string name="sem_wifi">Sem Wi-Fi</string>
     <string name="dica_sem_wifi">Conecte o celular a um Wi-Fi (ou ligue o roteador do celular) para os outros aparelhos entrarem.</string>
     <string name="dica_primeira_vez">Na primeira vez demora um pouco: o app prepara os arquivos do servidor.</string>
-    <string name="rodape">Os jogos você envia pela página Enviar ROMs, de qualquer aparelho da rede.</string>
+    <string name="rodape">Os jogos também podem ser enviados pela página Enviar ROMs, de qualquer aparelho da rede.</string>
+    <string name="pasta_titulo">Pasta dos jogos</string>
+    <string name="pasta_sem">Quer copiar os jogos direto para o celular (pelo gerenciador de arquivos ou pelo cabo)? Libere o acesso e o app cria a pasta "Fliperama de Casa", com uma pasta para cada console.</string>
+    <string name="pasta_ok">Os jogos ficam na pasta "%1$s" do celular, dentro de roms, uma pasta por console (o LEIA-ME de lá explica). Depois de copiar, recarregue a página.</string>
+    <string name="pasta_reiniciar">\n\nPara começar a usar a pasta, desligue e ligue o Fliperama.</string>
+    <string name="pasta_botao">Usar uma pasta do celular</string>
 </resources>

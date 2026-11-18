@@ -98,10 +98,51 @@
             android:textStyle="bold"
             android:visibility="gone" />
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="32dp"
+            android:background="@drawable/cartao"
+            android:orientation="vertical"
+            android:padding="18dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/pasta_titulo"
+                android:textColor="@color/grafite"
+                android:textSize="17sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/pasta_info"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:textColor="@color/cinza"
+                android:textSize="14sp" />
+
+            <Button
+                android:id="@+id/pasta_botao"
+                android:layout_width="wrap_content"
+                android:layout_height="48dp"
+                android:layout_marginTop="14dp"
+                android:background="@drawable/botao_claro_cinza"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:stateListAnimator="@null"
+                android:text="@string/pasta_botao"
+                android:textAllCaps="false"
+                android:textColor="@color/grafite"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
+        </LinearLayout>
+
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="28dp"
+            android:layout_marginTop="20dp"
             android:gravity="center"
             android:text="@string/rodape"
             android:textColor="@color/cinza"

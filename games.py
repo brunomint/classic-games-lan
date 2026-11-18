@@ -56,8 +56,9 @@ def slugify(text):
 class Catalog:
     def __init__(self, base_dir):
         self.base_dir = base_dir
-        self.roms_dir = os.path.join(base_dir, "roms")
-        self.bios_dir = os.path.join(base_dir, "bios")
+        # CG_ROMS / CG_BIOS: outra pasta (no app de Android, a pasta do celular escolhida)
+        self.roms_dir = os.environ.get("CG_ROMS") or os.path.join(base_dir, "roms")
+        self.bios_dir = os.environ.get("CG_BIOS") or os.path.join(base_dir, "bios")
         self.covers_dir = os.path.join(base_dir, "covers")
 
     def _cover_for(self, console, slug):

@@ -36,7 +36,16 @@ pip install -r requirements.txt
 python app.py            # porta 5000 (ou: python app.py 8080)
 ```
 
-**No Android (Termux):** instale o [Termux pelo F-Droid](https://f-droid.org/packages/com.termux/)
+**No Android (app):** baixe o
+[**fliperama-de-casa.apk**](https://github.com/brunomint/fliperama-de-casa/releases/latest/download/fliperama-de-casa.apk)
+(35 MB, Android 7 ou mais novo, celulares de 64 bits), abra e permita instalar. No app, toque em
+**Ligar**: aparece o endereço e um QR code para os outros aparelhos, e **Jogar neste celular**
+abre o fliperama no próprio telefone. Toque em **Usar uma pasta do celular** para os jogos
+ficarem em `Fliperama de Casa/roms/<console>` no armazenamento, e copie as ROMs para lá pelo
+gerenciador de arquivos ou pelo cabo (ou envie pela página Enviar ROMs). O Android avisa que o
+app é de fonte desconhecida porque ele não vem da Play Store.
+
+**No Android (Termux), sem instalar o app:** instale o [Termux pelo F-Droid](https://f-droid.org/packages/com.termux/)
 (a versão da Play Store é antiga) e cole esta linha:
 ```bash
 curl -fsSL https://raw.githubusercontent.com/brunomint/fliperama-de-casa/main/instalar-android.sh | bash

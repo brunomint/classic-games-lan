@@ -50,9 +50,12 @@ class ServidorService : Service() {
         try {
             val pasta = extrairServidor()
             val dados = File(filesDir, "dados").apply { mkdirs() }
+            val jogos = PastaJogos.preparar(this, pasta)   // null: jogos dentro do app
             if (!Python.isStarted()) Python.start(AndroidPlatform(this))
-            Python.getInstance().getModule("fliperama_android")
-                .callAttr("iniciar", pasta.absolutePath, dados.absolutePath, Rede.PORTA)
+            Python.getInstance().getModule("fliperama_android").callAttr(
+                "iniciar", pasta.absolutePath, dados.absolutePath, Rede.PORTA,
+                jogos?.first?.absolutePath, jogos?.second?.absolutePath
+            )
         } catch (e: Throwable) {
             Log.e(TAG, "o servidor parou", e)
             mostrarNotificacao("Erro ao ligar: ${e.message?.take(80)}")

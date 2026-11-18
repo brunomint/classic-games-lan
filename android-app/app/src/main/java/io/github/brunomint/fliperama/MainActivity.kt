@@ -11,6 +11,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.provider.Settings
 import android.view.View
 import android.widget.Button
 import android.widget.ImageView
@@ -38,6 +39,9 @@ class MainActivity : Activity() {
     private lateinit var dica: TextView
     private lateinit var qr: ImageView
     private lateinit var abrirAqui: Button
+    private lateinit var pastaInfo: TextView
+    private lateinit var pastaBotao: Button
+    private var pediuPasta = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,6 +52,9 @@ class MainActivity : Activity() {
         dica = findViewById(R.id.dica)
         qr = findViewById(R.id.qr)
         abrirAqui = findViewById(R.id.abrir_aqui)
+        pastaInfo = findViewById(R.id.pasta_info)
+        pastaBotao = findViewById(R.id.pasta_botao)
+        pastaBotao.setOnClickListener { pedirPasta() }
 
         botao.setOnClickListener { if (noAr) desligar() else ligar() }
         abrirAqui.setOnClickListener {
@@ -63,7 +70,34 @@ class MainActivity : Activity() {
 
     override fun onResume() {
         super.onResume()
+        mostrarPasta()
         verificar()
+    }
+
+    /** "Acesso a todos os arquivos": para ler a pasta Fliperama de Casa do celular */
+    private fun pedirPasta() {
+        pediuPasta = true
+        if (Build.VERSION.SDK_INT >= 30) {
+            val porApp = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION, Uri.parse("package:$packageName"))
+            try {
+                startActivity(porApp)
+            } catch (e: Exception) {
+                startActivity(Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION))
+            }
+        } else {
+            requestPermissions(arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), 2)
+        }
+    }
+
+    private fun mostrarPasta() {
+        if (PastaJogos.temAcesso(this)) {
+            val reiniciar = if (pediuPasta && noAr) getString(R.string.pasta_reiniciar) else ""
+            pastaInfo.text = getString(R.string.pasta_ok, PastaJogos.NOME) + reiniciar
+            pastaBotao.visibility = View.GONE
+        } else {
+            pastaInfo.setText(R.string.pasta_sem)
+            pastaBotao.visibility = View.VISIBLE
+        }
     }
 
     override fun onPause() {

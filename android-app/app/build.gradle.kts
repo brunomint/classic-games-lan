@@ -24,7 +24,7 @@ android {
         targetSdk = 35
         versionCode = numeroVersao
         versionName = versao
-        ndk { abiFilters += listOf("arm64-v8a", "x86_64") }
+        ndk { abiFilters += listOf("arm64-v8a") }   // celulares; x86_64 só serviria para emulador de PC
     }
 
     buildTypes {
@@ -71,7 +71,9 @@ val copiarServidor by tasks.registering(Sync::class) {
         include("*.py", "LICENSE", "TERCEIROS.md", "templates/**", "static/**")
         include("emulatorjs/*", "emulatorjs/src/**", "emulatorjs/compression/**", "emulatorjs/localization/**")
         nucleos.forEach { include("emulatorjs/cores/$it-*", "emulatorjs/cores/reports/$it.json") }
-        exclude("**/__pycache__/**", "emulatorjs/*.map")
+        // as versões "thread" dos núcleos precisam de SharedArrayBuffer, que o navegador só libera
+        // com cabeçalhos de isolamento que o servidor não manda: nunca são usadas
+        exclude("**/__pycache__/**", "emulatorjs/*.map", "emulatorjs/cores/*-thread-*")
     }
     into(layout.buildDirectory.dir("generated/servidor/servidor"))
     // marca da versão: o app só extrai os arquivos de novo quando ela muda

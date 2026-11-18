@@ -20,11 +20,11 @@ O servidor não é o gargalo (entrega a ~500 MB/s no próprio PC); o que limita 
 
 ## App Android (`android-app/`)
 
-Etapa 1 feita: app que liga o servidor (Chaquopy), mostra o endereço com QR code, notificação
-com Desligar e "Jogar neste celular" (testado no realme C85, Android 16). Falta:
-- assinatura própria (keystore) e publicar o APK nas versões do GitHub;
-- escolher uma pasta do celular para as ROMs (hoje vão pela página Enviar ROMs);
-- tirar o x86_64 do APK (só serve para emulador) e ver se dá para diminuir o tamanho (61 MB).
+Feito: app que liga o servidor (Chaquopy), endereço com QR code, notificação com Desligar,
+"Jogar neste celular", assinatura própria, pasta "Fliperama de Casa" no celular e APK de 35 MB
+(só arm64, sem os núcleos *-thread*). Testado no realme C85 (Android 16). Ideias:
+- procurar ROMs em outras pastas do celular (Download, Documentos, pastas "ROMs"), sem mover;
+- ligar sozinho quando o celular liga (opcional).
 
 ## Outras ideias
 
