@@ -36,12 +36,18 @@ pip install -r requirements.txt
 python app.py            # porta 5000 (ou: python app.py 8080)
 ```
 
-**No Android (Termux):**
+**No Android (Termux):** instale o [Termux pelo F-Droid](https://f-droid.org/packages/com.termux/)
+(a versão da Play Store é antiga) e cole esta linha:
 ```bash
-pkg install python
-pip install -r requirements.txt
-./iniciar-android.sh
+curl -fsSL https://raw.githubusercontent.com/brunomint/fliperama-de-casa/main/instalar-android.sh | bash
 ```
+Ela atualiza o Termux, instala Python, pip e git, baixa o projeto em `~/fliperama-de-casa` e cria
+o comando `fliperama`. Depois, para ligar o servidor, é só digitar:
+```bash
+fliperama
+```
+Para atualizar o projeto, rode a mesma linha de novo. Se der erro de conexão com os pacotes do
+Termux, rode `termux-change-repo`, escolha outro espelho e tente de novo.
 Dica: com o celular como roteador (hotspot), dá para jogar em qualquer lugar.
 
 Abra o endereço que aparece no terminal (ex.: `http://192.168.0.10:5000`).
@@ -152,7 +158,7 @@ quem joga com quem e as partidas recentes.
 
 | pasta | console | extensões |
 |---|---|---|
-| `roms/snes` | Super Nintendo | .sfc .smc |
+| `roms/snes` | Super Nintendo | .sfc .smc .zip |
 | `roms/nes` | Nintendinho | .nes |
 | `roms/n64` | Nintendo 64 | .z64 .n64 .v64 |
 | `roms/gba` | Game Boy Advance | .gba |
