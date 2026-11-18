@@ -40,6 +40,18 @@ EXTS_ACHADOS = {
 }
 
 
+def parece_jogo(caminho):
+    """ROM é arquivo binário; um texto com a mesma extensão (o .md do Markdown, por exemplo)
+    não tem bytes zero no começo. Usado nas pastas achadas pela busca do app."""
+    try:
+        if os.path.getsize(caminho) < 8 * 1024:
+            return False
+        with open(caminho, "rb") as f:
+            return b"\0" in f.read(4096)
+    except OSError:
+        return False
+
+
 def clean_title(filename):
     """'Mask, The (USA).sfc' -> 'The Mask'."""
     name = os.path.splitext(filename)[0]
@@ -167,7 +179,8 @@ class Catalog:
         guardado = self._cache_achados.get(chave)
         if guardado and guardado[0] == data:
             return guardado[1]
-        jogos = self._arquivos_de_jogo(folder, exts)
+        # o emulador abre o 1º arquivo (num jogo de CD, o .bin; o .cue é texto mesmo)
+        jogos = [j for j in self._arquivos_de_jogo(folder, exts) if parece_jogo(os.path.join(folder, j[0]))]
         self._cache_achados[chave] = (data, jogos)
         return jogos
 

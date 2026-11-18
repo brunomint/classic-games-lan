@@ -79,8 +79,24 @@ object BuscaJogos {
 
     private fun ehJogo(f: File): Boolean {
         val ext = f.extension.lowercase()
-        if (ext in EXTS) return true
-        // .zip só numa pasta com "snes" no caminho (como em games.py)
-        return ext == "zip" && f.parentFile?.absolutePath?.lowercase()?.contains("snes") == true
+        val aceito = ext in EXTS ||
+            // .zip só numa pasta com "snes" no caminho (como em games.py)
+            (ext == "zip" && f.parentFile?.absolutePath?.lowercase()?.contains("snes") == true)
+        return aceito && (ext == "cue" || binario(f))
+    }
+
+    /**
+     * ROM é arquivo binário; um texto com a mesma extensão (o .md do Markdown, por exemplo) não
+     * tem bytes zero no começo. Mesma regra do parece_jogo de games.py.
+     */
+    private fun binario(f: File): Boolean = try {
+        if (f.length() < 8 * 1024) false
+        else f.inputStream().use { entrada ->
+            val buf = ByteArray(4096)
+            val n = entrada.read(buf)
+            (0 until maxOf(n, 0)).any { buf[it] == 0.toByte() }
+        }
+    } catch (e: Exception) {
+        false
     }
 }

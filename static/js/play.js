@@ -20,6 +20,17 @@
   // tela desligado (só liga sozinho em celular/tablet). Avisa que é aparelho móvel.
   if (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 0) window.EJS_browserMode = 1;
   if (d.bios) window.EJS_biosUrl = d.bios;
+  // PlayStation em celular/tablet: com processador fraco o jogo ficava lento. Pular quadros
+  // quando não dá tempo mantém a velocidade certa, e sem o eco do som sobra processador.
+  // São só os valores iniciais: quem mudar no menu do jogo fica com a escolha dele.
+  const aparelhoMovel = /Android|iPhone|iPad/.test(navigator.userAgent) ||
+    (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 0);
+  if (d.core === "psx" && aparelhoMovel) {
+    window.EJS_defaultOptions = {
+      pcsx_rearmed_frameskip_type: "auto",
+      pcsx_rearmed_spu_reverb: "disabled",
+    };
+  }
 
   // Netplay: o próprio servidor Flask faz a sinalização.
   // Sem servidores STUN/TURN: a conexão fica só na rede local.
