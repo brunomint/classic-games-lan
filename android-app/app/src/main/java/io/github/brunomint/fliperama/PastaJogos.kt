@@ -19,6 +19,7 @@ object PastaJogos {
     private val CONSOLES = listOf("snes", "nes", "n64", "gba", "gb", "megadrive", "psx")
 
     fun raiz(): File = File(Environment.getExternalStorageDirectory(), NOME)
+    fun capas(): File = File(raiz(), "capas")
 
     fun temAcesso(ctx: Context): Boolean =
         if (Build.VERSION.SDK_INT >= 30) Environment.isExternalStorageManager()
@@ -55,6 +56,12 @@ object PastaJogos {
         )
         mover(File(internaServidor, "roms"), roms)
         mover(File(internaServidor, "bios"), bios)
+        // capas baixadas: ficam aqui para não sumirem se o app for reinstalado; o .nomedia
+        // tira essas imagens da galeria de fotos
+        val capas = File(raiz, "capas")
+        capas.mkdirs()
+        File(capas, ".nomedia").takeIf { !it.exists() }?.createNewFile()
+        mover(File(internaServidor, "covers"), capas)
         anunciar(ctx, raiz)
         return roms to bios
     }
@@ -64,7 +71,8 @@ object PastaJogos {
      * índice de mídia não mostram as pastas nem os jogos (que foram criados direto no disco).
      */
     private fun anunciar(ctx: Context, raiz: File) {
-        val arquivos = raiz.walkTopDown().filter { it.isFile }.map { it.absolutePath }.toList()
+        val arquivos = raiz.walkTopDown().onEnter { it.name != "capas" }
+            .filter { it.isFile }.map { it.absolutePath }.toList()
         if (arquivos.isNotEmpty()) MediaScannerConnection.scanFile(ctx, arquivos.toTypedArray(), null, null)
     }
 

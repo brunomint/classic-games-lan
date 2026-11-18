@@ -145,18 +145,23 @@ def baixar_para(jogo, covers_dir, falhas=None):
     nome_rom = os.path.splitext(os.path.basename(jogo["rom"]))[0]
     destino = os.path.join(covers_dir, jogo["console"], f"{jogo['slug']}.png")
 
+    respondeu = False   # o site das capas respondeu alguma vez (sem internet não é "não achou")
     for sistema in sistemas:
         tentativas = [_nome_libretro(nome_rom)]
         try:
             candidato = _melhor_candidato(jogo["title"], _lista(sistema))
+            respondeu = True
             if candidato and candidato not in tentativas:
                 tentativas.append(candidato)
-        except (urllib.error.URLError, OSError, ValueError):
-            pass   # sem a lista, ainda tenta o nome exato
+        except (urllib.error.URLError, OSError, ValueError) as e:
+            respondeu = respondeu or isinstance(e, urllib.error.HTTPError)
+            # sem a lista, ainda tenta o nome exato
         for nome in tentativas:
             try:
                 dados, tipo = _baixar(_url(sistema, nome + ".png"))
-            except (urllib.error.URLError, OSError, ValueError):
+                respondeu = True
+            except (urllib.error.URLError, OSError, ValueError) as e:
+                respondeu = respondeu or isinstance(e, urllib.error.HTTPError)
                 continue
             if not dados.startswith(b"\x89PNG") and "image" not in tipo:
                 continue
@@ -168,7 +173,7 @@ def baixar_para(jogo, covers_dir, falhas=None):
                 falhas.pop(jogo["rom"], None)
             return True
 
-    if falhas is not None:
+    if falhas is not None and respondeu:
         falhas[jogo["rom"]] = int(time.time())
     return False
 

@@ -21,7 +21,9 @@
   if (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 0) window.EJS_browserMode = 1;
   if (d.bios) window.EJS_biosUrl = d.bios;
   // PlayStation em celular/tablet: com processador fraco o jogo ficava lento. Pular quadros
-  // quando não dá tempo mantém a velocidade certa, e sem o eco do som sobra processador.
+  // quando não dá tempo mantém a velocidade certa; o processador do PlayStation a 50% (o
+  // normal do núcleo é 57%) e o som sem eco e sem suavização sobram processador. Algum jogo
+  // pode ficar lento por dentro com o processador mais baixo: no menu do jogo dá para voltar.
   // São só os valores iniciais: quem mudar no menu do jogo fica com a escolha dele.
   const aparelhoMovel = /Android|iPhone|iPad/.test(navigator.userAgent) ||
     (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 0);
@@ -29,6 +31,8 @@
     window.EJS_defaultOptions = {
       pcsx_rearmed_frameskip_type: "auto",
       pcsx_rearmed_spu_reverb: "disabled",
+      pcsx_rearmed_spu_interpolation: "off",
+      pcsx_rearmed_psxclock: "50",
     };
   }
 

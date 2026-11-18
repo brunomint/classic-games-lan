@@ -86,7 +86,8 @@ class Catalog:
         # CG_ROMS / CG_BIOS: outra pasta (no app de Android, a pasta do celular escolhida)
         self.roms_dir = os.environ.get("CG_ROMS") or os.path.join(base_dir, "roms")
         self.bios_dir = os.environ.get("CG_BIOS") or os.path.join(base_dir, "bios")
-        self.covers_dir = os.path.join(base_dir, "covers")
+        # CG_CAPAS: no app de Android, as capas ficam na pasta do celular (sobrevivem a reinstalar)
+        self.covers_dir = os.environ.get("CG_CAPAS") or os.path.join(base_dir, "covers")
         # CG_ACHADOS: arquivo JSON com a lista de pastas onde a busca do app achou jogos
         self.achados = os.environ.get("CG_ACHADOS")
         self._cache_achados = {}   # (pasta achada, extensões) -> (data da pasta, jogos)

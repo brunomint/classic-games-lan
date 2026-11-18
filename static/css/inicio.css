@@ -563,6 +563,68 @@ body.inicio { height: 100vh; overflow: hidden; }
   .teclado-letras { display: none; }
 }
 
+/* ---------- celular em pé: grade de capas, botões presos embaixo ----------
+   A fileira de lado é pensada para TV e controle; no celular em pé ela deixava metade da
+   tela vazia. Aqui as capas viram uma grade que rola com a página. */
+
+@media (max-width: 700px) and (orientation: portrait) {
+  .menu { padding: 14px 0 calc(96px + env(safe-area-inset-bottom)); }
+  .topo { padding: 0 16px; }
+  .perfil-topo .avatar { width: 40px; height: 40px; font-size: 17px; }
+  .perfil-topo.eu .avatar { width: 46px; height: 46px; font-size: 19px; }
+  .centro { justify-content: flex-start; padding-top: 18px; }
+  .barra-jogos { padding: 0 16px; }
+  .legenda { padding: 0 16px; margin-bottom: 4px; }
+  .legenda strong { font-size: 19px; }
+
+  .fileira {
+    --tile: calc((100vw - 32px - 2 * 10px) / 3);
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    padding: 10px 16px 8px;
+    overflow: visible;
+  }
+  .tile { width: auto; }
+  .tile:hover { outline: none; }
+  /* capa sem imagem: o nome embaixo da sigla, para saber que jogo é */
+  .tile:not(:has(img))::after {
+    content: attr(data-titulo);
+    position: absolute;
+    inset: auto 0 0;
+    padding: 4px 6px 5px;
+    background: rgba(0, 0, 0, .35);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.2;
+    text-align: center;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
+  .dock {
+    position: fixed;
+    left: 50%;
+    bottom: calc(12px + env(safe-area-inset-bottom));
+    z-index: 5;
+    transform: translateX(-50%);
+    gap: 6px;
+    margin: 0;
+    padding: 7px 10px;
+    background: rgba(255, 255, 255, .86);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 18px rgba(0, 0, 0, .12);
+  }
+  .dock-btn { width: 48px; height: 48px; }
+  .dock-btn svg { width: 25px; height: 25px; }
+  .dock-legenda { display: none; }
+  .inicio .avisos { bottom: calc(86px + env(safe-area-inset-bottom)); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .legenda { transition: none; }
 }

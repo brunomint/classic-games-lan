@@ -63,7 +63,8 @@ class ServidorService : Service() {
             Python.getInstance().getModule("fliperama_android").callAttr(
                 "iniciar", pasta.absolutePath, dados.absolutePath, Rede.PORTA,
                 jogos?.first?.absolutePath, jogos?.second?.absolutePath,
-                BuscaJogos.arquivo(this).absolutePath
+                BuscaJogos.arquivo(this).absolutePath,
+                if (jogos != null) PastaJogos.capas().absolutePath else null
             )
         } catch (e: Throwable) {
             Log.e(TAG, "o servidor parou", e)
