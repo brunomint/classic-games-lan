@@ -20,10 +20,12 @@
   // tela desligado (só liga sozinho em celular/tablet). Avisa que é aparelho móvel.
   if (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 0) window.EJS_browserMode = 1;
   if (d.bios) window.EJS_biosUrl = d.bios;
-  // PlayStation em celular/tablet: com processador fraco o jogo ficava lento. Pular quadros
-  // quando não dá tempo mantém a velocidade certa; o processador do PlayStation a 50% (o
-  // normal do núcleo é 57%) e o som sem eco e sem suavização sobram processador. Algum jogo
-  // pode ficar lento por dentro com o processador mais baixo: no menu do jogo dá para voltar.
+  // PlayStation em celular/tablet: com processador fraco o jogo ficava lento e o som picotava.
+  // Medido num Snapdragon 685 (Crash Bandicoot): com o processador do PlayStation a 50% o jogo
+  // ficava em ~49 quadros/s; a 30% (o mínimo do núcleo), em 60. O que pesa é emular o
+  // processador, não desenhar: pular quadros sempre (1 sim, 1 não) só levava de 45 a 49.
+  // Então: processador a 30%, pular quadros só quando falta tempo ("auto") e som simples.
+  // Algum jogo pode ficar lento por dentro em cena pesada: no menu do jogo dá para subir.
   // São só os valores iniciais: quem mudar no menu do jogo fica com a escolha dele.
   const aparelhoMovel = /Android|iPhone|iPad/.test(navigator.userAgent) ||
     (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 0);
@@ -32,7 +34,7 @@
       pcsx_rearmed_frameskip_type: "auto",
       pcsx_rearmed_spu_reverb: "disabled",
       pcsx_rearmed_spu_interpolation: "off",
-      pcsx_rearmed_psxclock: "50",
+      pcsx_rearmed_psxclock: "30",
     };
   }
 
