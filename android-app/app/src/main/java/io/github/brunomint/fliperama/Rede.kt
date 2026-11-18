@@ -34,11 +34,14 @@ object Rede {
 
     fun endereco(): String? = ipLocal()?.let { "http://$it:$PORTA" }
 
-    /** O servidor está respondendo? (bloqueia: chame fora da thread da tela) */
+    /**
+     * O servidor está respondendo? (bloqueia: chame fora da thread da tela). Pede um arquivo
+     * pequeno, não a página inicial, que demora mais com muitos jogos.
+     */
     fun servidorNoAr(): Boolean = try {
-        val c = URL("http://127.0.0.1:$PORTA/").openConnection() as HttpURLConnection
-        c.connectTimeout = 700
-        c.readTimeout = 1500
+        val c = URL("http://127.0.0.1:$PORTA/static/css/base.css").openConnection() as HttpURLConnection
+        c.connectTimeout = 1000
+        c.readTimeout = 4000
         c.instanceFollowRedirects = false
         val ok = c.responseCode in 200..399
         c.disconnect()

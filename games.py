@@ -77,6 +77,7 @@ class Catalog:
         self.covers_dir = os.path.join(base_dir, "covers")
         # CG_ACHADOS: arquivo JSON com a lista de pastas onde a busca do app achou jogos
         self.achados = os.environ.get("CG_ACHADOS")
+        self._cache_achados = {}   # (pasta achada, extensões) -> (data da pasta, jogos)
 
     def pastas_achadas(self):
         """Pastas da busca do app (lidas a cada vez: a busca pode rodar com o servidor ligado)."""
@@ -156,6 +157,20 @@ class Catalog:
                     exts = exts | {".zip"}
                 yield console, pasta, f"achados/{numero}", exts
 
+    def _ler(self, folder, exts, guardar):
+        """As pastas achadas pela busca ficam guardadas até mudarem (a data da pasta muda quando
+        entra ou sai um arquivo): ler a memória do celular a cada página deixava tudo lento."""
+        if not guardar:
+            return self._arquivos_de_jogo(folder, exts)
+        data = os.stat(folder).st_mtime_ns
+        chave = (folder, frozenset(exts))
+        guardado = self._cache_achados.get(chave)
+        if guardado and guardado[0] == data:
+            return guardado[1]
+        jogos = self._arquivos_de_jogo(folder, exts)
+        self._cache_achados[chave] = (data, jogos)
+        return jogos
+
     def scan(self):
         """Relê as pastas a cada chamada (é barato e evita reiniciar o servidor)."""
         games = []
@@ -165,7 +180,7 @@ class Catalog:
             if not os.path.isdir(folder):
                 continue
             try:
-                achados = self._arquivos_de_jogo(folder, exts)
+                achados = self._ler(folder, exts, guardar=prefixo.startswith("achados/"))
             except OSError:
                 continue
             for filename, title, size, arquivos in achados:
