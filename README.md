@@ -46,6 +46,13 @@ o comando `fliperama`. Depois, para ligar o servidor, é só digitar:
 ```bash
 fliperama
 ```
+Ao ligar, a tela mostra o endereço e um **QR code** para os outros aparelhos entrarem (o
+servidor roda em segundo plano; o registro dele fica em `dados/servidor.log`).
+
+**Ícone na tela inicial:** instale também o **Termux:Widget** (F-Droid, da mesma origem do
+Termux), segure num espaço vazio da tela inicial ▸ Widgets ▸ Termux:Widget e arraste para a tela.
+Aparecem os atalhos **Fliperama de Casa** (liga e mostra o endereço) e **Parar Fliperama**.
+
 Para atualizar o projeto, rode a mesma linha de novo. Se der erro de conexão com os pacotes do
 Termux, rode `termux-change-repo`, escolha outro espelho e tente de novo.
 Dica: com o celular como roteador (hotspot), dá para jogar em qualquer lugar.
