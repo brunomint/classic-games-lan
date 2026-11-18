@@ -6,4 +6,8 @@
         <item name="android:windowLightStatusBar">true</item>
         <item name="android:colorAccent">@color/laranja</item>
     </style>
+
+    <style name="Tema.Jogo" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@android:color/black</item>
+    </style>
 </resources>

@@ -70,7 +70,7 @@ class MainActivity : Activity() {
 
         botao.setOnClickListener { if (noAr) desligar() else ligar() }
         abrirAqui.setOnClickListener {
-            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("http://localhost:${Rede.PORTA}/")))
+            startActivity(Intent(this, JogoActivity::class.java))
         }
         if (Build.VERSION.SDK_INT >= 33 &&
             checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED

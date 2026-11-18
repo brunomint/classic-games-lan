@@ -2,7 +2,7 @@
 // o app for trocado ou a bateria acabar.
 //
 //  1. quando a página some (tela apagou, outro app, aba fechando): pausa e salva na hora
-//  2. a cada 2 minutos de jogo: salva em silêncio (cobre desligamento sem aviso)
+//  2. a cada 2 minutos de jogo (10 no celular): salva em silêncio (cobre desligamento sem aviso)
 //  3. se o envio não terminar a tempo, o save fica guardado no aparelho e sobe na próxima vez
 //
 // Existe um só save automático por jogador e jogo (o servidor troca o anterior).
@@ -11,7 +11,11 @@
   const gameId = document.getElementById("game").dataset.gameId;
   const nome = document.body.dataset.jogadorNome || "";
   const vemDeSala = new URLSearchParams(location.search).has("sala");
-  const INTERVALO_MS = 2 * 60 * 1000;
+  // no celular, salvar trava o jogo por ~0,1 s (medido no PlayStation, Snapdragon 685): lá o
+  // save periódico fica mais espaçado; trocar de app ou apagar a tela continua salvando na hora
+  const celular = /Android|iPhone|iPad/.test(navigator.userAgent) ||
+    (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 0);
+  const INTERVALO_MS = (celular ? 10 : 2) * 60 * 1000;
   const LIMITE_RAPIDO = 60 * 1024;        // o envio "de emergência" (sendBeacon) aceita ~64 KB
   const QUADROS_MIN_PERIODICO = 60 * 30;  // ~30 s de jogo desde o último save
   const QUADROS_MIN_SAINDO = 60 * 5;      // ~5 s
