@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="plastico">#EBEBEE</color>
+    <color name="branco">#FFFFFF</color>
+    <color name="grafite">#2B2B31</color>
+    <color name="cinza">#5E5E66</color>
+    <color name="laranja">#E0662B</color>
+    <color name="laranja_escuro">#B04F20</color>
+    <color name="sombra">#D3D3DA</color>
+</resources>

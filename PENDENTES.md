@@ -18,6 +18,14 @@ O servidor não é o gargalo (entrega a ~500 MB/s no próprio PC); o que limita 
    Conferir antes se o núcleo de PS1 do EmulatorJS abre `.chd`.
 3. **Usar o Wi-Fi 5 GHz** nos aparelhos que tiverem.
 
+## App Android (`android-app/`)
+
+Etapa 1 feita: app que liga o servidor (Chaquopy), mostra o endereço com QR code, notificação
+com Desligar e "Jogar neste celular" (testado no realme C85, Android 16). Falta:
+- assinatura própria (keystore) e publicar o APK nas versões do GitHub;
+- escolher uma pasta do celular para as ROMs (hoje vão pela página Enviar ROMs);
+- tirar o x86_64 do APK (só serve para emulador) e ver se dá para diminuir o tamanho (61 MB).
+
 ## Outras ideias
 
 - Serviço do sistema (systemd) para o servidor ligar sozinho com o notebook.

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Fliperama de Casa</string>
+    <string name="ligar">Ligar</string>
+    <string name="desligar">Desligar</string>
+    <string name="ligado">Fliperama ligado</string>
+    <string name="desligado">Desligado</string>
+    <string name="ligando">Ligando…</string>
+    <string name="preparando">Preparando os arquivos (só na primeira vez)…</string>
+    <string name="canal">Servidor ligado</string>
+    <string name="abrir_aqui">Jogar neste celular</string>
+    <string name="dica_endereco">Nos outros aparelhos (mesmo Wi-Fi), abra este endereço ou aponte a câmera para o QR code.</string>
+    <string name="sem_wifi">Sem Wi-Fi</string>
+    <string name="dica_sem_wifi">Conecte o celular a um Wi-Fi (ou ligue o roteador do celular) para os outros aparelhos entrarem.</string>
+    <string name="dica_primeira_vez">Na primeira vez demora um pouco: o app prepara os arquivos do servidor.</string>
+    <string name="rodape">Os jogos você envia pela página Enviar ROMs, de qualquer aparelho da rede.</string>
+</resources>

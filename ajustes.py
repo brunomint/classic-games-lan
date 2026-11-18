@@ -70,6 +70,9 @@ def register_ajustes(app, catalog, porta_atual):
     @app.post("/api/servidor/porta")
     @login_obrigatorio(api=True)
     def api_mudar_porta():
+        if os.environ.get("CG_ANDROID"):
+            # no app de Android o servidor não consegue se reiniciar sozinho
+            return jsonify(erro="No app de Android a porta é fixa (5000)."), 400
         dados = request.get_json(silent=True) or {}
         try:
             porta = int(dados.get("porta"))
